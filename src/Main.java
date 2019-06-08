@@ -201,8 +201,8 @@ public class Main {
         str = str.trim();
         boolean sign = true;
         int i = 0;
-            if(str.length()==0)
-                return 0;
+        if (str.length() == 0)
+            return 0;
         if ("-".indexOf(str.charAt(0)) >= 0) {
             sign = false;
             i++;
@@ -216,21 +216,41 @@ public class Main {
                 break;
             }
         }
-        if(i==0)
+        if (i == 0)
             return 0;
         str = str.substring(0, i);
-        if(str.equals("-")||str.equals("+"))
+        if (str.equals("-") || str.equals("+"))
             return 0;
         int res;
-        try{
+        try {
             res = Integer.parseInt(str);
-        }catch (Exception e){
-            if(sign)
+        } catch (Exception e) {
+            if (sign)
                 return Integer.MAX_VALUE;
             else
                 return Integer.MIN_VALUE;
         }
         return res;
+    }
+
+    public boolean isMatch(String s, String p) {
+        int si = 0;
+        int pi = 0;
+        while (si < s.length()) {
+            if (s.charAt(si) == p.charAt(pi)) {
+                si++;
+                pi++;
+            } else if (p.charAt(pi) == '.') {
+                si++;
+                pi++;
+            } else if (p.charAt(pi) == '*') {
+                if (p.charAt(pi - 1) == '.') {
+                    return true;
+                }
+
+            }
+        }
+        return true;
     }
 }
 
