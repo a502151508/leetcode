@@ -3,9 +3,7 @@ import java.util.*;
 public class Main {
 
     public static void main(String[] args) {
-        int[] i1 = {1, 3};
-        int[] i2 = {2};
-        System.out.println(myAtoi("+-1"));
+
     }
 
     public int[] twoSum(int[] nums, int target) {
@@ -234,24 +232,37 @@ public class Main {
     }
 
     public boolean isMatch(String s, String p) {
+        if (p.isEmpty())
+            return s.isEmpty();
         int si = 0;
         int pi = 0;
-        while (si < s.length()) {
-            if (s.charAt(si) == p.charAt(pi)) {
-                si++;
-                pi++;
-            } else if (p.charAt(pi) == '.') {
-                si++;
-                pi++;
-            } else if (p.charAt(pi) == '*') {
-                if (p.charAt(pi - 1) == '.') {
-                    return true;
+        while (si < s.length() && pi < p.length()) {
+            if (pi < p.length() - 1 && p.charAt(pi + 1) == '*') {
+                if (s.charAt(si) == p.charAt(pi) || p.charAt(pi) == '.') {
+                    si++;
+                    continue;
+                }
+                char now = p.charAt(pi);
+                pi = pi + 2;
+                if (pi < p.length()) {
+                    while (pi < p.length() && p.charAt(pi) == now) {
+                        pi++;
+                    }
                 }
 
+            } else {
+                if (s.charAt(si) == p.charAt(pi)) {
+                    si++;
+                    pi++;
+                } else if (p.charAt(pi) == '.') {
+                    si++;
+                    pi++;
+                } else return false;
             }
         }
-        return true;
+        return si == s.length() && (pi == p.length() || (pi + 2 == p.length() && p.charAt(p.length() - 1) == '*'));
     }
+
 }
 
 
