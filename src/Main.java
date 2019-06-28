@@ -3,7 +3,8 @@ import java.util.*;
 public class Main {
 
     public static void main(String[] args) {
-
+        String[] s = {};
+        System.out.println(longestCommonPrefix(s));
     }
 
     public int[] twoSum(int[] nums, int target) {
@@ -261,6 +262,64 @@ public class Main {
             }
         }
         return si == s.length() && (pi == p.length() || (pi + 2 == p.length() && p.charAt(p.length() - 1) == '*'));
+    }
+
+    public static String intToRoman(int num) {
+        Map<Integer, String> dic = new HashMap<>();
+        dic.put(1, "I");
+        dic.put(5, "V");
+        dic.put(10, "X");
+        dic.put(50, "L");
+        dic.put(100, "C");
+        dic.put(500, "D");
+        dic.put(1000, "M");
+        StringBuilder result = new StringBuilder();
+        int t = 0;
+        while (num != 0) {
+            int cur = num % 10;
+            num = num / 10;
+            if (1 <= cur && cur < 4) {
+                while (cur != 0) {
+                    result.insert(0, dic.get((int) Math.pow(10, t)));
+                    cur--;
+                }
+            } else if (cur == 4 || cur == 9) {
+                result.insert(0, dic.get((cur + 1) * (int) Math.pow(10, t)));
+                result.insert(0, dic.get((int) Math.pow(10, t)));
+            } else if (cur >= 5) {
+                result.insert(0, dic.get(5 * (int) Math.pow(10, t)));
+                while (cur - 5 != 0) {
+                    result.insert(1, dic.get((int) Math.pow(10, t)));
+                    cur--;
+                }
+            }
+            t++;
+        }
+        return result.toString();
+    }
+
+    private static String longestCommonPrefix(String[] strs) {
+        int cur = 0;
+        boolean flag = false;
+        if (strs.length == 0)
+            return "";
+        while (cur < strs[0].length()) {
+            char fir = strs[0].charAt(cur);
+            for (String str : strs) {
+                if (cur >= str.length() || fir != str.charAt(cur)) {
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag) {
+                break;
+            }
+            cur++;
+        }
+
+        if (cur == 0)
+            return "";
+        else return strs[0].substring(0, cur);
     }
 
 }
