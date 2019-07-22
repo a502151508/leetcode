@@ -1,10 +1,160 @@
+import java.io.FileReader;
 import java.util.*;
 
 public class Main {
 
     public static void main(String[] args) {
-        String[] s = {};
-        System.out.println(longestCommonPrefix(s));
+
+    }
+
+    public static int numIslands(char[][] grid) {
+        int row = grid.length;
+        if(row ==0)
+            return 0;
+        int col = grid[0].length;
+        int result = 0;
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+                if (grid[i][j] == '1') {
+                    findIsland(grid, i, j, row, col);
+                    result++;
+                }
+            }
+        }
+        return result;
+    }
+
+    public static void findIsland(char[][] grid, int row, int col, int rowM, int colM) {
+        if (row < rowM - 1 && grid[row + 1][col] == '1' ) {
+            grid[row+1][col]='0';
+            findIsland(grid, row + 1, col, rowM, colM);
+        }
+        if (col < colM - 1 && grid[row][col + 1] == '1' ) {
+            grid[row][col+1]='0';
+            findIsland(grid, row, col + 1, rowM, colM);
+        }
+        if (row > 0 && grid[row - 1][col] == '1') {
+            grid[row-1][col]='0';
+            findIsland(grid, row - 1, col, rowM, colM);
+        }
+        if (col > 0 && grid[row][col - 1] == '1' ) {
+            grid[row][col-1]='0';
+            findIsland(grid, row, col - 1, rowM, colM);
+        }
+    }
+
+    public static ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+        ListNode head = new ListNode(0);
+        ListNode copyHead = head;
+        while (l1.next == null && l2.next == null) {
+            if (l1.val < l2.val || l2 == null) {
+                copyHead.next = l1;
+                l1 = l1.next;
+            } else {
+                copyHead.next = l2;
+                l2 = l2.next;
+            }
+            copyHead = copyHead.next;
+        }
+        copyHead.next = l1 == null ? l2 : l1;
+        return head.next;
+    }
+
+    public static boolean isValid(String s) {
+        Map<Character, Character> data = new HashMap<>();
+        data.put('{', '}');
+        data.put('[', ']');
+        data.put('(', ')');
+        Stack<Character> stack = new Stack();
+        for (char c : s.toCharArray()) {
+            if (stack.size() != 0 && !data.containsKey(stack.peek()))
+                return false;
+            if (c == data.get(stack.peek())) {
+                stack.pop();
+            } else {
+                stack.push(c);
+            }
+        }
+        return stack.isEmpty();
+    }
+
+    public static List<List<Integer>> fourSum(int[] nums, int target) {
+        Arrays.sort(nums);
+        List<List<Integer>> result = new LinkedList<>();
+        for (int i = 0; i < nums.length; i++) {
+            if (i == nums.length - 3) {
+                break;
+            }
+            for (int j = i + 1; j < nums.length; j++) {
+                int f = j + 1;
+                int l = nums.length - 1;
+                int sum = nums[i] + nums[j];
+                while (f < l) {
+                    if (sum + nums[f] + nums[l] < target) {
+                        f++;
+                    } else if (sum + nums[f] + nums[l] > target) {
+                        l--;
+                    } else {
+                        List<Integer> singleRes = new LinkedList<>();
+                        singleRes.add(nums[i]);
+                        singleRes.add(nums[j]);
+                        singleRes.add(nums[l]);
+                        singleRes.add(nums[f]);
+                        result.add(singleRes);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public static int threeSumClosest(int[] nums, int target) {
+        Arrays.sort(nums);
+        int dis = nums[0] + nums[1] + nums[2];
+        for (int i = 0; i < nums.length - 2; i++) {
+            int f = i + 1;
+            int l = nums.length - 1;
+            while (f < l) {
+                if (nums[i] + nums[f] + nums[l] - target < 0) {
+                    dis = Math.abs(nums[i] + nums[f] + nums[l] - target) < Math.abs(dis - target) ? nums[i] + nums[f] + nums[l] : dis;
+                    f++;
+                } else if (nums[i] + nums[f] + nums[l] - target > 0) {
+                    dis = Math.abs(nums[i] + nums[f] + nums[l] - target) < Math.abs(dis - target) ? nums[i] + nums[f] + nums[l] : dis;
+                    l--;
+                } else {
+                    return target;
+                }
+            }
+        }
+        return dis;
+    }
+
+    public static List<List<Integer>> threeSum(int[] nums) {
+
+        Arrays.sort(nums);
+        List<List<Integer>> res = new ArrayList<>();
+        for (int k = 0; k < nums.length - 2; k++) {
+            if (nums[k] > 0) break;
+            if (k > 0 && nums[k] == nums[k - 1]) continue;
+            int i = k + 1, j = nums.length - 1;
+            while (i < j) {
+                int sum = nums[k] + nums[i] + nums[j];
+                if (sum < 0) {
+                    while (i < j && nums[i] == nums[++i]) {
+                    }
+                } else if (sum > 0) {
+                    while (i < j && nums[j] == nums[--j]) {
+                    }
+                } else {
+                    res.add(new ArrayList<Integer>(Arrays.asList(nums[k], nums[i], nums[j])));
+                    while (i < j && nums[i] == nums[++i]) {
+                    }
+                    while (i < j && nums[j] == nums[--j]) {
+                    }
+                }
+            }
+        }
+        return res;
     }
 
     public int[] twoSum(int[] nums, int target) {
@@ -322,6 +472,50 @@ public class Main {
         else return strs[0].substring(0, cur);
     }
 
+    private static List<String> letterCombinations(String digits) {
+        Map<Character, char[]> tele = new HashMap<>();
+        char[] n1 = {};
+        char[] n2 = {'a', 'b', 'c'};
+        char[] n3 = {'d', 'e', 'f'};
+        char[] n4 = {'g', 'h', 'i'};
+        char[] n5 = {'j', 'k', 'l'};
+        char[] n6 = {'m', 'n', 'o'};
+        char[] n7 = {'p', 'q', 'r', 's'};
+        char[] n8 = {'t', 'u', 'v'};
+        char[] n9 = {'w', 'x', 'y', 'z'};
+        tele.put('2', n2);
+        tele.put('3', n3);
+        tele.put('4', n4);
+        tele.put('5', n5);
+        tele.put('6', n6);
+        tele.put('7', n7);
+        tele.put('8', n8);
+        tele.put('9', n9);
+        List<String> result = new LinkedList<>();
+        for (int i = 0; i < digits.length(); i++) {
+            if (result.size() == 0) {
+                for (char cur : tele.get(digits.charAt(i))) {
+                    String newResult = new String(String.valueOf(cur));
+                    result.add(newResult);
+                }
+            } else {
+                char[] chars = tele.get(digits.charAt(i));
+                List<String> copyList = new LinkedList<>(Arrays.asList(new String[result.size()]));
+                Collections.copy(copyList, result);
+                for (int n = 0; n < result.size(); n++) {
+                    result.set(n, result.get(n) + chars[0]);
+                }
+                for (int t = 1; t < chars.length; t++) {
+                    List<String> newList = new LinkedList<>();
+                    for (String rec : copyList) {
+                        newList.add(rec + chars[t]);
+                    }
+                    result.addAll(newList);
+                }
+            }
+        }
+        return result;
+    }
 }
 
 
@@ -331,5 +525,27 @@ class ListNode {
 
     ListNode(int x) {
         val = x;
+    }
+}
+
+class LRUCache extends LinkedHashMap<Integer, Integer> {
+    private int capacity;
+
+    public LRUCache(int capacity) {
+        super(capacity, 0.75F, true);
+        this.capacity = capacity;
+    }
+
+    public int get(int key) {
+        return super.getOrDefault(key, -1);
+    }
+
+    public void put(int key, int value) {
+        super.put(key, value);
+    }
+
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<Integer, Integer> eldest) {
+        return size() > capacity;
     }
 }
