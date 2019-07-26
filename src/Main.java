@@ -4,12 +4,67 @@ import java.util.*;
 public class Main {
 
     public static void main(String[] args) {
+        int[][] s = {{1,3},{2,6},{8,10},{15,18}};
+        merge(s);
+    }
 
+    public static int[][] merge(int[][] intervals) {
+        List<int[]> s = new ArrayList<>(Arrays.asList(intervals));
+        Collections.sort(s, (s1, s2) -> {
+            if (s1[0] == s2[0]) {
+                return 0;
+            } else if (s1[0] < s2[0]) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
+        for (int i = 0; i < s.size() - 1; i++) {
+            int j = i + 1;
+            if (canMerge(s.get(i), s.get(j))) {
+                int[] newArray = {s.get(i)[0], s.get(j)[1] > s.get(i)[1] ? s.get(j)[1] : s.get(i)[1]};
+                s.set(i, newArray);
+                s.remove(s.get(j));
+                i = i - 1;
+            }
+        }
+        int[][] result = new int[s.size()][2];
+        for (int i = 0; i < result.length; i++) {
+            result[i]=s.get(i);
+        }
+        return result;
+    }
+
+    public static boolean canMerge(int[] a, int[] b) {
+        return (a[0] >= b[0]&&a[0]<=b[1]) || (a[1] >= b[0]&&a[1]<=b[1])||(a[0]<=b[0]&&a[1]>=b[0]) ||(a[0]<=b[1]&&a[1]>=b[1]);
+    }
+
+    public static int[][] kClosest(int[][] points, int K) {
+        int[][] result = new int[K][2];
+        divide(0, points.length, points);
+        System.arraycopy(points, 0, result, 0, K);
+        return result;
+    }
+
+    public static void divide(int i, int j, int[][] points) {
+        Random r = new Random();
+        int med = r.nextInt(points.length);
+    }
+
+    public static void swap(int i, int j, int[][] points) {
+        int temp[];
+        temp = points[i];
+        points[i] = points[j];
+        points[j] = temp;
+    }
+
+    public static int dis(int i, int j) {
+        return i * i + j * j;
     }
 
     public static int numIslands(char[][] grid) {
         int row = grid.length;
-        if(row ==0)
+        if (row == 0)
             return 0;
         int col = grid[0].length;
         int result = 0;
@@ -25,20 +80,20 @@ public class Main {
     }
 
     public static void findIsland(char[][] grid, int row, int col, int rowM, int colM) {
-        if (row < rowM - 1 && grid[row + 1][col] == '1' ) {
-            grid[row+1][col]='0';
+        if (row < rowM - 1 && grid[row + 1][col] == '1') {
+            grid[row + 1][col] = '0';
             findIsland(grid, row + 1, col, rowM, colM);
         }
-        if (col < colM - 1 && grid[row][col + 1] == '1' ) {
-            grid[row][col+1]='0';
+        if (col < colM - 1 && grid[row][col + 1] == '1') {
+            grid[row][col + 1] = '0';
             findIsland(grid, row, col + 1, rowM, colM);
         }
         if (row > 0 && grid[row - 1][col] == '1') {
-            grid[row-1][col]='0';
+            grid[row - 1][col] = '0';
             findIsland(grid, row - 1, col, rowM, colM);
         }
-        if (col > 0 && grid[row][col - 1] == '1' ) {
-            grid[row][col-1]='0';
+        if (col > 0 && grid[row][col - 1] == '1') {
+            grid[row][col - 1] = '0';
             findIsland(grid, row, col - 1, rowM, colM);
         }
     }
