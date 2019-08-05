@@ -1,11 +1,392 @@
+import java.awt.*;
 import java.io.FileReader;
 import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Main {
 
     public static void main(String[] args) {
-        int[][] s = {{1,3},{2,6},{8,10},{15,18}};
-        merge(s);
+        int[] nums = {5, 1, 1, 2, 5, 6, 3, 4, 76, 5, 3};
+        for(int num:nums){
+            System.out.println((num - 1) >>> 1);
+        }
+        findKthLargest(nums, 3);
+    }
+
+    public static int findKthLargest(int[] nums, int k) {
+
+        PriorityQueue<Integer> pq = new PriorityQueue<>(k, Comparator.comparingInt(o -> o));
+        for (int num : nums) {
+            if (pq.size() == k) {
+                if (num > pq.peek()) {
+                    pq.poll();
+                    pq.add(num);
+                }
+            } else
+                pq.add(num);
+        }
+        return pq.peek();
+    }
+
+    public static int[] productExceptSelf(int[] nums) {
+        int[] res = new int[nums.length];
+        int p = 1;
+        for (int i = 0; i < nums.length; i++) {
+            res[i] = p;
+            p = p * nums[i];
+        }
+        p = 1;
+        for (int i = nums.length - 1; i >= 0; i--) {
+            res[i] = res[i] * p;
+            p = p * nums[i];
+        }
+        return res;
+    }
+
+    public static void nextPermutation(int[] nums) {
+        if (nums.length <= 1)
+            return;
+        int i = nums.length - 1;
+        while (nums[i] <= nums[i - 1]) {
+            if (i == 1) {
+                Arrays.sort(nums);
+                return;
+            }
+            i--;
+        }
+        int j = i + 1;
+        while (j < nums.length && nums[i - 1] < nums[j]) {
+            j++;
+        }
+        swap(nums, i - 1, j - 1);
+        reverse(nums, i);
+    }
+
+    private static void reverse(int[] nums, int start) {
+        int i = start, j = nums.length - 1;
+        while (i < j) {
+            swap(nums, i, j);
+            i++;
+            j--;
+        }
+    }
+
+    private static void swap(int[] nums, int i, int j) {
+        int temp = nums[i];
+        nums[i] = nums[j];
+        nums[j] = temp;
+    }
+
+
+    public static int minMeetingRooms(int[][] intervals) {
+        if (intervals.length == 0)
+            return 0;
+        PriorityQueue<Integer> meetingQueue = new PriorityQueue<Integer>(intervals.length, Comparator.comparingInt(o -> o));
+        Arrays.sort(intervals, Comparator.comparingInt(o -> o[0]));
+        meetingQueue.add(intervals[0][1]);
+        for (int i = 1; i < intervals.length; i++) {
+            if (intervals[i][0] >= meetingQueue.peek()) {
+                meetingQueue.poll();
+            }
+            meetingQueue.add(intervals[i][1]);
+        }
+        return meetingQueue.size();
+    }
+
+    public static boolean canAttendMeetings(int[][] intervals) {
+        List<int[]> meetings = new ArrayList<>(Arrays.asList(intervals));
+        Collections.sort(meetings, (m1, m2) -> {
+            if (m1[0] < m2[0])
+                return -1;
+            else if (m1[0] > m2[0])
+                return 1;
+            else {
+                if (m1[1] >= m2[1])
+                    return 1;
+                else
+                    return -1;
+            }
+        });
+        for (int i = 0; i < meetings.size() - 1; i++) {
+            int[] m1 = meetings.get(i);
+            int[] m2 = meetings.get(i + 1);
+            if (m1[1] > m2[0])
+                return false;
+        }
+        return true;
+    }
+
+    public static List<List<Integer>> permute(int[] nums) {
+        List<List<Integer>> res = new ArrayList<>();
+        List<Integer> numsList = new ArrayList<>();
+        for (int num : nums) {
+            numsList.add(num);
+        }
+        findPermutation(0, res, numsList);
+        return res;
+    }
+
+    public static void findPermutation(int first, List<List<Integer>> resList, List<Integer> nums) {
+        if (first == nums.size() - 1) {
+            resList.add(nums);
+        } else {
+            for (int i = first; i < nums.size(); i++) {
+                List<Integer> nums1 = new ArrayList<>(nums);
+                swap(nums1, first, i);
+                findPermutation(first + 1, resList, nums1);
+            }
+        }
+    }
+
+    public static void swap(List<Integer> nums, int fir, int i) {
+        int temp = nums.get(fir);
+        nums.set(fir, nums.get(i));
+        nums.set(i, temp);
+    }
+
+    public static Node copyRandomList(Node head) {
+        if (head == null)
+            return null;
+        List<Node> src = new LinkedList<>();
+        Node cur = head;
+        while (cur != null) {
+            src.add(cur);
+            cur = cur.next;
+        }
+        if (src.size() == 1) {
+            Node n = new Node();
+            n.val = src.get(0).val;
+            if (head.random != null) {
+                n.random = n;
+            } else {
+                n.random = null;
+            }
+            return n;
+        }
+        int[] randomIndex = new int[src.size()];
+        List<Node> target = new LinkedList<>();
+        for (int i = 0; i < randomIndex.length; i++) {
+            Node n = new Node();
+            n.val = src.get(i).val;
+            target.add(n);
+            if (src.get(i).random != null) {
+                randomIndex[i] = src.indexOf(src.get(i).random);
+            } else {
+                randomIndex[i] = -1;
+            }
+        }
+        for (int i = 0; i < target.size() - 1; i++) {
+            target.get(i).next = target.get(i + 1);
+            target.get(i).random = randomIndex[i] != -1 ? target.get(randomIndex[i]) : null;
+        }
+        target.get(target.size() - 1).random = randomIndex[target.size() - 1] != -1 ? target.get(randomIndex[target.size() - 1]) : null;
+        return target.get(0);
+    }
+
+    public static boolean exist(char[][] board, String word) {
+        int row = board.length;
+        if (row == 0)
+            return false;
+        int col = board[0].length;
+        if (row * col < word.length()) {
+            return false;
+        }
+        char[] chars = word.toCharArray();
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+                if (chars[0] == board[i][j]) {
+                    if (searchAround(i, j, chars, 1, board, null))
+                        return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    static boolean searchAround(int i, int j, char[] chars, int t, char[][] board, boolean[][] beenTo) {
+        int row = board.length;
+        int col = board[0].length;
+        if (beenTo == null)
+            beenTo = new boolean[row][col];
+        beenTo[i][j] = true;
+        if (t == chars.length)
+            return true;
+        if (i < row - 1 && board[i + 1][j] == chars[t] && !beenTo[i + 1][j] && searchAround(i + 1, j, chars, t + 1, board, beenTo))
+            return true;
+        if (i > 0 && board[i - 1][j] == chars[t] && !beenTo[i - 1][j] && searchAround(i - 1, j, chars, t + 1, board, beenTo)) {
+            return true;
+        }
+        if (j > 0 && board[i][j - 1] == chars[t] && !beenTo[i][j - 1] && searchAround(i, j - 1, chars, t + 1, board, beenTo)) {
+            return true;
+        }
+        if (j < col - 1 && board[i][j + 1] == chars[t] && !beenTo[i][j + 1] && searchAround(i, j + 1, chars, t + 1, board, beenTo)) {
+            return true;
+        }
+        beenTo[i][j] = false;
+        return false;
+    }
+
+    public static List<List<String>> groupAnagrams3(String[] strs) {
+
+        HashMap<String, ArrayList<String>> map = new HashMap();
+        for (int i = 0; i < strs.length; i++) {
+            String valKey = createAngVal(strs[i]);
+            ArrayList<String> list = map.get(valKey);
+            if (list == null) list = new ArrayList<String>();
+            list.add(strs[i]);
+            map.put(valKey, list);
+        }
+        return new ArrayList(map.values());
+    }
+
+    public static String createAngVal(String str) {
+        char arr[] = new char[26];
+        for (int i = 0; i < str.length(); i++) {
+            ++arr[str.charAt(i) - 'a'];
+        }
+        return new String(arr);
+    }
+
+    public static List<List<String>> groupAnagrams(String[] strs) {
+        List<List<String>> result = new LinkedList<>();
+        if (strs.length == 0)
+            return new LinkedList<>();
+        Map<Integer, List<String>> countGroup = new HashMap();
+        for (String str : strs) {
+            if (countGroup.containsKey(str.length())) {
+                countGroup.get(str.length()).add(str);
+            } else {
+                LinkedList<String> l = new LinkedList<>();
+                l.add(str);
+                countGroup.put(str.length(), l);
+            }
+        }
+        for (Map.Entry<Integer, List<String>> e : countGroup.entrySet()) {
+            List<String> cur = e.getValue();
+            while (cur.size() != 0) {
+                List<String> singleResult = new LinkedList();
+                String s = cur.get(0);
+                String copyS = s;
+                singleResult.add(s);
+                cur.remove(0);
+                outer:
+                for (int i = 0; i < cur.size(); i++) {
+                    for (int j = 0; j < cur.get(i).length(); j++) {
+                        if (!copyS.contains(String.valueOf(cur.get(i).charAt(j)))) {
+                            copyS = s;
+                            continue outer;
+                        } else {
+                            int index = copyS.indexOf(cur.get(i).charAt(j));
+                            copyS = copyS.substring(0, index) + copyS.substring(index + 1);
+                        }
+                    }
+                    singleResult.add(cur.get(i));
+                    cur.remove(i);
+                    i--;
+                    copyS = s;
+                }
+                result.add(singleResult);
+            }
+            if (cur.size() != 0) {
+                List<String> singleResult = new LinkedList();
+                singleResult.add(cur.get(0));
+                result.add(singleResult);
+            }
+        }
+        return result;
+    }
+
+    public static List<List<String>> groupAnagrams1(String[] strs) {
+        List<List<String>> result = new LinkedList<>();
+        if (strs.length == 0)
+            return new LinkedList<>();
+        Map<Integer, List<String>> countGroup = new HashMap();
+        for (String str : strs) {
+            if (countGroup.containsKey(str.length())) {
+                countGroup.get(str.length()).add(str);
+            } else {
+                LinkedList<String> l = new LinkedList<>();
+                l.add(str);
+                countGroup.put(str.length(), l);
+            }
+        }
+
+        for (Map.Entry<Integer, List<String>> e : countGroup.entrySet()) {
+            List<String> cur = e.getValue();
+            while (cur.size() != 0) {
+                List<String> singleResult = new LinkedList();
+                String s = cur.get(0);
+                singleResult.add(s);
+                cur.remove(0);
+                outer:
+                for (int i = 0; i < cur.size(); i++) {
+                    for (int j = 0; j < s.length(); j++) {
+                        if (!cur.get(i).contains(String.valueOf(s.charAt(j)))) {
+                            break outer;
+                        }
+                    }
+                    singleResult.add(cur.get(i));
+                    cur.remove(i);
+                }
+                result.add(singleResult);
+            }
+            if (cur.size() != 0) {
+                List<String> singleResult = new LinkedList();
+                singleResult.add(cur.get(0));
+                result.add(singleResult);
+            }
+        }
+        return result;
+    }
+
+    public static int search(int[] nums, int target) {
+        if (nums.length == 0)
+            return -1;
+        return findTarget(0, nums.length - 1, target, nums);
+    }
+
+    public static int findTarget(int start, int end, int target, int[] nums) {
+        if (start == end || start + 1 == end) {
+            if (nums[start] == target)
+                return start;
+            else if (nums[end] == target)
+                return end;
+            else return -1;
+        }
+        int mid = (end + start) / 2;
+        if (nums[mid] < target) {
+            if (nums[end] >= target) {
+                return findTarget(mid, end, target, nums);
+            } else {
+                int res = findTarget(start, mid, target, nums);
+                return res != -1 ? res : findTarget(mid, end, target, nums);
+            }
+
+        } else if (nums[mid] > target) {
+            if (nums[start] <= target) {
+                return findTarget(start, mid, target, nums);
+            } else {
+                int res = findTarget(mid, end, target, nums);
+                return res != -1 ? res : findTarget(start, mid, target, nums);
+            }
+        } else
+            return mid;
+    }
+
+    public static int maxProfit(int[] prices) {
+        int buyIn = Integer.MAX_VALUE;
+        int sellOut = Integer.MIN_VALUE;
+        int maxPro = Integer.MIN_VALUE;
+        for (int i : prices) {
+            if (i < buyIn) {
+                buyIn = i;
+                sellOut = Integer.MIN_VALUE;
+            }
+            sellOut = i > sellOut ? i : sellOut;
+            maxPro = maxPro > sellOut - buyIn ? maxPro : sellOut - buyIn;
+        }
+        return maxPro;
     }
 
     public static int[][] merge(int[][] intervals) {
@@ -30,13 +411,13 @@ public class Main {
         }
         int[][] result = new int[s.size()][2];
         for (int i = 0; i < result.length; i++) {
-            result[i]=s.get(i);
+            result[i] = s.get(i);
         }
         return result;
     }
 
     public static boolean canMerge(int[] a, int[] b) {
-        return (a[0] >= b[0]&&a[0]<=b[1]) || (a[1] >= b[0]&&a[1]<=b[1])||(a[0]<=b[0]&&a[1]>=b[0]) ||(a[0]<=b[1]&&a[1]>=b[1]);
+        return (a[0] >= b[0] && a[0] <= b[1]) || (a[1] >= b[0] && a[1] <= b[1]) || (a[0] <= b[0] && a[1] >= b[0]) || (a[0] <= b[1] && a[1] >= b[1]);
     }
 
     public static int[][] kClosest(int[][] points, int K) {
@@ -580,6 +961,21 @@ class ListNode {
 
     ListNode(int x) {
         val = x;
+    }
+}
+
+class Node {
+    public int val;
+    public Node next;
+    public Node random;
+
+    public Node() {
+    }
+
+    public Node(int _val, Node _next, Node _random) {
+        val = _val;
+        next = _next;
+        random = _random;
     }
 }
 
