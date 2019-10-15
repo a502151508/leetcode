@@ -1,17 +1,238 @@
 import javafx.util.Pair;
-
-import java.awt.*;
-import java.io.FileReader;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
+import sun.text.normalizer.Trie;
 
 public class Main {
 
     public static void main(String[] args) {
-        boolean res = isMatch("baaaaab", "ba*b");
-        System.out.print(res);
+        int[][] test = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+        spiralOrder(test);
+    }
+
+    public int[][] generateMatrix(int n) {
+        int[][] res = new int[n][n];
+        int[][] per = new int[4][2];
+        int[] a1 = {0, 1};
+        int[] a2 = {1, 0};
+        int[] a3 = {0, -1};
+        int[] a4 = {-1, 0};
+        per[0] = a1;
+        per[1] = a2;
+        per[2] = a3;
+        per[3] = a4;
+        int c = 0, r = 0;
+        boolean[][] visited = new boolean[n][n];
+        int[] nextmove = per[0];
+        int t = 0;
+        for (int i = 0; i < n * n; i++) {
+            res[r][c] = i + 1;
+            visited[r][c] = true;
+            if (!(r + nextmove[0] >= 0 && r + nextmove[0] < n && c + nextmove[1] >= 0
+                && c + nextmove[1] < n && !visited[r + nextmove[0]][c + nextmove[1]])) {
+                t++;
+                nextmove = per[t % 4];
+            }
+            r += nextmove[0];
+            c += nextmove[1];
+        }
+        return res;
+    }
+
+
+    public static List<Integer> spiralOrder(int[][] matrix) {
+        int m = matrix.length;
+        int n;
+        List<Integer> res = new ArrayList<>();
+        if (m > 0) {
+            n = matrix[0].length;
+        } else {
+            return res;
+        }
+        int[][] per = new int[4][2];
+        int[] a1 = {0, 1};
+        int[] a2 = {1, 0};
+        int[] a3 = {0, -1};
+        int[] a4 = {-1, 0};
+        per[0] = a1;
+        per[1] = a2;
+        per[2] = a3;
+        per[3] = a4;
+        int c = 0;
+        int r = 0;
+        int[] nextmove = per[0];
+        boolean[][] visited = new boolean[m][n];
+        int t = 0;
+        for (int i = 0; i < m * n; i++) {
+            res.add(matrix[r][c]);
+            visited[r][c] = true;
+            int nextr = r + nextmove[0];
+            int nextc = c + nextmove[1];
+            if (nextc >= n || nextr >= m || nextc < 0 || nextr < 0) {
+                t++;
+                nextmove = per[t % 4];
+            } else if (visited[nextr][nextc]) {
+                t++;
+                nextmove = per[t % 4];
+            }
+            r += nextmove[0];
+            c += nextmove[1];
+
+        }
+        return res;
+
+
+    }
+
+    private int[] pre, low;
+    private int time;
+
+    public List<List<Integer>> criticalConnections(int n, List<List<Integer>> connections) {
+        pre = new int[n];
+        low = new int[n];
+        time = 0;
+        Arrays.fill(pre, -1);
+        List<Integer>[] adj = new List[n];
+        for (int i = 0; i < n; i++) {
+            adj[i] = new ArrayList<>();
+        }
+        for (List<Integer> connection : connections) {
+            adj[connection.get(0)].add(connection.get(1));
+            adj[connection.get(1)].add(connection.get(0));
+        }
+        List<List<Integer>> res = new ArrayList<>();
+        dfs(adj, 0, res, -1);
+        return res;
+    }
+
+    private void dfs(List<Integer>[] adj, int u, List<List<Integer>> res, int parent) {
+        pre[u] = low[u] = ++time;
+        for (int v : adj[u]) {
+            if (v == parent) {
+                continue;
+            }
+            if (pre[v] == -1) {
+                dfs(adj, v, res, u);
+                low[u] = Math.min(low[u], low[v]);
+                if (low[v] > pre[u]) {
+                    res.add(Arrays.asList(u, v));
+                }
+            } else {
+                low[u] = Math.min(low[u], pre[v]);
+            }
+        }
+    }
+
+    public static String mostCommonWord(String paragraph, String[] banned) {
+        Set<String> banset = new HashSet();
+        for (String word : banned) {
+            banset.add(word);
+        }
+        Map<String, Integer> count = new HashMap();
+
+        String ans = "";
+        int ansfreq = 0;
+
+        StringBuilder word = new StringBuilder();
+        for (char c : paragraph.toCharArray()) {
+            if (Character.isLetter(c)) {
+                word.append(Character.toLowerCase(c));
+            } else if (word.length() > 0) {
+                String finalword = word.toString();
+                if (!banset.contains(finalword)) {
+                    count.put(finalword, count.getOrDefault(finalword, 0) + 1);
+                    if (count.get(finalword) > ansfreq) {
+                        ans = finalword;
+                        ansfreq = count.get(finalword);
+                    }
+                }
+                word = new StringBuilder();
+            }
+        }
+
+        return ans.equals("") ? word.toString() : ans;
+    }
+
+    public static void moveZeroes(int[] nums) {
+        int i = 0;
+        int j = nums.length - 1;
+        if (j < 0) {
+            return;
+        }
+        while (i < j) {
+            while (j > 0 && nums[j] == 0) {
+                j--;
+            }
+            if (nums[i] != 0) {
+                i++;
+                continue;
+            }
+            swapIJ(nums, i, j);
+            j--;
+        }
+    }
+
+    static void swapIJ(int[] nums, int i, int j) {
+        for (int t = i; t < j; t++) {
+            nums[t] = nums[t + 1];
+        }
+        nums[j] = 0;
+    }
+
+
+    public static String addBinary(String a, String b) {
+        int aL = a.length() - 1;
+        int bL = b.length() - 1;
+        StringBuilder res = new StringBuilder();
+        boolean jin = false;
+        while (aL >= 0 && bL >= 0) {
+            //0+0=96  0+1=97 1+1=98
+            switch (a.charAt(aL) + b.charAt(bL)) {
+                case 96:
+                    res.insert(0, jin ? '1' : '0');
+                    jin = false;
+                    break;
+                case 97:
+                    res.insert(0, jin ? '0' : '1');
+                    break;
+                case 98:
+                    res.insert(0, jin ? '1' : '0');
+                    jin = true;
+                    break;
+            }
+            aL--;
+            bL--;
+        }
+        while (aL >= 0) {
+            if (jin) {
+                if (a.charAt(aL) == '1') {
+                    res.insert(0, '0');
+                } else {
+                    res.insert(0, '1');
+                    jin = false;
+                }
+            } else {
+                res.insert(0, a.charAt(aL));
+            }
+            aL--;
+        }
+        while (bL >= 0) {
+            if (jin) {
+                if (b.charAt(bL) == '1') {
+                    res.insert(0, '0');
+                } else {
+                    res.insert(0, '1');
+                    jin = false;
+                }
+            } else {
+                res.insert(0, b.charAt(bL));
+            }
+            bL--;
+        }
+        if (jin) {
+            res.insert(0, '1');
+        }
+        return res.toString();
     }
 
     public static int uniquePaths(int m, int n) {
@@ -1254,6 +1475,16 @@ public class Main {
     }
 }
 
+class TreeNode {
+
+    int val;
+    TreeNode left;
+    TreeNode right;
+
+    TreeNode(int x) {
+        val = x;
+    }
+}
 
 class ListNode {
 
