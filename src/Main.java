@@ -1,3 +1,4 @@
+import java.util.concurrent.ConcurrentHashMap;
 import javafx.util.Pair;
 import java.util.*;
 import java.util.List;
@@ -6,8 +7,66 @@ import sun.text.normalizer.Trie;
 public class Main {
 
     public static void main(String[] args) {
-        int[][] test = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
-        spiralOrder(test);
+        nextGreaterElements1(new int[]{0, -2, -3});
+    }
+
+    public static int[] nextGreaterElements1(int[] nums) {
+        Stack<Integer> stack = new Stack<>();
+        int[] res = new int[nums.length];
+        Arrays.fill(res, -1);
+        for (int i = 0; i < 2 * nums.length; i++) {
+            while (!stack.empty() && nums[i % nums.length] > nums[stack.peek()]) {
+                res[stack.pop()] = nums[i % nums.length];
+            }
+            if (res[i % nums.length] == -1) {
+                stack.push(i % nums.length);
+            }
+        }
+
+        return res;
+    }
+
+    public int[] nextGreaterElement(int[] findNums, int[] nums) {
+        Stack<Integer> stack = new Stack<>();
+        HashMap<Integer, Integer> map = new HashMap<>();
+        int[] res = new int[findNums.length];
+        for (int i = 0; i < nums.length; i++) {
+            while (!stack.empty() && nums[i] > stack.peek()) {
+                map.put(stack.pop(), nums[i]);
+            }
+            stack.push(nums[i]);
+        }
+        while (!stack.empty()) {
+            map.put(stack.pop(), -1);
+        }
+        for (int i = 0; i < findNums.length; i++) {
+            res[i] = map.get(findNums[i]);
+        }
+        return res;
+    }
+
+    public int[] nextGreaterElements(int[] nums) {
+        int[] result = new int[nums.length];
+        for (int i = 0; i <= nums.length - 1; i++) {
+            int j = i;
+            int flag = 0;
+            while (true) {
+                if (flag == 1 && i == j) {
+                    result[i] = -1;
+                    break;
+                }
+                j++;
+                if (j == nums.length) {
+                    j = 0;
+                    flag++;
+                }
+                if (nums[i] < nums[j]) {
+                    result[i] = nums[j];
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
     public int[][] generateMatrix(int n) {
@@ -37,6 +96,37 @@ public class Main {
             c += nextmove[1];
         }
         return res;
+    }
+
+    public String getLastSubString(String s) {
+        if (s.length() == 1) {
+            return s;
+        }
+
+        int currentMaxIndex = 0; //记录最大字符下标
+        boolean needCompare = false; //是否有挑战者
+        int newMaxIndex = 0; //挑战者下标
+        for (int i = 1; i < s.length(); i++) { // 一次循环
+            // 如何遍历的字符比当前字符还大，则最大字符下标变为当前下标
+            if (s.charAt(i) > s.charAt(currentMaxIndex)) {
+                currentMaxIndex = i;
+                continue;
+            }
+            // 如果第一次出现挑战者，记录挑战者 （）
+            if (s.charAt(i) == s.charAt(currentMaxIndex) && !needCompare) {
+                newMaxIndex = i;
+                needCompare = true;
+                continue;
+            }
+            // 有挑战者时，如果挑战成功，则变更擂主
+            if (needCompare) {
+                if (s.charAt(i) > s.charAt(currentMaxIndex + i - newMaxIndex)) {
+                    currentMaxIndex = newMaxIndex;
+                    needCompare = false;
+                }
+            }
+        }
+        return s.substring(currentMaxIndex);
     }
 
 
