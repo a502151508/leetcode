@@ -1,3 +1,4 @@
+import java.beans.PropertyVetoException;
 import java.util.concurrent.ConcurrentHashMap;
 import javafx.util.Pair;
 import java.util.*;
@@ -7,8 +8,399 @@ import sun.text.normalizer.Trie;
 public class Main {
 
     public static void main(String[] args) {
-        nextGreaterElements1(new int[]{0, -2, -3});
+        System.out.println(waterPlants(new int[]{2, 4, 5, 4, 1, 2}, 5, 7));
     }
+
+    public static int waterPlants(int[] plants, int cap1, int cap2) {
+        int n = plants.length;
+        int count = 2;
+        int cur1 = cap1;
+        int cur2 = cap2;
+        int i = 0;
+        while (i <= n - 1 - i) {
+            if (i == n - 1 - i) {
+                if (cur1 + cur2 < plants[i]) {
+                    count++;
+                }
+                break;
+            } else {
+                if (cur1 >= plants[i]) {
+                    cur1 -= plants[i];
+                } else {
+                    count++;
+                    cur1 = cap1;
+                }
+                if (cur2 >= plants[n - 1 - i]) {
+                    cur2 -= plants[n - 1 - i];
+                } else {
+                    count++;
+                    cur2 = cap2;
+                }
+                i++;
+            }
+        }
+
+        return count;
+    }
+
+    public static int minDominoRotations(int[] A, int[] B) {
+        int length = A.length;
+        if (length == 0) {
+            return -1;
+        } else if (length == 1) {
+            return 0;
+        }
+        int a = A[0];
+        int b = B[0];
+        int ua = 0;
+        int ub = a == b ? -1 : 0;
+        int la = 0;
+        int lb = a == b ? -1 : 0;
+        for (int i = 0; i < length; i++) {
+            if (ua != -1) {
+                if (A[i] != a && B[i] == a) {
+                    ua++;
+                } else if (A[i] != a && B[i] != a) {
+                    ua = -1;
+                    la = -1;
+                }
+            }
+
+            if (la != -1) {
+                if (B[i] != a && A[i] == a) {
+                    la++;
+                } else if (A[i] != a && B[i] != a) {
+                    la = -1;
+                    ua = -1;
+                }
+            }
+
+            if (ub != -1) {
+                if (B[i] == b && A[i] != b) {
+                    ub++;
+                } else if (A[i] != b && B[i] != b) {
+                    ub = -1;
+                    lb = -1;
+                }
+            }
+
+            if (lb != -1) {
+                if (B[i] != b && A[i] == b) {
+                    lb++;
+                } else if (A[i] != b && B[i] != b) {
+                    lb = -1;
+                    ub = -1;
+                }
+            }
+            if (lb == -1 && ub == -1 && ua == -1 && la == -1) {
+                return -1;
+            }
+        }
+
+        int[] reses = new int[]{ua, la, ub, lb};
+        int min = Integer.MAX_VALUE;
+        for (int res : reses) {
+            if (res != -1) {
+                min = Math.min(res, min);
+            }
+        }
+        return min;
+    }
+
+    public static int pivotIndex(int[] nums) {
+        int divisor = 1000000007;
+        int quo1 = 0;
+        int rema1 = 0;
+        for (int num : nums) {
+            quo1 += (num / divisor);
+            rema1 += num % divisor;
+            if (rema1 > divisor) {
+                quo1 += rema1 / divisor;
+                rema1 += rema1 % divisor;
+            }
+        }
+        int quo2 = 0;
+        int rema2 = 0;
+        for (int i = 0; i < nums.length; i++) {
+            if (i - 1 >= 0) {
+                quo2 += nums[i - 1] / divisor;
+                rema2 += nums[i - 1] % divisor;
+            }
+            if (rema2 > divisor) {
+                quo2 += rema2 / divisor;
+                rema2 += rema2 % divisor;
+            }
+
+            int quoCur = 0;
+            quoCur += nums[i] / divisor;
+            int remaCur = 0;
+            remaCur += nums[i] % divisor;
+
+            if (quo1 - quoCur - quo2 == quo2 && rema1 - remaCur - rema2 == rema2) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public int[][] kClosest(int[][] points, int K) {
+        int[][] res = new int[K][2];
+        PriorityQueue<int[]> queue = new PriorityQueue<>(K, (t1, t2) -> dis(t1) - dis(t2));//构建一个小根堆
+        for (int i = 0; i < points.length; i++) {
+            queue.offer(points[i]); //将所有元素入队
+        }
+
+        for (int i = 0; i < K; i++) {
+            res[i] = queue.poll(); //前k个元素出堆，就是我们所需要的结果。
+        }
+
+        return res;
+    }
+
+    public int[][] kClosestQ(int[][] points, int K) {
+        kClosedQuickS(points, 0, points.length - 1, K);
+        return Arrays.copyOf(points, K);
+    }
+
+    public void kClosedQuickS(int[][] points, int low, int high, int K) {
+        if (low < high) {
+            int center = kClosedQuickP(points, low, high, K);
+            if (center > K - 1) {
+                kClosedQuickS(points, low, center - 1, K);
+            } else {
+                kClosedQuickS(points, center + 1, high, K);
+            }
+
+        }
+    }
+
+    public int kClosedQuickP(int[][] points, int low, int high, int K) {
+        int[] pivot = points[low];
+        while (low < high) {
+            while (low < high && dis(pivot) < dis(points[high])) {
+                high--;
+            }
+            if (low < high) {
+                points[low] = points[high];
+                low++;
+            }
+            while (low < high && dis(pivot) > dis(points[low])) {
+                low++;
+            }
+            if (low < high) {
+                points[high] = points[low];
+                high--;
+            }
+        }
+        points[low] = pivot;
+        return low;
+    }
+
+    public int dis(int[] t)  //计算该点到原点的距离
+    {
+        return t[0] * t[0] + t[1] * t[1];
+    }
+
+    public static int divide(int dividend, int divisor) {
+        boolean sign = (dividend > 0) ^ (divisor > 0);
+        int result = 0;
+        if (dividend > 0) {
+            dividend = -dividend;
+        }
+        if (divisor > 0) {
+            divisor = -divisor;
+        }
+        while (dividend <= divisor) {
+            int temp_result = -1;
+            int temp_divisor = divisor;
+            while (dividend <= (temp_divisor << 1)) {
+                if (temp_divisor <= (Integer.MIN_VALUE >> 1)) {
+                    break;
+                }
+                temp_result = temp_result << 1;
+                temp_divisor = temp_divisor << 1;
+            }
+            dividend = dividend - temp_divisor;
+            result += temp_result;
+        }
+        if (!sign) {
+            if (result <= Integer.MIN_VALUE) {
+                return Integer.MAX_VALUE;
+            }
+            result = -result;
+        }
+        return result;
+    }
+
+
+    public String fractionToDecimal(int numerator, int denominator) {
+        StringBuilder res = new StringBuilder();
+        if (numerator == 0) {
+            return "0";
+        }
+        //if denominator == 0
+
+        if (numerator < 0 ^ denominator < 0) {
+            res.append('-');
+        }
+        long n = Math.abs(Long.valueOf(numerator));
+        long d = Math.abs(Long.valueOf(denominator));
+        long quo = n / d;
+        long remainder = n % d;
+        if (remainder == 0) {
+            res.append(quo);
+            return res.toString();
+        } else {
+            res.append(quo);
+            res.append('.');
+            Map<Long, Integer> map = new HashMap<>();
+            while (remainder != 0) {
+                quo = remainder * 10 / d;
+                if (map.containsKey(remainder)) {
+                    res.insert(map.get(remainder), "(");
+                    res.append(")");
+                    break;
+                }
+                res.append(quo);
+                map.put(remainder, res.length() - 1);
+                remainder = remainder * 10 % d;
+
+            }
+        }
+        return res.toString();
+    }
+
+    /**
+     * Morris中序遍历二叉树(node每次往右移之前打印节点)
+     */
+    public static void morrisIn(TreeNode head) {
+        if (head == null) {
+            return;
+        }
+        TreeNode cur = head;
+        TreeNode prev = null;
+        while (cur != null) {
+            //没有左节点 直接去右节点
+            if (cur.left == null) {
+                System.out.println(cur.val);
+                cur = cur.right;
+            } else {
+                //找先驱节点，即为中序遍历之前的最后一个节点
+                prev = cur.left;
+                while (prev.right != null && prev.right != cur) {
+                    prev = prev.right;
+                }
+                if (prev.right == null) {
+                    prev.right = cur;
+                    cur = cur.left;
+                } else {
+                    prev.right = null;
+                    System.out.println(cur.val);
+                    cur = cur.right;
+                }
+            }
+        }
+    }
+
+    //  非递归中根遍历
+    public static void iterativeInOrder(TreeNode p) {
+        if (p == null) {
+            return;
+        }
+        Deque<TreeNode> stack = new ArrayDeque<>();
+        while (stack.size() != 0 || p != null) {
+            while (p != null) {
+                stack.addLast(p);
+                p = p.left;
+            }
+            p = stack.removeLast();
+            System.out.println(p.val);
+            p = p.right;
+        }
+    }
+
+    //**********非递归的分层输出的层次遍历**********
+    public static void iterativeLevelOrder_1(TreeNode p) {
+        if (p == null) {
+            return;
+        }
+        Queue<TreeNode> queue = new LinkedList<TreeNode>();
+        queue.offer(p);
+        while (!queue.isEmpty()) {
+            int levelNum = queue.size();
+            for (int i = 0; i < levelNum; i++) {
+                p = queue.poll();
+                if (p.left != null) {
+                    queue.offer(p.left);
+                }
+                if (p.right != null) {
+                    queue.offer(p.right);
+                }
+                System.out.println(p.val);
+            }
+
+        }
+    }
+
+    public void reverseString(char[] s) {
+        int left = 0, right = s.length - 1;
+        while (left < right) {
+            char tmp = s[left];
+            s[left++] = s[right];
+            s[right--] = tmp;
+        }
+    }
+
+    public static List<Integer> connectedCities(int n, int g, List<Integer> originCities,
+        List<Integer> destinationCities) {
+        int[] root = new int[n + 1];
+        int[] ids = new int[n + 1];
+
+        for (int i = 0; i <= n; i++) {
+            root[i] = i;
+            ids[i] = 1;
+        }
+
+        for (int i = g + 1; i <= n; i++) {
+            for (int j = 2 * i; j <= n; j += i) {
+                unionFind(j, i, root, ids);
+            }
+        }
+
+        List<Integer> res = new ArrayList<>(originCities.size());
+        Iterator<Integer> itSrc = originCities.iterator();
+        Iterator<Integer> itDest = destinationCities.iterator();
+
+        while (itSrc.hasNext() && itDest.hasNext()) {
+            res.add(getRoot(itSrc.next(), root) == getRoot(itDest.next(), root) ? 1 : 0);
+        }
+
+        return res;
+    }
+
+    private static void unionFind(int a, int b, int[] root, int[] ids) {
+        int aRoot = getRoot(a, root);
+        int bRoot = getRoot(b, root);
+        if (aRoot == bRoot) {
+            return;
+        }
+
+        if (ids[aRoot] < ids[bRoot]) {
+            root[aRoot] = root[bRoot];
+            ids[bRoot] += ids[aRoot];
+        } else {
+            root[bRoot] = root[aRoot];
+            ids[aRoot] += ids[bRoot];
+        }
+    }
+
+    private static int getRoot(int a, int[] root) {
+        while (a != root[a]) {
+            a = root[a];
+        }
+        return a;
+    }
+
 
     public static int[] nextGreaterElements1(int[] nums) {
         Stack<Integer> stack = new Stack<>();
@@ -973,15 +1365,7 @@ public class Main {
 
     public static int[][] merge(int[][] intervals) {
         List<int[]> s = new ArrayList<>(Arrays.asList(intervals));
-        Collections.sort(s, (s1, s2) -> {
-            if (s1[0] == s2[0]) {
-                return 0;
-            } else if (s1[0] < s2[0]) {
-                return -1;
-            } else {
-                return 1;
-            }
-        });
+        Collections.sort(s, (s1, s2) -> s1[0] - s2[0]);
         for (int i = 0; i < s.size() - 1; i++) {
             int j = i + 1;
             if (canMerge(s.get(i), s.get(j))) {
@@ -1004,17 +1388,6 @@ public class Main {
             && a[1] >= b[0]) || (a[0] <= b[1] && a[1] >= b[1]);
     }
 
-    public static int[][] kClosest(int[][] points, int K) {
-        int[][] result = new int[K][2];
-        divide(0, points.length, points);
-        System.arraycopy(points, 0, result, 0, K);
-        return result;
-    }
-
-    public static void divide(int i, int j, int[][] points) {
-        Random r = new Random();
-        int med = r.nextInt(points.length);
-    }
 
     public static void swap(int i, int j, int[][] points) {
         int temp[];
@@ -1064,11 +1437,11 @@ public class Main {
         }
     }
 
-    public static ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+    public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
         ListNode head = new ListNode(0);
         ListNode copyHead = head;
-        while (l1.next == null && l2.next == null) {
-            if (l1.val < l2.val || l2 == null) {
+        while (l1 != null && l2 != null) {
+            if (l1.val <= l2.val) {
                 copyHead.next = l1;
                 l1 = l1.next;
             } else {
@@ -1091,7 +1464,7 @@ public class Main {
             if (stack.size() != 0 && !data.containsKey(stack.peek())) {
                 return false;
             }
-            if (c == data.get(stack.peek())) {
+            if (stack.size() != 0 && c == data.get(stack.peek())) {
                 stack.pop();
             } else {
                 stack.push(c);
