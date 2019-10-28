@@ -3,12 +3,182 @@ import java.util.concurrent.ConcurrentHashMap;
 import javafx.util.Pair;
 import java.util.*;
 import java.util.List;
+import sun.awt.image.ImageWatched.Link;
 import sun.text.normalizer.Trie;
 
 public class Main {
 
     public static void main(String[] args) {
-        System.out.println(waterPlants(new int[]{2, 4, 5, 4, 1, 2}, 5, 7));
+        LinkedHashMap l = new LinkedHashMap();
+        l.put(1, 1);
+        System.out.println(floodFill(new int[][]{{1, 1, 1}, {1, 1, 0}, {1, 0, 1}}, 1, 1, 2));
+    }
+
+    public static int[][] floodFill(int[][] image, int sr, int sc, int newColor) {
+        if (image.length == 0) {
+            return image;
+        }
+        fillFlood(image, sr, sc, image[sr][sc], newColor,
+            new boolean[image.length][image[0].length]);
+        return image;
+    }
+
+    private static void fillFlood(int[][] image, int sr, int sc, int oldColor, int newColor,
+        boolean[][] visited) {
+        int r = image.length;
+        int c = image[0].length;
+        if (sr >= 0 && sr < r && sc >= 0 && sc < c && !visited[sr][sc]) {
+            if (image[sr][sc] == oldColor) {
+                image[sr][sc] = newColor;
+                visited[sr][sc] = true;
+                fillFlood(image, sr + 1, sc, oldColor, newColor, visited);
+                fillFlood(image, sr, sc + 1, oldColor, newColor, visited);
+                fillFlood(image, sr - 1, sc, oldColor, newColor, visited);
+                fillFlood(image, sr, sc - 1, oldColor, newColor, visited);
+            } else {
+                visited[sr][sc] = true;
+            }
+        }
+    }
+
+    public static int subarraySum(int[] nums, int k) {
+        int count = 0, sum = 0;
+        HashMap<Integer, Integer> map = new HashMap<>();
+        map.put(0, 1);
+        for (int i = 0; i < nums.length; i++) {
+            sum += nums[i];
+            if (map.containsKey(sum - k)) {
+                count += map.get(sum - k);
+            }
+            map.put(sum, map.getOrDefault(sum, 0) + 1);
+        }
+        return count;
+    }
+
+    public static String smallestEquivalentString(String A, String B, String S) {
+        int n = A.length();
+        int[] root = new int[27];
+        for (int i = 0; i < root.length; i++) {
+            root[i] = i;
+        }
+        for (int i = 0; i < n; i++) {
+            int a = A.charAt(i) - 'a';
+            int b = B.charAt(i) - 'a';
+            unionFindSmallDicString(b, a, root);
+
+        }
+        StringBuilder res = new StringBuilder();
+        for (char c : S.toCharArray()) {
+            char c1 = (char) (getRoot(c - 'a', root) + 'a');
+            res.append(c1);
+        }
+        return res.toString();
+    }
+
+    private static void unionFindSmallDicString(int a, int b, int[] root) {
+        int aRoot = getRoot(a, root);
+        int bRoot = getRoot(b, root);
+        if (aRoot == bRoot) {
+            return;
+        }
+        if (root[bRoot] > root[aRoot]) {
+            root[bRoot] = root[aRoot];
+        } else {
+            root[aRoot] = root[bRoot];
+        }
+    }
+
+
+    public ListNode mergeKLists(ListNode[] lists) {
+        ListNode head = new ListNode(0);
+        ListNode cur = head;
+        PriorityQueue<ListNode> pq = new PriorityQueue<>(Comparator.comparingInt(o -> o.val));
+        for (ListNode lh : lists) {
+            if (lh != null) {
+                pq.add(lh);
+            }
+        }
+        while (pq.size() != 0) {
+            ListNode min = pq.poll();
+            cur.next = new ListNode(min.val);
+            cur = cur.next;
+            if (min.next != null) {
+                pq.add(min.next);
+            }
+        }
+        return head.next;
+    }
+
+    public static int longestPalindromeSubseq(String s) {
+        int length = s.length();
+        int[][] dp = new int[length][length];
+        for (int i = 0; i < length; i++) {
+            dp[i][i] = 1;
+        }
+        for (int l = 1; l <= length; l++) {
+            for (int i = 0; i < length - l; i++) {
+                int j = i + l;
+                if (s.charAt(i) == s.charAt(j)) {
+                    dp[i][j] = dp[i + 1][j - 1] + 2;
+                } else {
+                    dp[i][j] = Math.max(dp[i + 1][j], dp[i][j - 1]);
+                }
+            }
+        }
+        return dp[0][length - 1];
+    }
+
+    public int KMPindexOf(String source, String pattern) {
+        int i = 0, j = 0;
+        char[] src = source.toCharArray();
+        char[] ptn = pattern.toCharArray();
+        int sLen = src.length;
+        int pLen = ptn.length;
+        int[] next = getNext(ptn);
+        while (i < sLen && j < pLen) {
+            // 如果j = -1,或者当前字符匹配成功(src[i] = ptn[j]),都让i++,j++
+            if (j == -1 || src[i] == ptn[j]) {
+                i++;
+                j++;
+            } else {
+                // 如果j!=-1且当前字符匹配失败,则令i不变,j=next[j],即让pattern模式串右移j-next[j]个单位
+                j = next[j];
+            }
+        }
+        if (j == pLen) {
+            return i - j;
+        }
+        return -1;
+    }
+
+    protected int[] getNext(char[] p) {
+        // 已知next[j] = k,利用递归的思想求出next[j+1]的值
+        // 如果已知next[j] = k,如何求出next[j+1]呢?具体算法如下:
+        // 1. 如果p[j] = p[k], 则next[j+1] = next[k] + 1;
+        // 2. 如果p[j] != p[k], 则令k=next[k],如果此时p[j]==p[k],则next[j+1]=k+1,
+        // 如果不相等,则继续递归前缀索引,令 k=next[k],继续判断,直至k=-1(即k=next[0])或者p[j]=p[k]为止
+        int pLen = p.length;
+        int[] next = new int[pLen];
+        int k = -1;
+        int j = 0;
+        next[0] = -1; // next数组中next[0]为-1
+        while (j < pLen - 1) {
+            if (k == -1 || p[j] == p[k]) {
+                k++;
+                j++;
+                // 修改next数组求法
+                if (p[j] != p[k]) {
+                    next[j] = k;// KMPStringMatcher中只有这一行
+                } else {
+                    // 不能出现p[j] = p[next[j]],所以如果出现这种情况则继续递归,如 k = next[k],
+                    // k = next[[next[k]]
+                    next[j] = next[k];
+                }
+            } else {
+                k = next[k];
+            }
+        }
+        return next;
     }
 
     public static int waterPlants(int[] plants, int cap1, int cap2) {
@@ -376,6 +546,44 @@ public class Main {
         }
 
         return res;
+    }
+
+    public static int longestConsecutive(int[] nums) {
+        int n = nums.length;
+        if (n == 0) {
+            return 0;
+        }
+        if (n == 1) {
+            return 1;
+        }
+        int[] root = new int[n + 1];
+        int[] ids = new int[n + 1];
+
+        for (int i = 0; i <= n; i++) {
+            root[i] = i;
+            ids[i] = 1;
+        }
+        Map<Integer, Integer> s = new HashMap<>();
+        for (int i = 0; i < n; i++) {
+            if (s.containsKey(nums[i])) {
+                continue;
+            }
+            s.put(nums[i], i);
+        }
+        for (Map.Entry<Integer, Integer> e : s.entrySet()) {
+
+            if (s.containsKey(e.getKey() + 1)) {
+                unionFind(e.getValue(), s.get(e.getKey() + 1), root, ids);
+            }
+            if (s.containsKey(e.getKey() - 1)) {
+                unionFind(e.getValue(), s.get(e.getKey() - 1), root, ids);
+            }
+        }
+        int max = Integer.MIN_VALUE;
+        for (int id : ids) {
+            max = Math.max(max, id);
+        }
+        return max;
     }
 
     private static void unionFind(int a, int b, int[] root, int[] ids) {
@@ -1608,27 +1816,30 @@ public class Main {
         return first;
     }
 
-    public static int lengthOfLongestSubstring(String s) {
-        LinkedHashSet<Character> hs = new LinkedHashSet<Character>();
-        int max = 0;
+    public int lengthOfLongestSubstring(String s) {
+        int i = 0;
+        if (s.length() == 0) {
+            return 0;
+        }
         if (s.length() == 1) {
             return 1;
         }
-        for (int i = 0; i < s.length() - 1; i++) {
-            hs.add(s.charAt(i));
-            for (int j = i + 1; j < s.length(); j++) {
-                if (!hs.contains(s.charAt(j))) {
-                    hs.add(s.charAt(j));
-                } else {
-                    max = max < hs.size() ? hs.size() : max;
-                    hs.remove(s.charAt(i));
-                    break;
-                }
-                max = max < hs.size() ? hs.size() : max;
+        Map<Character, Integer> t = new HashMap<>();
+        int maxLength = Integer.MIN_VALUE;
+        int j = i;
+        while (j < s.length()) {
+            if (t.containsKey(s.charAt(j))) {
+                int index = t.get(s.charAt(j));
+                i = Math.max(i, index + 1);
             }
+            maxLength = Math.max(maxLength, j - i + 1);
+            t.put(s.charAt(j), j);
+            j++;
+
         }
-        return max;
+        return maxLength;
     }
+
 
     public static double findMedianSortedArrays(int[] nums1, int[] nums2) {
         int medIndex = (nums1.length + nums2.length) / 2;
@@ -1972,28 +2183,5 @@ class Node {
         val = _val;
         next = _next;
         random = _random;
-    }
-}
-
-class LRUCache extends LinkedHashMap<Integer, Integer> {
-
-    private int capacity;
-
-    public LRUCache(int capacity) {
-        super(capacity, 0.75F, true);
-        this.capacity = capacity;
-    }
-
-    public int get(int key) {
-        return super.getOrDefault(key, -1);
-    }
-
-    public void put(int key, int value) {
-        super.put(key, value);
-    }
-
-    @Override
-    protected boolean removeEldestEntry(Map.Entry<Integer, Integer> eldest) {
-        return size() > capacity;
     }
 }

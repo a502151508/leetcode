@@ -5,16 +5,7 @@ import javafx.util.Pair;
 
 public class test {
 
-
     public static void main(String[] args) {
-        int[] a = new int[]{1, 2};
-        int[] b = new int[]{1, 2};
-        Set<int[]> s = new HashSet<>();
-        s.add(a);
-
-        System.out.println(a.hashCode());
-        System.out.println(s.contains(b));
-
     }
 
 

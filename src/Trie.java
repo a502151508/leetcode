@@ -2,6 +2,8 @@ import java.util.HashMap;
 
 /**
  * Created by Sichi Zhang on 2019/10/26.
+ * 假设所有字符串长度之和为n，构建字典树的时间复杂度为O(n)
+ * 假设要查找的字符串长度为k，查找的时间复杂度为O(k)
  */
 public class Trie {
 
@@ -16,12 +18,12 @@ public class Trie {
         private int dumpli_num;////该字串的反复数目，  该属性统计反复次数的时候实用,取值为0、1、2、3、4、5……
         private int prefix_num;///以该字串为前缀的字串数。 应该包含该字串本身。。！
         private Node childs[];////此处用数组实现，当然也能够map或list实现以节省空间
-        private boolean isLeaf;///是否为单词节点
+        private boolean isWord;///是否为单词节点
 
         public Node() {
             dumpli_num = 0;
             prefix_num = 0;
-            isLeaf = false;
+            isWord = false;
             childs = new Node[26];
         }
     }
@@ -63,7 +65,7 @@ public class Trie {
 
             ///假设到了字串结尾，则做标记
             if (i == length - 1) {
-                root.childs[index].isLeaf = true;
+                root.childs[index].isWord = true;
                 root.childs[index].dumpli_num++;
             }
             ///root指向子节点，继续处理
@@ -95,7 +97,7 @@ public class Trie {
 
         if (root != null) {
 
-            if (root.isLeaf == true) {
+            if (root.isWord == true) {
                 ////当前即为一个单词
                 map.put(prefixs, root.dumpli_num);
             }
