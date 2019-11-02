@@ -5,7 +5,10 @@ import javafx.util.Pair;
 
 public class test {
 
+    int a;
+
     public static void main(String[] args) {
+
     }
 
 
@@ -249,4 +252,6 @@ public class test {
         }
         return dp[cur];
     }
+
+
 }

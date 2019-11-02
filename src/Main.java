@@ -1,18 +1,119 @@
-import java.beans.PropertyVetoException;
-import java.util.concurrent.ConcurrentHashMap;
 import javafx.util.Pair;
 import java.util.*;
-import java.util.List;
-import sun.awt.image.ImageWatched.Link;
-import sun.text.normalizer.Trie;
 
 public class Main {
 
     public static void main(String[] args) {
-        LinkedHashMap l = new LinkedHashMap();
-        l.put(1, 1);
-        System.out.println(floodFill(new int[][]{{1, 1, 1}, {1, 1, 0}, {1, 0, 1}}, 1, 1, 2));
+        MyCalendar m = new MyCalendar();
+        m.book(10, 20);
+        m.book(15, 25);
+        m.book(20, 30);
     }
+
+    public static boolean canFinish(int numCourses, int[][] prerequisites) {
+        int[] inDegrees = new int[numCourses];
+        for (int[] pre : prerequisites) {
+            inDegrees[pre[0]]++;
+        }
+        Stack<Integer> readyToMove = new Stack<>();
+        for (int i = 0; i < numCourses; i++) {
+            if (inDegrees[i] == 0) {
+                readyToMove.push(i);
+            }
+        }
+        int count = 0;
+        while (!readyToMove.isEmpty()) {
+            int movedCourse = readyToMove.pop();
+            count++;
+            for (int[] pre : prerequisites) {
+                if (pre[1] == movedCourse) {
+                    if (--inDegrees[pre[0]] == 0) {
+                        readyToMove.push(pre[0]);
+                    }
+                }
+            }
+        }
+        return count == numCourses;
+    }
+
+    public List<Integer> rightSideView(TreeNode root) {
+        List<Integer> res = new ArrayList<>();
+        Set<Integer> set = new HashSet<>();
+        if (root == null) {
+            return res;
+        }
+        dfs(root, 0, set, res);
+        return res;
+    }
+
+    void dfs(TreeNode x, int level, Set<Integer> set, List<Integer> res) {
+        if (x == null) {
+            return;
+        }
+
+        if (!set.contains(level)) {
+            set.add(level);
+            res.add(x.val);
+        }
+
+        dfs(x.right, level + 1, set, res);
+        dfs(x.left, level + 1, set, res);
+    }
+
+    public int diameterOfBinaryTree(TreeNode root) {
+        int[] ans = new int[]{1};
+        depth(root, ans);
+        return ans[0] - 1;
+    }
+
+    public int depth(TreeNode node, int[] ans) {
+        if (node == null) {
+            return 0;
+        }
+        int L = depth(node.left, ans);
+        int R = depth(node.right, ans);
+        ans[0] = Math.max(ans[0], L + R + 1);
+        return Math.max(L, R) + 1;
+    }
+
+
+    public int nextGreaterElement(int n) {
+        char[] a = ("" + n).toCharArray();
+        int i = a.length - 2;
+        while (i >= 0 && a[i + 1] <= a[i]) {
+            i--;
+        }
+        if (i < 0) {
+            return -1;
+        }
+        int j = a.length - 1;
+        while (j >= 0 && a[j] <= a[i]) {
+            j--;
+        }
+        swap(a, i, j);
+        reverse(a, i + 1);
+        try {
+            return Integer.parseInt(new String(a));
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    private void reverse(char[] a, int start) {
+        int i = start, j = a.length - 1;
+        while (i < j) {
+            swap(a, i, j);
+            i++;
+            j--;
+        }
+    }
+
+    private void swap(char[] a, int i, int j) {
+        char temp = a[i];
+        a[i] = a[j];
+        a[j] = temp;
+    }
+
 
     public static int[][] floodFill(int[][] image, int sr, int sc, int newColor) {
         if (image.length == 0) {
@@ -610,7 +711,7 @@ public class Main {
     }
 
 
-    public static int[] nextGreaterElements1(int[] nums) {
+    public static int[] nextGreaterElements2(int[] nums) {
         Stack<Integer> stack = new Stack<>();
         int[] res = new int[nums.length];
         Arrays.fill(res, -1);
@@ -626,7 +727,7 @@ public class Main {
         return res;
     }
 
-    public int[] nextGreaterElement(int[] findNums, int[] nums) {
+    public int[] nextGreaterElement1(int[] findNums, int[] nums) {
         Stack<Integer> stack = new Stack<>();
         HashMap<Integer, Integer> map = new HashMap<>();
         int[] res = new int[findNums.length];
@@ -1982,43 +2083,38 @@ public class Main {
     }
 
     public static int myAtoi(String str) {
-        str = str.trim();
-        boolean sign = true;
-        int i = 0;
-        if (str.length() == 0) {
+        if (str == null) {
             return 0;
         }
-        if ("-".indexOf(str.charAt(0)) >= 0) {
-            sign = false;
+        // 偷懒做法，去掉空格，也可以用while循环来做
+        String temp = str.trim();
+        if (temp == "" || temp.length() == 0) {
+            return 0;
+        }
+        boolean flag = true;
+        char[] bits = temp.toCharArray();
+        int i = 0;
+        int res = 0;
+        int bit = 0;
+        if (bits[0] == '-') {
+            flag = false;
+        }
+        if (bits[0] == '+' || bits[0] == '-') {
             i++;
         }
-        if ("+".indexOf(str.charAt(0)) >= 0) {
-            sign = true;
-            i++;
-        }
-        for (; i < str.length(); i++) {
-            if ("1234567890".indexOf(str.charAt(i)) < 0) {
+        for (; i < bits.length; i++) {
+            if (bits[i] >= '0' && bits[i] <= '9') {
+                bit = bits[i] - '0';
+            } else {
                 break;
             }
-        }
-        if (i == 0) {
-            return 0;
-        }
-        str = str.substring(0, i);
-        if (str.equals("-") || str.equals("+")) {
-            return 0;
-        }
-        int res;
-        try {
-            res = Integer.parseInt(str);
-        } catch (Exception e) {
-            if (sign) {
-                return Integer.MAX_VALUE;
-            } else {
-                return Integer.MIN_VALUE;
+            // 这里巧妙的应用了如果溢出就取最大值 Integer.MAX_VALUE 或 Integer.MIN_VALUE
+            if (res > Integer.MAX_VALUE / 10 || (res == Integer.MAX_VALUE / 10 && bit > 7)) {
+                return flag ? Integer.MAX_VALUE : Integer.MIN_VALUE;
             }
+            res = res * 10 + bit;
         }
-        return res;
+        return flag ? res : -res;
     }
 
     public static boolean isMatch(String text, String pattern) {
@@ -2149,6 +2245,72 @@ public class Main {
     }
 }
 
+class KthLargestElementInAnArray {
+
+    int[] nums;
+
+    public void swap(int a, int b) {
+        int tmp = this.nums[a];
+        this.nums[a] = this.nums[b];
+        this.nums[b] = tmp;
+    }
+
+
+    public int partition(int left, int right, int pivot_index) {
+        int pivot = this.nums[pivot_index];
+        // 1. move pivot to end
+        swap(pivot_index, right);
+        int store_index = left;
+
+        // 2. move all smaller elements to the left
+        for (int i = left; i <= right; i++) {
+            if (this.nums[i] < pivot) {
+                swap(store_index, i);
+                store_index++;
+            }
+        }
+
+        // 3. move pivot to its final place
+        swap(store_index, right);
+
+        return store_index;
+    }
+
+    public int quickselect(int left, int right, int k_smallest) {
+    /*
+    Returns the k-th smallest element of list within left..right.
+    */
+
+        if (left == right) // If the list contains only one element,
+        {
+            return this.nums[left];  // return that element
+        }
+
+        // select a random pivot_index
+        int pivot_index = (left + right) / 2;
+
+        pivot_index = partition(left, right, pivot_index);
+
+        // the pivot is on (N - k)th smallest position
+        if (k_smallest == pivot_index) {
+            return this.nums[k_smallest];
+        }
+        // go left side
+        else if (k_smallest < pivot_index) {
+            return quickselect(left, pivot_index - 1, k_smallest);
+        }
+        // go right side
+        return quickselect(pivot_index + 1, right, k_smallest);
+    }
+
+    public int findKthLargest(int[] nums, int k) {
+        this.nums = nums;
+        int size = nums.length;
+        // kth largest is (N - k)th smallest
+        return quickselect(0, size - 1, size - k);
+    }
+}
+
 class TreeNode {
 
     int val;
@@ -2183,5 +2345,144 @@ class Node {
         val = _val;
         next = _next;
         random = _random;
+    }
+}
+
+class MinStack {
+
+    // 数据栈
+    private Stack<Integer> data;
+    // 辅助栈
+    private Stack<Integer> helper;
+
+    /**
+     * initialize your data structure here.
+     */
+    public MinStack() {
+        data = new Stack<>();
+        helper = new Stack<>();
+    }
+
+    // 思路 2：辅助栈和数据栈不同步
+    // 关键 1：辅助栈的元素空的时候，必须放入新进来的数
+    // 关键 2：新来的数小于或者等于辅助栈栈顶元素的时候，才放入（特别注意这里等于要考虑进去）
+    // 关键 3：出栈的时候，辅助栈的栈顶元素等于数据栈的栈顶元素，才出栈，即"出栈保持同步"就可以了
+
+    public void push(int x) {
+        // 辅助栈在必要的时候才增加
+        data.add(x);
+        // 关键 1 和 关键 2
+        if (helper.isEmpty() || helper.peek() >= x) {
+            helper.add(x);
+        }
+    }
+
+    public void pop() {
+        // 关键 3：data 一定得 pop()
+        if (!data.isEmpty()) {
+            // 注意：声明成 int 类型，这里完成了自动拆箱，从 Integer 转成了 int，因此下面的比较可以使用 "==" 运算符
+            // 参考资料：https://www.cnblogs.com/GuoYaxiang/p/6931264.html
+            // 如果把 top 变量声明成 Integer 类型，下面的比较就得使用 equals 方法
+            int top = data.pop();
+            if (top == helper.peek()) {
+                helper.pop();
+            }
+        }
+    }
+
+    public int top() {
+        if (!data.isEmpty()) {
+            return data.peek();
+        }
+        throw new RuntimeException("栈中元素为空，此操作非法");
+    }
+
+    public int getMin() {
+        if (!helper.isEmpty()) {
+            return helper.peek();
+        }
+        throw new RuntimeException("栈中元素为空，此操作非法");
+    }
+
+}
+
+//Not allow two events at the same time
+class MyCalendar {
+
+    TreeMap<Integer, Integer> tm;
+
+    public MyCalendar() {
+        tm = new TreeMap<>();
+    }
+
+    public boolean book(int start, int end) {
+        if (end <= start) {
+            return false;
+        }
+        Map.Entry<Integer, Integer> low = tm.floorEntry(start);
+        Map.Entry<Integer, Integer> high = tm.ceilingEntry(start);
+        if (low == null && high == null) {
+            tm.put(start, end);
+            return true;
+        }
+        if (low != null && low.getValue() > start) {
+            return false;
+        }
+        if (high != null && end > high.getKey()) {
+            return false;
+        }
+        tm.put(start, end);
+        return true;
+    }
+}
+
+//not allow three events at the same time
+class MyCalendarTwo {
+
+    List<int[]> calendar;
+    List<int[]> overlaps;
+
+    MyCalendarTwo() {
+        calendar = new ArrayList();
+        overlaps = new ArrayList<>();
+    }
+
+    public boolean book(int start, int end) {
+        for (int[] iv : overlaps) {
+            if (iv[0] < end && start < iv[1]) {
+                return false;
+            }
+        }
+        for (int[] iv : calendar) {
+            if (iv[0] < end && start < iv[1]) {
+                overlaps.add(new int[]{Math.max(start, iv[0]), Math.min(end, iv[1])});
+            }
+        }
+        calendar.add(new int[]{start, end});
+        return true;
+    }
+}
+
+//Return Largest num of events that hold together
+class MyCalendarThree {
+
+    TreeMap<Integer, Integer> delta;
+
+    public MyCalendarThree() {
+        delta = new TreeMap();
+    }
+
+    public int book(int start, int end) {
+        delta.put(start, delta.getOrDefault(start, 0) + 1);
+        delta.put(end, delta.getOrDefault(end, 0) - 1);
+
+        int active = 0, ans = 0;
+        for (int d : delta.values()) {
+            active += d;
+            if (active > ans) {
+                ans = active;
+            }
+        }
+        return ans;
     }
 }
