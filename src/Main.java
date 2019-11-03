@@ -1,13 +1,258 @@
 import javafx.util.Pair;
 import java.util.*;
+import sun.security.util.Length;
 
 public class Main {
 
     public static void main(String[] args) {
-        MyCalendar m = new MyCalendar();
-        m.book(10, 20);
-        m.book(15, 25);
-        m.book(20, 30);
+        ListNode l1 = new ListNode(7);
+        ListNode l2 = new ListNode(2);
+        ListNode l3 = new ListNode(4);
+        ListNode l4 = new ListNode(3);
+        ListNode l5 = new ListNode(5);
+        ListNode l6 = new ListNode(6);
+        ListNode l7 = new ListNode(4);
+        l1.next = l2;
+        l2.next = l3;
+        l3.next = l4;
+        l5.next = l6;
+        l6.next = l7;
+        addTwoNumbers2(l1, l5);
+    }
+
+    public int findPeakElement(int[] nums) {
+        int l = 0, r = nums.length - 1;
+        while (l < r) {
+            int mid = (l + r) / 2;
+            if (nums[mid] > nums[mid + 1]) {
+                r = mid;
+            } else {
+                l = mid + 1;
+            }
+        }
+        return l;
+    }
+
+    //using PQ
+    public int firstMissingPositive1(int[] nums) {
+        int min = 1;
+        PriorityQueue<Integer> posNums = new PriorityQueue<>(Comparator.comparingInt(n -> n));
+        for (int num : nums) {
+            if (num > 0) {
+                posNums.add(num);
+            }
+        }
+        while (posNums.size() != 0) {
+            if (min < posNums.peek()) {
+                return min;
+            } else if (min == posNums.peek()) {
+                posNums.poll();
+                min++;
+            } else {
+                posNums.poll();
+            }
+        }
+        return min;
+    }
+
+
+    //use sign and index as hash
+    public int firstMissingPositive(int[] nums) {
+        int n = nums.length;
+
+        // Base case.
+        int contains = 0;
+        for (int i = 0; i < n; i++) {
+            if (nums[i] == 1) {
+                contains++;
+                break;
+            }
+        }
+
+        if (contains == 0) {
+            return 1;
+        }
+
+        // nums = [1]
+        if (n == 1) {
+            return 2;
+        }
+
+        // Replace negative numbers, zeros,
+        // and numbers larger than n by 1s.
+        // After this convertion nums will contain
+        // only positive numbers.
+        for (int i = 0; i < n; i++) {
+            if ((nums[i] <= 0) || (nums[i] > n)) {
+                nums[i] = 1;
+            }
+        }
+
+        // Use index as a hash key and number sign as a presence detector.
+        // For example, if nums[1] is negative that means that number `1`
+        // is present in the array.
+        // If nums[2] is positive - number 2 is missing.
+        for (int i = 0; i < n; i++) {
+            int a = Math.abs(nums[i]);
+            // If you meet number a in the array - change the sign of a-th element.
+            // Be careful with duplicates : do it only once.
+            if (a == n) {
+                nums[0] = -Math.abs(nums[0]);
+            } else {
+                nums[a] = -Math.abs(nums[a]);
+            }
+        }
+
+        // Now the index of the first positive number
+        // is equal to first missing positive.
+        for (int i = 1; i < n; i++) {
+            if (nums[i] > 0) {
+                return i;
+            }
+        }
+
+        if (nums[0] > 0) {
+            return n;
+        }
+
+        return n + 1;
+    }
+
+
+    public boolean isHappy(int n) {
+        Set<Integer> set = new HashSet<>();
+        int m = 0;
+        while (true) {
+            while (n != 0) {
+                m += Math.pow(n % 10, 2);
+                n /= 10;
+            }
+            if (m == 1) {
+                return true;
+            }
+            if (set.contains(m)) {
+                return false;
+            } else {
+                set.add(m);
+                n = m;
+                m = 0;
+            }
+        }
+    }
+
+    //Using stack
+    public String removeDuplicateLetters2(String s) {
+
+        Stack<Character> stack = new Stack<>();
+
+        // this lets us keep track of what's in our solution in O(1) time
+        HashSet<Character> seen = new HashSet<>();
+
+        // this will let us know if there are any more instances of s[i] left in s
+        HashMap<Character, Integer> last_occurrence = new HashMap<>();
+        for (int i = 0; i < s.length(); i++) {
+            last_occurrence.put(s.charAt(i), i);
+        }
+
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            // we can only try to add c if it's not already in our solution
+            // this is to maintain only one of each character
+            if (!seen.contains(c)) {
+                // if the last letter in our solution:
+                //     1. exists
+                //     2. is greater than c so removing it will make the string smaller
+                //     3. it's not the last occurrence
+                // we remove it from the solution to keep the solution optimal
+                while (!stack.isEmpty() && c < stack.peek()
+                    && last_occurrence.get(stack.peek()) > i) {
+                    seen.remove(stack.pop());
+                }
+                seen.add(c);
+                stack.push(c);
+            }
+        }
+        StringBuilder sb = new StringBuilder(stack.size());
+        for (Character c : stack) {
+            sb.append(c.charValue());
+        }
+        return sb.toString();
+    }
+
+    //字母去重后保留最小的字典排序
+    public static String removeDuplicateLetters(String s) {
+        if (s.length() <= 1) {
+            return s;
+        }
+        int[] count = new int[26];
+        for (char c : s.toCharArray()) {
+            count[c - 'a']++;
+        }
+        StringBuilder res = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char cur = s.charAt(i);
+            if (count[cur - 'a'] == 0) {
+                continue;
+            }
+            char min = 'z';
+            int j = i;
+            int[] temp = Arrays.copyOf(count, 26);
+            while (j < s.length() - 1 && count[cur - 'a'] != 1) {
+                if (count[cur - 'a'] != 0) {
+                    min = min < cur ? min : cur;
+
+                    if (--temp[cur - 'a'] == 0) {
+                        break;
+                    }
+                }
+                j++;
+                cur = s.charAt(j);
+            }
+            //The Last char or the char that must exist.
+            min = min < cur ? min : cur;
+            res.append(min);
+            count[min - 'a'] = 0;
+            //delete those before the char we want.
+            for (char c : s.substring(i, s.indexOf(min, i)).toCharArray()) {
+                if (count[c - 'a'] > 0) {
+                    count[c - 'a']--;
+                }
+            }
+            i = s.indexOf(min, i);
+        }
+
+        return res.toString();
+
+    }
+
+    //topological sort
+    public int[] findOrder(int numCourses, int[][] prerequisites) {
+
+        int[] inDegrees = new int[numCourses];
+        for (int[] pre : prerequisites) {
+            inDegrees[pre[0]]++;
+        }
+        Stack<Integer> readyToMove = new Stack<>();
+        for (int i = 0; i < numCourses; i++) {
+            if (inDegrees[i] == 0) {
+                readyToMove.push(i);
+            }
+        }
+        int count = 0;
+        int[] res = new int[numCourses];
+        while (!readyToMove.isEmpty()) {
+            int movedCourse = readyToMove.pop();
+            res[count] = movedCourse;
+            count++;
+            for (int[] pre : prerequisites) {
+                if (pre[1] == movedCourse) {
+                    if (--inDegrees[pre[0]] == 0) {
+                        readyToMove.push(pre[0]);
+                    }
+                }
+            }
+        }
+        return count == numCourses ? res : new int[]{};
     }
 
     public static boolean canFinish(int numCourses, int[][] prerequisites) {
@@ -1135,12 +1380,46 @@ public class Main {
         return -1;
     }
 
-    public static int removeDuplicates(int[] nums) {
-        if (nums.length == 0) {
-            return 0;
+
+    //找出所有重复的元素
+    public static List<Integer> findDuplicates(int[] nums) {
+        List<Integer> res = new ArrayList<>();
+        for (int num : nums) {
+            num = Math.abs(num);
+            if (nums[num - 1] > 0) {
+                nums[num - 1] = -nums[num - 1];
+            } else {
+                res.add(num);
+            }
         }
-        if (nums.length == 1) {
-            return 1;
+        return res;
+    }
+
+    //最多只能出现两次
+    public static int removeDuplicates2(int[] nums) {
+        int length = nums.length;
+        if (length <= 2) {
+            return length;
+        }
+        int i = 2;
+        int j = 2;
+        for (; i < length && j < length; i++) {
+            while (j < length && nums[j] == nums[i - 1] && nums[j] == nums[i - 2]) {
+                if (j == length - 1) {
+                    return i;
+                }
+                j++;
+            }
+            nums[i] = nums[j];
+            j++;
+        }
+        return i;
+    }
+
+    //最多只能出现一次
+    public static int removeDuplicates(int[] nums) {
+        if (nums.length <= 1) {
+            return nums.length;
         }
         int i = 0;
         int j = 1;
@@ -1445,6 +1724,7 @@ public class Main {
         return target.get(0);
     }
 
+    //search word in 2d board
     public static boolean exist(char[][] board, String word) {
         int row = board.length;
         if (row == 0) {
@@ -1888,6 +2168,50 @@ public class Main {
         return null;
     }
 
+    //数字个位在最后
+    public static ListNode addTwoNumbers2(ListNode l1, ListNode l2) {
+        Stack<Integer> s1 = new Stack<Integer>();
+        Stack<Integer> s2 = new Stack<Integer>();
+
+        while (l1 != null) {
+            s1.push(l1.val);
+            l1 = l1.next;
+        }
+        ;
+        while (l2 != null) {
+            s2.push(l2.val);
+            l2 = l2.next;
+        }
+
+        int sum = 0;
+        ListNode list = new ListNode(0);
+        while (!s1.empty() || !s2.empty()) {
+            if (!s1.empty()) {
+                sum += s1.pop();
+            }
+            if (!s2.empty()) {
+                sum += s2.pop();
+            }
+            list.val = sum % 10;
+            ListNode head = new ListNode(sum / 10);
+            head.next = list;
+            list = head;
+            sum /= 10;
+        }
+
+        return list.val == 0 ? list.next : list;
+    }
+
+    static int getLength(ListNode l1) {
+        int res = 0;
+        while (l1 != null) {
+            res++;
+            l1 = l1.next;
+        }
+        return res;
+    }
+
+    //数字个位在链表第一个
     public static ListNode addTwoNumbers(ListNode l1, ListNode l2) {
 
         ListNode ln = new ListNode((l1.val + l2.val) % 10);
@@ -2484,5 +2808,95 @@ class MyCalendarThree {
             }
         }
         return ans;
+    }
+}
+
+class RandomizedSet {
+
+    Map<Integer, Integer> dict;
+    List<Integer> list;
+    Random rand = new Random();
+
+    /**
+     * Initialize your data structure here.
+     */
+    public RandomizedSet() {
+        dict = new HashMap();
+        list = new ArrayList();
+    }
+
+    /**
+     * Inserts a value to the set. Returns true if the set did not already contain the specified
+     * element.
+     */
+    public boolean insert(int val) {
+        if (dict.containsKey(val)) {
+            return false;
+        }
+
+        dict.put(val, list.size());
+        list.add(val);
+        return true;
+    }
+
+    /**
+     * Removes a value from the set. Returns true if the set contained the specified element.
+     */
+    public boolean remove(int val) {
+        if (!dict.containsKey(val)) {
+            return false;
+        }
+
+        // move the last element to the place idx of the element to delete
+        int lastElement = list.get(list.size() - 1);
+        int idx = dict.get(val);
+        list.set(idx, lastElement);
+        dict.put(lastElement, idx);
+        // delete the last element
+        list.remove(list.size() - 1);
+        dict.remove(val);
+        return true;
+    }
+
+    /**
+     * Get a random element from the set.
+     */
+    public int getRandom() {
+        return list.get(rand.nextInt(list.size()));
+    }
+}
+
+class ShuffleArray {
+
+    int[] nums;
+    int[] originNums;
+
+    Random rand = new Random();
+
+    private int randRange(int min, int max) {
+        return rand.nextInt(max - min) + min;
+    }
+
+    private void swapAt(int i, int j) {
+        int temp = nums[i];
+        nums[i] = nums[j];
+        nums[j] = temp;
+    }
+
+    public ShuffleArray(int[] nums) {
+        this.nums = nums;
+        this.originNums = Arrays.copyOf(nums, nums.length);
+    }
+
+    public int[] reset() {
+        nums = Arrays.copyOf(originNums, nums.length);
+        return nums;
+    }
+
+    public int[] shuffle() {
+        for (int i = 0; i < nums.length; i++) {
+            swapAt(i, randRange(i, nums.length));
+        }
+        return nums;
     }
 }
