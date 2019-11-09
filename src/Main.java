@@ -328,34 +328,28 @@ public class Main {
         return searchPartitionK(new int[k], row, nums, target);
     }
 
-
-    //8 10 14 3 6 7 70 30 13 1 4
-    public static void diagonalPrint(TreeNode root) {
-        Queue<TreeNode> q = new LinkedList<>();
-        q.add(root);
-        while (!q.isEmpty()) {
-            TreeNode cur = q.peek();
-            while (cur != null) {
-                System.out.print(cur.val + " ");
-                if (cur.left != null) {
-                    q.add(cur.left);
+    //2d array 找最低path到终点
+    public int minPathSum(int[][] grid) {
+        int row = grid.length;
+        if (row == 0) {
+            return 0;
+        }
+        int col = grid[0].length;
+        int[][] dp = new int[row][col];
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+                if (i - 1 < 0 && j - 1 < 0) {
+                    dp[i][j] = grid[i][j];
+                } else if (i - 1 < 0 && j - 1 >= 0) {
+                    dp[i][j] = dp[i][j - 1] + grid[i][j];
+                } else if (i - 1 >= 0 && j - 1 < 0) {
+                    dp[i][j] = dp[i - 1][j] + grid[i][j];
+                } else {
+                    dp[i][j] = Math.min(dp[i - 1][j], dp[i][j - 1]) + grid[i][j];
                 }
-                cur = cur.right;
             }
-            q.poll();
         }
-
-    }
-
-    public boolean hasPathSum(TreeNode root, int sum) {
-        if (root == null) {
-            return false;
-        }
-        if (root.left == null && root.right == null) {
-            return root.val == sum;
-        }
-        return hasPathSum(root.left, sum - root.val) || hasPathSum(root.right, sum - root.val);
-
+        return dp[row - 1][col - 1];
     }
 
     public int findCircleNum(int[][] M) {
@@ -773,45 +767,9 @@ public class Main {
         return count == numCourses;
     }
 
-    public List<Integer> rightSideView(TreeNode root) {
-        List<Integer> res = new ArrayList<>();
-        Set<Integer> set = new HashSet<>();
-        if (root == null) {
-            return res;
-        }
-        dfs(root, 0, set, res);
-        return res;
-    }
 
-    void dfs(TreeNode x, int level, Set<Integer> set, List<Integer> res) {
-        if (x == null) {
-            return;
-        }
 
-        if (!set.contains(level)) {
-            set.add(level);
-            res.add(x.val);
-        }
 
-        dfs(x.right, level + 1, set, res);
-        dfs(x.left, level + 1, set, res);
-    }
-
-    public int diameterOfBinaryTree(TreeNode root) {
-        int[] ans = new int[]{1};
-        depth(root, ans);
-        return ans[0] - 1;
-    }
-
-    public int depth(TreeNode node, int[] ans) {
-        if (node == null) {
-            return 0;
-        }
-        int L = depth(node.left, ans);
-        int R = depth(node.right, ans);
-        ans[0] = Math.max(ans[0], L + R + 1);
-        return Math.max(L, R) + 1;
-    }
 
 
     public int nextGreaterElement(int n) {
@@ -1292,78 +1250,6 @@ public class Main {
             }
         }
         return res.toString();
-    }
-
-    /**
-     * Morris中序遍历二叉树(node每次往右移之前打印节点)
-     */
-    public static void morrisIn(TreeNode head) {
-        if (head == null) {
-            return;
-        }
-        TreeNode cur = head;
-        TreeNode prev = null;
-        while (cur != null) {
-            //没有左节点 直接去右节点
-            if (cur.left == null) {
-                System.out.println(cur.val);
-                cur = cur.right;
-            } else {
-                //找先驱节点，即为中序遍历之前的最后一个节点
-                prev = cur.left;
-                while (prev.right != null && prev.right != cur) {
-                    prev = prev.right;
-                }
-                if (prev.right == null) {
-                    prev.right = cur;
-                    cur = cur.left;
-                } else {
-                    prev.right = null;
-                    System.out.println(cur.val);
-                    cur = cur.right;
-                }
-            }
-        }
-    }
-
-    //  非递归中根遍历
-    public static void iterativeInOrder(TreeNode p) {
-        if (p == null) {
-            return;
-        }
-        Deque<TreeNode> stack = new ArrayDeque<>();
-        while (stack.size() != 0 || p != null) {
-            while (p != null) {
-                stack.addLast(p);
-                p = p.left;
-            }
-            p = stack.removeLast();
-            System.out.println(p.val);
-            p = p.right;
-        }
-    }
-
-    //**********非递归的分层输出的层次遍历**********
-    public static void iterativeLevelOrder_1(TreeNode p) {
-        if (p == null) {
-            return;
-        }
-        Queue<TreeNode> queue = new LinkedList<TreeNode>();
-        queue.offer(p);
-        while (!queue.isEmpty()) {
-            int levelNum = queue.size();
-            for (int i = 0; i < levelNum; i++) {
-                p = queue.poll();
-                if (p.left != null) {
-                    queue.offer(p.left);
-                }
-                if (p.right != null) {
-                    queue.offer(p.right);
-                }
-                System.out.println(p.val);
-            }
-
-        }
     }
 
     public void reverseString(char[] s) {
@@ -3538,16 +3424,6 @@ class KthLargestElementInAnArray {
     }
 }
 
-class TreeNode {
-
-    int val;
-    TreeNode left;
-    TreeNode right;
-
-    TreeNode(int x) {
-        val = x;
-    }
-}
 
 class ListNode {
 
