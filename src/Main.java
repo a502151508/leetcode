@@ -1,23 +1,506 @@
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javafx.util.Pair;
 import java.util.*;
-import sun.security.util.Length;
 
 public class Main {
 
     public static void main(String[] args) {
-        ListNode l1 = new ListNode(7);
-        ListNode l2 = new ListNode(2);
-        ListNode l3 = new ListNode(4);
-        ListNode l4 = new ListNode(3);
-        ListNode l5 = new ListNode(5);
-        ListNode l6 = new ListNode(6);
-        ListNode l7 = new ListNode(4);
-        l1.next = l2;
-        l2.next = l3;
-        l3.next = l4;
-        l5.next = l6;
-        l6.next = l7;
-        addTwoNumbers2(l1, l5);
+        Main m = new Main();
+
+    }
+
+
+    //O(n(words)*m(ave letters))  O(Letters Numbers)
+    public List<String> findAllConcatenatedWordsInADict(String[] words) {
+        Arrays.sort(words, Comparator.comparingInt(String::length));
+        TrieNodeArray root = new TrieNodeArray();
+        List<String> res = new ArrayList<>();
+        for (String word : words) {
+            TrieNodeArray node = root;
+            for (Character c : word.toCharArray()) {
+                if (node.children[c - 'a'] != null) {
+                    node = node.children[c - 'a'];
+                } else {
+                    node.children[c - 'a'] = new TrieNodeArray();
+                    node = node.children[c - 'a'];
+                }
+            }
+            node.word = new String(word);
+
+            int count = 0;
+            boolean flag = false;
+            TrieNodeArray curNode = root;
+            for (char c : word.toCharArray()) {
+                curNode = curNode.children[c - 'a'];
+                count++;
+                if (curNode != null && !word.equals(curNode.word)) {
+                    if (curNode.word != null) {
+                        flag = checkIfConcatenated(root, word.substring(count));
+                    }
+                    if (flag) {
+                        res.add(word);
+                        break;
+                    }
+                }
+            }
+        }
+        return res;
+    }
+
+
+    private boolean checkIfConcatenated(TrieNodeArray root, String word) {
+        if (word.length() == 0) {
+            return true;
+        }
+        TrieNodeArray node = root;
+        int count = 0;
+        boolean flag = false;
+        for (char c : word.toCharArray()) {
+            if (node.children[c - 'a'] != null) {
+                node = node.children[c - 'a'];
+                count++;
+                if (node.word != null) {
+                    flag = checkIfConcatenated(root, word.substring(count));
+                }
+            } else {
+                return false;
+            }
+            if (flag) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    //用frist index做映射
+    public boolean isIsomorphic1(String s, String t) {
+        char[] ch1 = s.toCharArray();
+        char[] ch2 = t.toCharArray();
+        int len = s.length();
+        for (int i = 0; i < len; i++) {
+            if (s.indexOf(ch1[i]) != t.indexOf(ch2[i])) {
+                return false;
+            }
+        }
+        return true;
+
+    }
+
+    public static boolean isIsomorphic(String s, String t) {
+        Map<Character, Character> smap = new HashMap<>();
+        Set<Character> hasAssign = new HashSet<>();
+        for (int i = 0; i < s.length(); i++) {
+            if (smap.containsKey(s.charAt(i)) && smap.get(s.charAt(i)) != t.charAt(i)) {
+                return false;
+            }
+            if (!smap.containsKey(s.charAt(i)) && hasAssign.contains(t.charAt(i))) {
+                return false;
+            }
+            smap.put(s.charAt(i), t.charAt(i));
+            hasAssign.add(t.charAt(i));
+        }
+        return true;
+    }
+
+
+    public void solveSudoku(char[][] board) {
+        if (board == null || board.length == 0) {
+            return;
+        }
+        solve(board);
+    }
+
+    public boolean solve(char[][] board) {
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[0].length; j++) {
+                if (board[i][j] == '.') {
+                    for (char c = '1'; c <= '9'; c++) {//trial. Try 1 through 9
+                        if (isValid(board, i, j, c)) {
+                            board[i][j] = c; //Put c for this cell
+
+                            if (solve(board)) {
+                                return true; //If it's the solution return true
+                            } else {
+                                board[i][j] = '.'; //Otherwise go back
+                            }
+                        }
+                    }
+
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean isValid(char[][] board, int row, int col, char c) {
+        for (int i = 0; i < 9; i++) {
+            if (board[i][col] == c) {
+                return false; //check row
+            }
+            if (board[row][i] == c) {
+                return false; //check column
+            }
+            if (board[3 * (row / 3) + i / 3][3 * (col / 3) + i % 3] != '.' &&
+                board[3 * (row / 3) + i / 3][3 * (col / 3) + i % 3] == c) {
+                return false; //check 3*3 block
+            }
+        }
+        return true;
+    }
+
+
+    public static boolean isValidSudoku(char[][] board) {
+        Set<Character>[] row = new Set[9];
+        Set<Character>[] col = new Set[9];
+        Set<Character>[] box = new Set[9];
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                int boxIndex = (i / 3) * 3 + j / 3;
+                if (row[i] == null) {
+                    row[i] = new HashSet<>();
+                }
+                if (col[j] == null) {
+                    col[j] = new HashSet<>();
+                }
+                if (box[boxIndex] == null) {
+                    box[boxIndex] = new HashSet<>();
+                }
+                char cur = board[i][j];
+                if (cur == '.') {
+                    continue;
+                }
+                if (row[i].contains(cur) || col[j].contains(cur) || box[boxIndex]
+                    .contains(cur)) {
+                    return false;
+                }
+                row[i].add(cur);
+                col[j].add(cur);
+                box[boxIndex].add(cur);
+            }
+        }
+        return true;
+    }
+
+    //类似，约瑟夫环，寻找递推公式 f(n个数，第m个删除) = [f(n-1,m)+m]%n  n>1
+    //f(n,m) =1 n=1
+    //通过删除一个数字之后重新开始排序，找到新的序列与原来的序列之间序号的关系
+
+    //消除数字
+    public int lastRemaining(int n) {
+        //通过找规律分析f(n)与f(n/2)的递推公式
+        //1 2 3 4 5 6 与 1 2 3 4 5 6 7 8 9 10 11 12
+        //后者一次删除后变成 2 4 6 8 10 12
+        //先除以二 变成1 2 3 4 5 6
+        //第二次是倒过来删除，相当于 6 5 4 3 2 1
+        //无论是否数组倒过来，最后剩下的位置的一定一样，这两个位置相加起来等于n/2+1
+        //通过n/2+1-lastRemain(n/2) 求出最后的位置的数字，然后乘二恢复
+        return n == 1 ? 1 : 2 * (n / 2 + 1 - lastRemaining(n / 2));
+    }
+
+    //循环链表删除节点
+    static ListNode deleteNodeFromCircularList(ListNode head, int key) {
+        if (head == null) {
+            return null;
+        }
+        // Find the required node
+        ListNode curr = head, prev = new ListNode(0);
+        while (curr.val != key) {
+            if (curr.next == head) {
+                System.out.printf("\nGiven node is not found"
+                    + " in the list!!!");
+                break;
+            }
+            prev = curr;
+            curr = curr.next;
+        }
+
+        // Check if node is only node
+        if (curr.next == head) {
+            head = null;
+            return head;
+        }
+        // If more than one node, check if
+        // it is first node
+        if (curr == head) {
+            prev = head;
+            while (prev.next != head) {
+                prev = prev.next;
+            }
+            head = curr.next;
+            prev.next = head;
+        }
+        // check if node is last node
+        else if (curr.next == head) {
+            prev.next = head;
+        } else {
+            prev.next = curr.next;
+        }
+        return head;
+    }
+
+    //递归做法，每次判断截断字符串之后继续判断
+    public int longestSubstring(String s, int k) {
+        int len = s.length();
+        if (len == 0 || k > len) {
+            return 0;
+        }
+        if (k < 2) {
+            return len;
+        }
+
+        return countCharater(s.toCharArray(), k, 0, len - 1);
+    }
+
+    private static int countCharater(char[] chars, int k, int p1, int p2) {
+        if (p2 - p1 + 1 < k) {
+            return 0;
+        }
+        int[] times = new int[26];  //  26个字母
+        //  统计出现频次
+        for (int i = p1; i <= p2; ++i) {
+            ++times[chars[i] - 'a'];
+        }
+        //  如果该字符出现频次小于k，则不可能出现在结果子串中
+        //  分别排除，然后挪动两个指针
+        while (p2 - p1 + 1 >= k && times[chars[p1] - 'a'] < k) {
+            ++p1;
+        }
+        while (p2 - p1 + 1 >= k && times[chars[p2] - 'a'] < k) {
+            --p2;
+        }
+
+        if (p2 - p1 + 1 < k) {
+            return 0;
+        }
+        //  得到临时子串，再递归处理
+        for (int i = p1; i <= p2; ++i) {
+            //  如果第i个不符合要求，切分成左右两段分别递归求得
+            if (times[chars[i] - 'a'] < k) {
+                return Math
+                    .max(countCharater(chars, k, p1, i - 1), countCharater(chars, k, i + 1, p2));
+            }
+        }
+        return p2 - p1 + 1;
+    }
+
+
+    public boolean searchPartitionK(int[] groups, int row, int[] nums, int target) {
+        if (row < 0) {
+            return true;
+        }
+        int v = nums[row--];
+        for (int i = 0; i < groups.length; i++) {
+            if (groups[i] + v <= target) {
+                groups[i] += v;
+                if (searchPartitionK(groups, row, nums, target)) {
+                    return true;
+                }
+                groups[i] -= v;
+            }
+            if (groups[i] == 0) {
+                break;
+            }
+        }
+        return false;
+    }
+
+    //平分成k组  回溯法暴力搜索
+    public boolean canPartitionKSubsets(int[] nums, int k) {
+        int sum = Arrays.stream(nums).sum();
+        if (sum % k > 0) {
+            return false;
+        }
+        int target = sum / k;
+
+        Arrays.sort(nums);
+        int row = nums.length - 1;
+        if (nums[row] > target) {
+            return false;
+        }
+        while (nums[row] == target) {
+            row--;
+            k--;
+        }
+        return searchPartitionK(new int[k], row, nums, target);
+    }
+
+
+    //8 10 14 3 6 7 70 30 13 1 4
+    public static void diagonalPrint(TreeNode root) {
+        Queue<TreeNode> q = new LinkedList<>();
+        q.add(root);
+        while (!q.isEmpty()) {
+            TreeNode cur = q.peek();
+            while (cur != null) {
+                System.out.print(cur.val + " ");
+                if (cur.left != null) {
+                    q.add(cur.left);
+                }
+                cur = cur.right;
+            }
+            q.poll();
+        }
+
+    }
+
+    public boolean hasPathSum(TreeNode root, int sum) {
+        if (root == null) {
+            return false;
+        }
+        if (root.left == null && root.right == null) {
+            return root.val == sum;
+        }
+        return hasPathSum(root.left, sum - root.val) || hasPathSum(root.right, sum - root.val);
+
+    }
+
+    public int findCircleNum(int[][] M) {
+        int N = M.length;
+        if (N <= 1) {
+            return N;
+        }
+        int[] root = new int[N];
+        int[] ids = new int[N];
+        for (int i = 0; i < N; i++) {
+            root[i] = i;
+            ids[i] = 1;
+        }
+        for (int i = 0; i < N - 1; i++) {
+            for (int j = i + 1; j < N; j++) {
+                if (M[i][j] == 1) {
+                    unionFind(i, j, root, ids);
+                }
+            }
+        }
+        return countSets(root);
+    }
+
+    public int mincostTickets(int[] days, int[] costs) {
+        int[] dp = new int[days.length];
+        int[] durations = new int[]{1, 7, 30};
+        for (int i = dp.length - 1; i >= 0; i--) {
+            int j = i;
+            int min = Integer.MAX_VALUE;
+            for (int d = 0; d < durations.length; d++) {
+                while (j <= days.length - 1 && days[j] - days[i] < durations[d]) {
+                    j++;
+                }
+                if (j == days.length) {
+                    min = Math.min(min, costs[d]);
+                } else {
+                    min = Math.min(min, dp[j] + costs[d]);
+                }
+            }
+            dp[i] = min;
+        }
+        return dp[0];
+    }
+
+    public int coinChange(int[] coins, int amount) {
+        int[] dp = new int[amount + 1];
+        Arrays.fill(dp, -1);
+        dp[0] = 0;
+        for (int i = 1; i <= amount; i++) {
+            int min = Integer.MAX_VALUE;
+            boolean flag = false;
+            for (int c : coins) {
+                if (i - c >= 0 && dp[i - c] != -1) {
+                    flag = true;
+                    min = Math.min(min, dp[i - c] + 1);
+                }
+            }
+            if (flag) {
+                dp[i] = min;
+            }
+        }
+        return dp[amount];
+    }
+
+    public int[][] intervalIntersection(int[][] A, int[][] B) {
+        int L1 = A.length;
+        int L2 = B.length;
+        int i = 0, j = 0;
+        List<int[]> res = new ArrayList<>();
+        while (i < L1 && j < L2) {
+            if (canMerge(A[i], B[j])) {
+                int start = Math.max(A[i][0], B[j][0]);
+                int end = Math.min(A[i][1], B[j][1]);
+                res.add(new int[]{start, end});
+            }
+            if (A[i][1] > B[j][1]) {
+                j++;
+            } else {
+                i++;
+            }
+        }
+        int[][] resA = new int[res.size()][2];
+        res.toArray(resA);
+        return resA;
+    }
+
+
+    public List<Integer> arraysIntersection(int[] arr1, int[] arr2, int[] arr3) {
+        List<Integer> res = new ArrayList<>();
+        int L1 = arr1.length, L2 = arr2.length, L3 = arr3.length;
+        int i = 0, j = 0, k = 0;
+        while (i < L1 && j < L2 && k < L3) {
+            if (arr1[i] == arr2[j] && arr1[i] == arr3[k]) {
+                res.add(arr1[i]);
+                i++;
+                k++;
+                j++;
+            } else if (arr1[i] <= arr2[j] && arr1[i] <= arr3[k]) {
+                i++;
+            } else if (arr2[j] <= arr1[i] && arr2[j] <= arr3[k]) {
+                j++;
+            } else if (arr3[k] <= arr2[j] && arr3[k] <= arr1[i]) {
+                k++;
+            }
+        }
+        return res;
+    }
+
+    //两个数组 不去重，使用排序方法，或者hashmap计数
+    public int[] intersect(int[] nums1, int[] nums2) {
+        Arrays.sort(nums1);
+        Arrays.sort(nums2);
+        int i = 0, j = 0, k = 0;
+        while (i < nums1.length && j < nums2.length) {
+            if (nums1[i] < nums2[j]) {
+                ++i;
+            } else if (nums1[i] > nums2[j]) {
+                ++j;
+            } else {
+                nums1[k++] = nums1[i++];
+                ++j;
+            }
+
+        }
+        return Arrays.copyOfRange(nums1, 0, k);
+    }
+
+    //两个数组取交集， 要求去重
+    public int[] intersection(int[] nums1, int[] nums2) {
+        HashSet<Integer> set1 = new HashSet<Integer>();
+        for (Integer n : nums1) {
+            set1.add(n);
+        }
+        HashSet<Integer> set2 = new HashSet<Integer>();
+        for (Integer n : nums2) {
+            set2.add(n);
+        }
+        set1.retainAll(set2);
+        int[] res = new int[set1.size()];
+        int i = 0;
+        for (int n : set1) {
+            res[i++] = n;
+        }
+
+        return res;
     }
 
     public int findPeakElement(int[] nums) {
@@ -225,7 +708,16 @@ public class Main {
 
     }
 
-    //topological sort
+    //拓扑排序
+    public int[] sortItems(int n, int m, int[] group, List<List<Integer>> beforeItems) {
+        //构造小组的依赖关系和组内项目的依赖关系。
+        //判断小组间是否有冲突，没冲突计算出小组的拓扑排序。
+        //判断每个小组内项目是否有冲突，没冲突计算出小组内项目的拓扑排序。
+        return null;
+    }
+
+
+    //topological sort 拓扑排序
     public int[] findOrder(int numCourses, int[][] prerequisites) {
 
         int[] inDegrees = new int[numCourses];
@@ -387,12 +879,28 @@ public class Main {
         }
     }
 
+    //BF, check every possible subarray
+    public int subarraySumBF(int[] nums, int k) {
+        int count = 0;
+        for (int start = 0; start < nums.length; start++) {
+            int sum = 0;
+            for (int end = start; end < nums.length; end++) {
+                sum += nums[end];
+                if (sum == k) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
     public static int subarraySum(int[] nums, int k) {
         int count = 0, sum = 0;
         HashMap<Integer, Integer> map = new HashMap<>();
         map.put(0, 1);
         for (int i = 0; i < nums.length; i++) {
             sum += nums[i];
+            //如果当前的累积和减去之前某一个累积和等于k，相当于中间有一段的和为k
             if (map.containsKey(sum - k)) {
                 count += map.get(sum - k);
             }
@@ -950,9 +1458,20 @@ public class Main {
 
     private static int getRoot(int a, int[] root) {
         while (a != root[a]) {
+            root[a] = root[root[a]];
             a = root[a];
         }
         return a;
+    }
+
+    private int countSets(int[] root) {
+        int cnt = 0;
+        for (int i = 0; i <= root.length - 1; i++) {
+            if (getRoot(i, root) == i) {
+                cnt++;
+            }
+        }
+        return cnt;
     }
 
 
@@ -1271,6 +1790,83 @@ public class Main {
         return res.toString();
     }
 
+
+    int res = 0;
+    int[] offRow = new int[]{0, 1, 0, -1};
+    int[] offCol = new int[]{1, 0, -1, 0};
+
+    //必须每个空白都踩 0为空白 -1为障碍
+    public int uniquePathsIII(int[][] grid) {
+        int row = grid.length;
+        if (row == 0) {
+            return 0;
+        }
+        int count = 0;
+        Pair<Integer, Integer> start = new Pair<>(0, 0);
+        int col = grid[0].length;
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+                if (grid[i][j] == 1) {
+                    start = new Pair<>(i, j);
+                }
+                if (grid[i][j] == 0) {
+                    count++;
+                }
+            }
+        }
+        backtrackingUniquePath(start.getKey(), start.getValue(), count + 1, grid);
+        return res;
+
+    }
+
+    private void backtrackingUniquePath(int row, int col, int count, int[][] grid) {
+        int cur = grid[row][col];
+        if (cur == 2) {
+            if (count == 0) {
+                res++;
+            }
+            return;
+        }
+
+        grid[row][col] = -1;
+        for (int i = 0; i < 4; i++) {
+            int newRow = row + offRow[i];
+            int newCol = col + offCol[i];
+            if (inGrid(newRow, newCol, grid) && grid[newRow][newCol] != -1) {
+                backtrackingUniquePath(newRow, newCol, count - 1, grid);
+            }
+        }
+        grid[row][col] = cur;
+    }
+
+    private boolean inGrid(int row, int col, int[][] grid) {
+        return row >= 0 && col >= 0 && row < grid.length && col < grid[0].length;
+    }
+
+
+    public int uniquePathsWithObstacles(int[][] obstacleGrid) {
+        int n = obstacleGrid.length;
+        int m = obstacleGrid[0].length;
+        if (n == 0) {
+            return 0;
+        }
+        int[][] dp = new int[n + 1][m + 1];
+        dp[1][1] = obstacleGrid[0][0] == 0 ? 1 : 0;
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= m; j++) {
+                if (i == 1 && j == 1) {
+                    continue;
+                }
+                if (obstacleGrid[i - 1][j - 1] == 1) {
+                    dp[i][j] = 0;
+                } else {
+                    dp[i][j] = dp[i - 1][j] + dp[i][j - 1];
+                }
+            }
+        }
+        return dp[n][m];
+    }
+
     public static int uniquePaths(int m, int n) {
         int[][] dp = new int[n + 1][m + 1];
         dp[1][1] = 1;
@@ -1438,6 +2034,7 @@ public class Main {
         return i + 1;
     }
 
+    //行和列分别有序 时间复杂度(n+m)
     public boolean searchMatrix(int[][] matrix, int target) {
         if (matrix.length == 0) {
             return false;
@@ -1460,6 +2057,264 @@ public class Main {
         return false;
     }
 
+    /**
+     * word ladder list 1.找到每个单词的转移分支，通过*来遮盖某一位来完成这个map 2。双向bfs，每个bfs节点保存当前的所有路径
+     * 3.相遇后将当前单词列表加入答案，并完成本次队列里的遍历后结束 4
+     */
+    public static List<List<String>> findLadders(String beginWord, String endWord,
+        List<String> wordList) {
+        Set<List<String>> res = new HashSet<>();
+        if (!wordList.contains(endWord)) {
+            return new ArrayList<>(res);
+        }
+        if (beginWord.equals(endWord)) {
+            List<String> singleResult = new ArrayList<>();
+            singleResult.add(beginWord);
+            res.add(singleResult);
+            return new ArrayList<>(res);
+        }
+
+        Map<String, List<String>> comboDic = new HashMap<>();
+        for (String word : wordList) {
+            for (int i = 0; i < beginWord.length(); i++) {
+                StringBuilder mask = new StringBuilder();
+                mask.append(word.substring(0, i));
+                mask.append("*");
+                mask.append(word.substring(i + 1));
+                List<String> wordListForAMask = comboDic
+                    .getOrDefault(mask.toString(), new ArrayList<>());
+                wordListForAMask.add(word);
+                comboDic.put(mask.toString(), wordListForAMask);
+            }
+        }
+
+        Queue<Pair<String, List<String>>> qF = new LinkedList<>();
+        Queue<Pair<String, List<String>>> qE = new LinkedList<>();
+        Map<String, List<List<String>>> isVistedF = new HashMap<>();
+        Map<String, List<List<String>>> isVistedE = new HashMap<>();
+        int resSize = Integer.MAX_VALUE;
+        qF.offer(new Pair<>(beginWord, new ArrayList<>(Arrays.asList(new String[]{beginWord}))));
+        qE.offer(new Pair<>(endWord, new ArrayList<>(Arrays.asList(new String[]{endWord}))));
+        List<List<String>> eVisited = new ArrayList<>();
+        List<List<String>> fVisited = new ArrayList<>();
+        eVisited.add(qE.peek().getValue());
+        isVistedE.put(endWord, eVisited);
+        fVisited.add(qF.peek().getValue());
+        isVistedF.put(beginWord, fVisited);
+        while (!qF.isEmpty() || !qE.isEmpty()) {
+            if (!qF.isEmpty()) {
+                Pair<String, List<String>> curPair = qF.remove();
+                if (!(!res.isEmpty() && resSize <= curPair.getValue().size())) {
+                    String curWord = curPair.getKey();
+                    for (int i = 0; i < curPair.getKey().length(); i++) {
+                        StringBuilder mask = new StringBuilder();
+                        mask.append(curWord.substring(0, i));
+                        mask.append("*");
+                        mask.append(curWord.substring(i + 1));
+                        List<String> wordListForAMask = comboDic
+                            .getOrDefault(mask.toString(), new ArrayList<>());
+                        for (String nextWord : wordListForAMask) {
+                            if (nextWord.equals(endWord)) {
+                                curPair.getValue().add(endWord);
+                                List<String> newRes = new ArrayList<>(
+                                    Arrays.asList(new String[curPair.getValue().size()]));
+                                Collections.copy(newRes, curPair.getValue());
+                                if (newRes.size() <= resSize) {
+                                    res.add(newRes);
+                                    resSize = newRes.size();
+                                }
+                            }
+                            if (isVistedE.containsKey(nextWord)) {
+                                List<String> newRes = new ArrayList<>();
+                                newRes.addAll(curPair.getValue());
+                                List<List<String>> anotherParts = isVistedE.get(nextWord);
+                                for (List<String> anotherPart : anotherParts) {
+                                    List<String> wholeRes = new ArrayList<>(newRes);
+                                    wholeRes.addAll(anotherPart);
+                                    if (wholeRes.size() <= resSize) {
+                                        res.add(wholeRes);
+                                        resSize = wholeRes.size();
+                                    }
+                                }
+                            } else {
+                                List<String> next = new ArrayList<>();
+                                next.addAll(curPair.getValue());
+                                next.add(nextWord);
+                                List<List<String>> allPath = isVistedF
+                                    .getOrDefault(nextWord, new ArrayList<>());
+                                allPath.add(next);
+                                isVistedF.put(nextWord, allPath);
+                                qF.offer(new Pair<>(nextWord, next));
+                            }
+                        }
+                    }
+                }
+            }
+            if (!qE.isEmpty()) {
+                Pair<String, List<String>> curPair = qE.remove();
+                if (!(!res.isEmpty() && resSize <= curPair.getValue().size())) {
+                    String curWord = curPair.getKey();
+                    for (int i = 0; i < curPair.getKey().length(); i++) {
+                        StringBuilder mask = new StringBuilder();
+                        mask.append(curWord.substring(0, i));
+                        mask.append("*");
+                        mask.append(curWord.substring(i + 1));
+                        List<String> wordListForAMask = comboDic
+                            .getOrDefault(mask.toString(), new ArrayList<>());
+                        for (String nextWord : wordListForAMask) {
+                            if (nextWord.equals(endWord)) {
+                                curPair.getValue().add(endWord);
+                                List<String> newRes = new ArrayList<>(
+                                    Arrays.asList(new String[curPair.getValue().size()]));
+                                Collections.copy(newRes, curPair.getValue());
+                                if (newRes.size() <= resSize) {
+                                    res.add(newRes);
+                                    resSize = newRes.size();
+                                }
+                            }
+                            if (isVistedF.containsKey(nextWord)) {
+                                List<String> newRes = new ArrayList<>(curPair.getValue());
+                                List<List<String>> anotherParts = isVistedF.get(nextWord);
+                                for (List<String> anotherPart : anotherParts) {
+                                    List<String> wholeRes = new ArrayList<>(anotherPart);
+                                    wholeRes.addAll(newRes);
+                                    if (wholeRes.size() <= resSize) {
+                                        res.add(wholeRes);
+                                        resSize = wholeRes.size();
+                                    }
+                                }
+                            } else {
+                                List<String> next = new LinkedList<>();
+                                next.addAll(curPair.getValue());
+                                next.add(0, nextWord);
+                                List<List<String>> allPath = isVistedF
+                                    .getOrDefault(nextWord, new ArrayList<>());
+                                allPath.add(next);
+                                isVistedE.put(nextWord, allPath);
+                                qE.offer(new Pair<>(nextWord, next));
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+        return new ArrayList<>(res);
+    }
+
+
+    public List<List<String>> findLaddersZUIJIA(String beginWord, String endWord,
+        List<String> wordList) {
+        List<List<String>> ans = new ArrayList<>();
+        if (!wordList.contains(endWord)) {
+            return ans;
+        }
+        // 利用 BFS 得到所有的邻居节点
+        HashMap<String, ArrayList<String>> map = new HashMap<>();
+        bfs(beginWord, endWord, wordList, map);
+        ArrayList<String> temp = new ArrayList<String>();
+        // temp 用来保存当前的路径
+        temp.add(beginWord);
+        findLaddersHelper(beginWord, endWord, map, temp, ans);
+        return ans;
+    }
+
+    private void findLaddersHelper(String beginWord, String endWord,
+        HashMap<String, ArrayList<String>> map,
+        ArrayList<String> temp, List<List<String>> ans) {
+        if (beginWord.equals(endWord)) {
+            ans.add(new ArrayList<String>(temp));
+            return;
+        }
+        // 得到所有的下一个的节点
+        ArrayList<String> neighbors = map.getOrDefault(beginWord, new ArrayList<String>());
+        for (String neighbor : neighbors) {
+            temp.add(neighbor);
+            findLaddersHelper(neighbor, endWord, map, temp, ans);
+            temp.remove(temp.size() - 1);
+        }
+    }
+
+    //利用递归实现了双向搜索
+    private void bfs(String beginWord, String endWord, List<String> wordList,
+        HashMap<String, ArrayList<String>> map) {
+        Set<String> set1 = new HashSet<String>();
+        set1.add(beginWord);
+        Set<String> set2 = new HashSet<String>();
+        set2.add(endWord);
+        Set<String> wordSet = new HashSet<String>(wordList);
+        bfsHelper(set1, set2, wordSet, true, map);
+    }
+
+    // direction 为 true 代表向下扩展，false 代表向上扩展
+    private boolean bfsHelper(Set<String> set1, Set<String> set2, Set<String> wordSet,
+        boolean direction,
+        HashMap<String, ArrayList<String>> map) {
+        //set1 为空了，就直接结束
+        //比如下边的例子就会造成 set1 为空
+    /*	"hot"
+		"dog"
+		["hot","dog"]*/
+        if (set1.isEmpty()) {
+            return false;
+        }
+        // set1 的数量多，就反向扩展
+        if (set1.size() > set2.size()) {
+            return bfsHelper(set2, set1, wordSet, !direction, map);
+        }
+        // 将已经访问过单词删除
+        wordSet.removeAll(set1);
+        wordSet.removeAll(set2);
+
+        boolean done = false;
+
+        // 保存新扩展得到的节点
+        Set<String> set = new HashSet<String>();
+
+        for (String str : set1) {
+            //遍历每一位
+            for (int i = 0; i < str.length(); i++) {
+                char[] chars = str.toCharArray();
+
+                // 尝试所有字母
+                for (char ch = 'a'; ch <= 'z'; ch++) {
+                    if (chars[i] == ch) {
+                        continue;
+                    }
+                    chars[i] = ch;
+
+                    String word = new String(chars);
+
+                    // 根据方向得到 map 的 key 和 val
+                    String key = direction ? str : word;
+                    String val = direction ? word : str;
+
+                    ArrayList<String> list =
+                        map.containsKey(key) ? map.get(key) : new ArrayList<String>();
+
+                    //如果相遇了就保存结果
+                    if (set2.contains(word)) {
+                        done = true;
+                        list.add(val);
+                        map.put(key, list);
+                    }
+
+                    //如果还没有相遇，并且新的单词在 word 中，那么就加到 set 中
+                    if (!done && wordSet.contains(word)) {
+                        set.add(word);
+                        list.add(val);
+                        map.put(key, list);
+                    }
+                }
+            }
+        }
+
+        //一般情况下新扩展的元素会多一些，所以我们下次反方向扩展  set2
+        return done || bfsHelper(set2, set, wordSet, !direction, map);
+
+    }
+
+    //word ladder length
     public static int ladderLength(String beginWord, String endWord, List<String> wordList) {
         Map<String, List<String>> comboDic = new HashMap<>();
         if (!wordList.contains(endWord)) {
@@ -1782,6 +2637,7 @@ public class Main {
         return false;
     }
 
+    //Accepted
     public static List<List<String>> groupAnagrams3(String[] strs) {
 
         HashMap<String, ArrayList<String>> map = new HashMap();
@@ -1805,6 +2661,7 @@ public class Main {
         return new String(arr);
     }
 
+    //time exceeded
     public static List<List<String>> groupAnagrams(String[] strs) {
         List<List<String>> result = new LinkedList<>();
         if (strs.length == 0) {
@@ -1855,58 +2712,15 @@ public class Main {
         return result;
     }
 
-    public static List<List<String>> groupAnagrams1(String[] strs) {
-        List<List<String>> result = new LinkedList<>();
-        if (strs.length == 0) {
-            return new LinkedList<>();
-        }
-        Map<Integer, List<String>> countGroup = new HashMap();
-        for (String str : strs) {
-            if (countGroup.containsKey(str.length())) {
-                countGroup.get(str.length()).add(str);
-            } else {
-                LinkedList<String> l = new LinkedList<>();
-                l.add(str);
-                countGroup.put(str.length(), l);
-            }
-        }
-
-        for (Map.Entry<Integer, List<String>> e : countGroup.entrySet()) {
-            List<String> cur = e.getValue();
-            while (cur.size() != 0) {
-                List<String> singleResult = new LinkedList();
-                String s = cur.get(0);
-                singleResult.add(s);
-                cur.remove(0);
-                outer:
-                for (int i = 0; i < cur.size(); i++) {
-                    for (int j = 0; j < s.length(); j++) {
-                        if (!cur.get(i).contains(String.valueOf(s.charAt(j)))) {
-                            break outer;
-                        }
-                    }
-                    singleResult.add(cur.get(i));
-                    cur.remove(i);
-                }
-                result.add(singleResult);
-            }
-            if (cur.size() != 0) {
-                List<String> singleResult = new LinkedList();
-                singleResult.add(cur.get(0));
-                result.add(singleResult);
-            }
-        }
-        return result;
-    }
-
-    public static int search(int[] nums, int target) {
+    //旋转数组中搜索
+    public static int searchInRotatedArray(int[] nums, int target) {
         if (nums.length == 0) {
             return -1;
         }
-        return findTarget(0, nums.length - 1, target, nums);
+        return findTargetInRotatedArray(0, nums.length - 1, target, nums);
     }
 
-    public static int findTarget(int start, int end, int target, int[] nums) {
+    public static int findTargetInRotatedArray(int start, int end, int target, int[] nums) {
         if (start == end || start + 1 == end) {
             if (nums[start] == target) {
                 return start;
@@ -1917,27 +2731,78 @@ public class Main {
             }
         }
         int mid = (end + start) / 2;
+        //mid 小于target
         if (nums[mid] < target) {
+            //end 大于等于target 说明mid 到end 是递增序列 在后半段找
             if (nums[end] >= target) {
-                return findTarget(mid, end, target, nums);
-            } else {
-                int res = findTarget(start, mid, target, nums);
-                return res != -1 ? res : findTarget(mid, end, target, nums);
+                return findTargetInRotatedArray(mid, end, target, nums);
+            }
+            //end 小于target 说明后半段中间有拐头 两边都有可能要搜
+            else {
+                int res = findTargetInRotatedArray(start, mid, target, nums);
+                return res != -1 ? res : findTargetInRotatedArray(mid, end, target, nums);
             }
 
-        } else if (nums[mid] > target) {
+        }
+        //mid比target大
+        else if (nums[mid] > target) {
+            //start小于target 说明前半段递增，直接咱前半段里找
             if (nums[start] <= target) {
-                return findTarget(start, mid, target, nums);
-            } else {
-                int res = findTarget(mid, end, target, nums);
-                return res != -1 ? res : findTarget(start, mid, target, nums);
+                return findTargetInRotatedArray(start, mid, target, nums);
+            }
+            //start比target大说明前半段可能有拐点，两边都有可能
+            else {
+                int res = findTargetInRotatedArray(mid, end, target, nums);
+                return res != -1 ? res : findTargetInRotatedArray(start, mid, target, nums);
             }
         } else {
             return mid;
         }
     }
 
-    public static int maxProfit(int[] prices) {
+    public int maxProfitWithCD(int[] prices) {
+
+        int n = prices.length;
+        int dp_i_0 = 0, dp_i_1 = Integer.MIN_VALUE;
+        int dp_pre_0 = 0; // 代表 dp[i-2][0]
+        for (int i = 0; i < n; i++) {
+            int temp = dp_i_0;
+            dp_i_0 = Math.max(dp_i_0, dp_i_1 + prices[i]);
+            dp_i_1 = Math.max(dp_i_1, dp_pre_0 - prices[i]);
+            dp_pre_0 = temp;
+        }
+        return dp_i_0;
+
+
+    }
+
+    //sell stock 3， only allow do K transaction
+    public int maxProfit3(int K, int[] prices) {
+        if (prices.length == 0) {
+            return 0;
+        }
+        if (K >= prices.length / 2) {
+            return maxProfit2(prices);
+        }
+        int[][] dp = new int[prices.length][K + 1];
+        for (int k = 1; k <= K; k++) {
+            int min = prices[0];
+            for (int i = 1; i < prices.length; i++) {
+                //找出第 1 天到第 i 天 prices[buy] - dp[buy][k - 1] 的最小值
+                //dp[i][k]应为求 price[i]-price[j]+dp[j][k-1]的最大值即为最后一次买入
+                //在j天，并与不买入的数值比较，也就是dp[i-1][k].
+                //转化为求price[j]-dp[j][k-1]的最小值
+                //price[j]-dp[j][k-1] 其中j的取值为0~i，所以可用一个min储存起来，以i遍历累积过去。
+                min = Math.min(prices[i] - dp[i][k - 1], min);
+                //比较不操作和选择一天买入的哪个值更大
+                dp[i][k] = Math.max(dp[i - 1][k], prices[i] - min);
+            }
+        }
+        return dp[prices.length - 1][K];
+    }
+
+    //sell stock 1， only allow do one transaction
+    public static int maxProfit1(int[] prices) {
         int buyIn = Integer.MAX_VALUE;
         int sellOut = Integer.MIN_VALUE;
         int maxPro = Integer.MIN_VALUE;
@@ -1951,6 +2816,44 @@ public class Main {
         }
         return maxPro;
     }
+
+    //sell stock2, do many transaction, but sell before buy
+    public int maxProfit2(int[] prices) {
+        int profit = 0;
+        int minPrice = Integer.MAX_VALUE;
+        for (int i : prices) {
+            if (i > minPrice) {
+                //sell it
+                profit += i - minPrice;
+            }
+            minPrice = i;
+        }
+        return profit;
+    }
+
+    int maxProfit2DP(int[] prices) {
+        int n = prices.length;
+        int dp_i_0 = 0, dp_i_1 = Integer.MIN_VALUE;
+        for (int i = 0; i < n; i++) {
+            int temp = dp_i_0;
+            dp_i_0 = Math.max(dp_i_0, dp_i_1 + prices[i]);
+            dp_i_1 = Math.max(dp_i_1, temp - prices[i]);
+        }
+        return dp_i_0;
+    }
+
+    public int maxProfitWithFee(int[] prices, int fee) {
+
+        int n = prices.length;
+        int dp_i_0 = 0, dp_i_1 = Integer.MIN_VALUE;
+        for (int i = 0; i < n; i++) {
+            int temp = dp_i_0;
+            dp_i_0 = Math.max(dp_i_0, dp_i_1 + prices[i]);
+            dp_i_1 = Math.max(dp_i_1, temp - prices[i] - fee);
+        }
+        return dp_i_0;
+    }
+
 
     public static int[][] merge(int[][] intervals) {
         List<int[]> s = new ArrayList<>(Arrays.asList(intervals));
@@ -2522,6 +3425,7 @@ public class Main {
         }
     }
 
+    //电话 phone
     private static List<String> letterCombinations(String digits) {
         Map<Character, char[]> tele = new HashMap<>();
         char[] n1 = {};
@@ -2559,7 +3463,6 @@ public class Main {
                     List<String> newList = new LinkedList<>();
                     for (String rec : copyList) {
                         newList.add(rec + chars[t]);
-
                     }
                     result.addAll(newList);
                 }
@@ -2898,5 +3801,264 @@ class ShuffleArray {
             swapAt(i, randRange(i, nums.length));
         }
         return nums;
+    }
+}
+
+class MyStack {
+
+    private Queue<Integer> q1;
+
+    /**
+     * Initialize your data structure here.
+     */
+    public MyStack() {
+        q1 = new LinkedList<>();
+    }
+
+    /**
+     * Push element x onto stack.
+     */
+    public void push(int x) {
+        q1.add(x);
+        int sz = q1.size();
+        while (sz > 1) {
+            q1.add(q1.remove());
+            sz--;
+        }
+    }
+
+    /**
+     * Removes the element on top of the stack and returns that element.
+     */
+    public int pop() {
+        return q1.remove();
+    }
+
+    /**
+     * Get the top element.
+     */
+    public int top() {
+        return q1.peek();
+    }
+
+    /**
+     * Returns whether the stack is empty.
+     */
+    public boolean empty() {
+        return q1.isEmpty();
+    }
+}
+
+class MyQueue {
+
+
+    private Stack<Integer> s1 = new Stack<>();
+    private Stack<Integer> s2 = new Stack<>();
+    int front;
+
+    /**
+     * Initialize your data structure here.
+     */
+    public MyQueue() {
+
+    }
+
+    /**
+     * Push element x to the back of queue.
+     */
+    public void push(int x) {
+        if (s1.empty()) {
+            front = x;
+        }
+        s1.push(x);
+    }
+
+    /**
+     * Removes the element from in front of queue and returns that element.
+     */
+    public int pop() {
+        if (s2.isEmpty()) {
+            while (!s1.isEmpty()) {
+                s2.push(s1.pop());
+            }
+        }
+        return s2.pop();
+    }
+
+    /**
+     * Get the front element.
+     */
+    public int peek() {
+        if (!s2.isEmpty()) {
+            return s2.peek();
+        }
+        return front;
+    }
+
+    /**
+     * Returns whether the queue is empty.
+     */
+    public boolean empty() {
+        return s1.isEmpty() && s2.isEmpty();
+    }
+}
+
+
+class TrieNodeArray {
+
+    TrieNodeArray[] children;
+    String word = null;
+
+    public TrieNodeArray() {
+        children = new TrieNodeArray[26];
+    }
+}
+
+
+class TrieNode {
+
+    Map<Character, TrieNode> children;
+    String word = null;
+
+    public TrieNode() {
+        children = new HashMap<>();
+    }
+}
+
+//use trie to search all words in matrix
+class WordSearch2 {
+
+    static int[] rowOffset = {-1, 0, 1, 0};
+    static int[] colOffset = {0, 1, 0, -1};
+    char[][] _board = null;
+    ArrayList<String> _result = new ArrayList<String>();
+
+    public List<String> findWords(char[][] board, String[] words) {
+
+        // Step 1). Construct the Trie
+        TrieNode root = new TrieNode();
+        for (String word : words) {
+            TrieNode node = root;
+
+            for (Character letter : word.toCharArray()) {
+                if (node.children.containsKey(letter)) {
+                    node = node.children.get(letter);
+                } else {
+                    TrieNode newNode = new TrieNode();
+                    node.children.put(letter, newNode);
+                    node = newNode;
+                }
+            }
+            node.word = word;  // store words in Trie
+        }
+
+        this._board = board;
+        // Step 2). Backtracking starting for each cell in the board
+        for (int row = 0; row < board.length; ++row) {
+            for (int col = 0; col < board[row].length; ++col) {
+                if (root.children.containsKey(board[row][col])) {
+                    backtracking(row, col, root);
+                }
+            }
+        }
+
+        return this._result;
+    }
+
+    private void backtracking(int row, int col, TrieNode parent) {
+        Character letter = this._board[row][col];
+        TrieNode currNode = parent.children.get(letter);
+
+        // check if there is any match
+        if (currNode.word != null) {
+            this._result.add(currNode.word);
+            currNode.word = null;
+        }
+
+        // mark the current letter before the EXPLORATION
+        this._board[row][col] = '#';
+
+        // explore neighbor cells in around-clock directions: up, right, down, left
+
+        for (int i = 0; i < 4; ++i) {
+            int newRow = row + rowOffset[i];
+            int newCol = col + colOffset[i];
+            if (newRow < 0 || newRow >= this._board.length || newCol < 0
+                || newCol >= this._board[0].length) {
+                continue;
+            }
+            if (currNode.children.containsKey(this._board[newRow][newCol])) {
+                backtracking(newRow, newCol, currNode);
+            }
+        }
+
+        // End of EXPLORATION, restore the original letter in the board.
+        this._board[row][col] = letter;
+
+        // Optimization: incrementally remove the leaf nodes
+        if (currNode.children.isEmpty()) {
+            parent.children.remove(letter);
+        }
+    }
+}
+
+//存的时候带时间，取的时候返回一个刚好小于等于这个取的时间的值
+class TimeMap {
+
+    /**
+     * Initialize your data structure here.
+     */
+    Map<String, TreeMap<Integer, String>> map;
+
+    public TimeMap() {
+        map = new HashMap<>();
+    }
+
+    public void set(String key, String value, int timestamp) {
+        if (!map.containsKey(key)) {
+            map.put(key, new TreeMap());
+        }
+        TreeMap<Integer, String> treeMap = map.get(key);
+        treeMap.put(timestamp, value);
+    }
+
+    public String get(String key, int timestamp) {
+        TreeMap<Integer, String> treeMap = map.get(key);
+        Integer tmKey = treeMap.floorKey(timestamp);
+        if (tmKey == null) {
+            return "";
+        } else {
+            return treeMap.get(tmKey);
+        }
+    }
+}
+
+class Logger {
+
+    private Map<String, Integer> map;
+
+    /**
+     * Initialize your data structure here.
+     */
+    public Logger() {
+        map = new HashMap<>();
+    }
+
+    /**
+     * Returns true if the message should be printed in the given timestamp, otherwise returns
+     * false. If this method returns false, the message will not be printed. The timestamp is in
+     * seconds granularity.
+     */
+    public boolean shouldPrintMessage(int timestamp, String message) {
+        if (map.containsKey(message)) {
+            if (timestamp - map.get(message) >= 10) {
+                map.put(message, timestamp);
+                return true;
+            }
+            return false;
+        } else {
+            map.put(message, timestamp);
+            return true;
+        }
     }
 }
