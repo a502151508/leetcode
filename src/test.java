@@ -1,13 +1,13 @@
-import java.lang.reflect.Parameter;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import javafx.util.Pair;
+
 
 public class test {
 
     int a;
 
     public static void main(String[] args) {
+        TrieNode t = new TrieNode();
 
     }
 

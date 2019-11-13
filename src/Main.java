@@ -1,3 +1,4 @@
+import java.util.concurrent.DelayQueue;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -7,8 +8,48 @@ import java.util.*;
 public class Main {
 
     public static void main(String[] args) {
+        int[] nums = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
         Main m = new Main();
+        System.out.print(m.findLadders("hit", "cog",
+            new ArrayList<String>(Arrays.asList(
+                new String[]{"hot", "dot", "dog", "lot", "log", "cog"}))
+        ));
 
+
+    }
+
+
+    int[] rowOffset = {-1, 0, 1, 0};
+    int[] colOffset = {0, 1, 0, -1};
+
+    public int maxAreaOfIsland(int[][] grid) {
+        int row = grid.length;
+        if (row == 0) {
+            return 0;
+        }
+        int col = grid[0].length;
+        int max = 0;
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+                if (grid[i][j] == 1) {
+                    max = Math.max(max, bfsMaxIsland(grid, i, j));
+                }
+            }
+        }
+        return max;
+    }
+
+    private int bfsMaxIsland(int[][] grid, int i, int j) {
+        int count = 1;
+        grid[i][j] = 0;
+        for (int t = 0; t < 4; t++) {
+            int newRow = i + rowOffset[t];
+            int newCol = j + colOffset[t];
+            if (inGrid(newRow, newCol, grid) && grid[newRow][newCol] == 1) {
+                count += bfsMaxIsland(grid, newRow, newCol);
+            }
+        }
+        return count;
     }
 
 
@@ -766,10 +807,6 @@ public class Main {
         }
         return count == numCourses;
     }
-
-
-
-
 
 
     public int nextGreaterElement(int n) {
@@ -1945,21 +1982,160 @@ public class Main {
 
     /**
      * word ladder list 1.找到每个单词的转移分支，通过*来遮盖某一位来完成这个map 2。双向bfs，每个bfs节点保存当前的所有路径
-     * 3.相遇后将当前单词列表加入答案，并完成本次队列里的遍历后结束 4
+     * 3.相遇后将当前单词列表加入答案，并完成本次队列里的遍历后结束 4 该function有bug 勿用 //
      */
-    public static List<List<String>> findLadders(String beginWord, String endWord,
+//    public static List<List<String>> findLadders(String beginWord, String endWord,
+//        List<String> wordList) {
+//        Set<List<String>> res = new HashSet<>();
+//        Map<String, List<String>> comboDic = new HashMap<>();
+//        if (!wordList.contains(endWord)) {
+//            return new ArrayList<>(res);
+//        }
+//        if (beginWord.equals(endWord)) {
+//            List<String> singleResult = new ArrayList<>();
+//            singleResult.add(beginWord);
+//            res.add(singleResult);
+//            return new ArrayList<>(res);
+//        }
+//        for (String word : wordList) {
+//            for (int i = 0; i < beginWord.length(); i++) {
+//                StringBuilder mask = new StringBuilder();
+//                mask.append(word.substring(0, i));
+//                mask.append("*");
+//                mask.append(word.substring(i + 1));
+//                List<String> wordListForAMask = comboDic
+//                    .getOrDefault(mask.toString(), new ArrayList<>());
+//                wordListForAMask.add(word);
+//                comboDic.put(mask.toString(), wordListForAMask);
+//            }
+//        }
+//        Queue<Pair<String, List<String>>> qF = new LinkedList<>();
+//        Queue<Pair<String, List<String>>> qE = new LinkedList<>();
+//        Map<String, List<List<String>>> isVistedF = new HashMap<>();
+//        Map<String, List<List<String>>> isVistedE = new HashMap<>();
+//        int resSize = Integer.MAX_VALUE;
+//        qF.offer(new Pair<>(beginWord, new ArrayList<>(Arrays.asList(new String[]{beginWord}))));
+//        qE.offer(new Pair<>(endWord, new ArrayList<>(Arrays.asList(new String[]{endWord}))));
+//        List<List<String>> eVisited = new ArrayList<>();
+//        List<List<String>> fVisited = new ArrayList<>();
+//        eVisited.add(qE.peek().getValue());
+//        isVistedE.put(endWord, eVisited);
+//        fVisited.add(qF.peek().getValue());
+//        isVistedF.put(beginWord, fVisited);
+//        while (!qF.isEmpty() && !qE.isEmpty()) {
+//            if (!qF.isEmpty()) {
+//                Pair<String, List<String>> curPair = qF.remove();
+//                if (!(!res.isEmpty() && resSize <= curPair.getValue().size())) {
+//                    String curWord = curPair.getKey();
+//                    for (int i = 0; i < curPair.getKey().length(); i++) {
+//                        StringBuilder mask = new StringBuilder();
+//                        mask.append(curWord.substring(0, i));
+//                        mask.append("*");
+//                        mask.append(curWord.substring(i + 1));
+//                        List<String> wordListForAMask = comboDic
+//                            .getOrDefault(mask.toString(), new ArrayList<>());
+//                        for (String nextWord : wordListForAMask) {
+//                            if (curWord.equals((nextWord)) || curPair.getValue()
+//                                .contains(nextWord)) {
+//                                continue;
+//                            }
+//                            if (nextWord.equals(endWord)) {
+//                                curPair.getValue().add(endWord);
+//                                List<String> newRes = new ArrayList<>(
+//                                    Arrays.asList(new String[curPair.getValue().size()]));
+//                                Collections.copy(newRes, curPair.getValue());
+//                                if (newRes.size() <= resSize) {
+//                                    res.add(newRes);
+//                                    resSize = newRes.size();
+//                                }
+//                            }
+//                            if (isVistedE.containsKey(nextWord)) {
+//                                List<String> newRes = new ArrayList<>();
+//                                newRes.addAll(curPair.getValue());
+//                                List<List<String>> anotherParts = isVistedE.get(nextWord);
+//                                for (List<String> anotherPart : anotherParts) {
+//                                    List<String> wholeRes = new ArrayList<>(newRes);
+//                                    wholeRes.addAll(anotherPart);
+//                                    if (wholeRes.size() <= resSize) {
+//                                        res.add(wholeRes);
+//                                        resSize = wholeRes.size();
+//                                    }
+//                                }
+//                            } else {
+//                                List<String> next = new ArrayList<>();
+//                                next.addAll(curPair.getValue());
+//                                next.add(nextWord);
+//                                List<List<String>> allPath = isVistedF
+//                                    .getOrDefault(nextWord, new ArrayList<>());
+//                                allPath.add(next);
+//                                isVistedF.put(nextWord, allPath);
+//                                qF.offer(new Pair<>(nextWord, next));
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            if (!qE.isEmpty()) {
+//                Pair<String, List<String>> curPair = qE.remove();
+//                if (!(!res.isEmpty() && resSize <= curPair.getValue().size())) {
+//                    String curWord = curPair.getKey();
+//                    for (int i = 0; i < curPair.getKey().length(); i++) {
+//                        StringBuilder mask = new StringBuilder();
+//                        mask.append(curWord.substring(0, i));
+//                        mask.append("*");
+//                        mask.append(curWord.substring(i + 1));
+//                        List<String> wordListForAMask = comboDic
+//                            .getOrDefault(mask.toString(), new ArrayList<>());
+//                        for (String nextWord : wordListForAMask) {
+//                            if (curWord.equals(nextWord) || curPair.getValue().contains(nextWord)) {
+//                                continue;
+//                            }
+//                            if (nextWord.equals(endWord)) {
+//                                curPair.getValue().add(endWord);
+//                                List<String> newRes = new ArrayList<>(
+//                                    Arrays.asList(new String[curPair.getValue().size()]));
+//                                Collections.copy(newRes, curPair.getValue());
+//                                if (newRes.size() <= resSize) {
+//                                    res.add(newRes);
+//                                    resSize = newRes.size();
+//                                }
+//                            }
+//                            if (isVistedF.containsKey(nextWord)) {
+//                                List<String> newRes = new ArrayList<>(curPair.getValue());
+//                                List<List<String>> anotherParts = isVistedF.get(nextWord);
+//                                for (List<String> anotherPart : anotherParts) {
+//                                    List<String> wholeRes = new ArrayList<>(anotherPart);
+//                                    wholeRes.addAll(newRes);
+//                                    if (wholeRes.size() <= resSize) {
+//                                        res.add(wholeRes);
+//                                        resSize = wholeRes.size();
+//                                    }
+//                                }
+//                            } else {
+//                                List<String> next = new LinkedList<>();
+//                                next.addAll(curPair.getValue());
+//                                next.add(0, nextWord);
+//                                List<List<String>> allPath = isVistedF
+//                                    .getOrDefault(nextWord, new ArrayList<>());
+//                                allPath.add(next);
+//                                isVistedE.put(nextWord, allPath);
+//                                qE.offer(new Pair<>(nextWord, next));
+//                            }
+//                        }
+//                    }
+//                }
+//
+//            }
+//        }
+//        return new ArrayList<>(res);
+//    }
+    public List<List<String>> findLadders(String beginWord, String endWord,
         List<String> wordList) {
-        Set<List<String>> res = new HashSet<>();
+        List<List<String>> ans = new ArrayList<>();
         if (!wordList.contains(endWord)) {
-            return new ArrayList<>(res);
+            return ans;
         }
-        if (beginWord.equals(endWord)) {
-            List<String> singleResult = new ArrayList<>();
-            singleResult.add(beginWord);
-            res.add(singleResult);
-            return new ArrayList<>(res);
-        }
-
+        //做词典
         Map<String, List<String>> comboDic = new HashMap<>();
         for (String word : wordList) {
             for (int i = 0; i < beginWord.length(); i++) {
@@ -1973,131 +2149,25 @@ public class Main {
                 comboDic.put(mask.toString(), wordListForAMask);
             }
         }
-
-        Queue<Pair<String, List<String>>> qF = new LinkedList<>();
-        Queue<Pair<String, List<String>>> qE = new LinkedList<>();
-        Map<String, List<List<String>>> isVistedF = new HashMap<>();
-        Map<String, List<List<String>>> isVistedE = new HashMap<>();
-        int resSize = Integer.MAX_VALUE;
-        qF.offer(new Pair<>(beginWord, new ArrayList<>(Arrays.asList(new String[]{beginWord}))));
-        qE.offer(new Pair<>(endWord, new ArrayList<>(Arrays.asList(new String[]{endWord}))));
-        List<List<String>> eVisited = new ArrayList<>();
-        List<List<String>> fVisited = new ArrayList<>();
-        eVisited.add(qE.peek().getValue());
-        isVistedE.put(endWord, eVisited);
-        fVisited.add(qF.peek().getValue());
-        isVistedF.put(beginWord, fVisited);
-        while (!qF.isEmpty() || !qE.isEmpty()) {
-            if (!qF.isEmpty()) {
-                Pair<String, List<String>> curPair = qF.remove();
-                if (!(!res.isEmpty() && resSize <= curPair.getValue().size())) {
-                    String curWord = curPair.getKey();
-                    for (int i = 0; i < curPair.getKey().length(); i++) {
-                        StringBuilder mask = new StringBuilder();
-                        mask.append(curWord.substring(0, i));
-                        mask.append("*");
-                        mask.append(curWord.substring(i + 1));
-                        List<String> wordListForAMask = comboDic
-                            .getOrDefault(mask.toString(), new ArrayList<>());
-                        for (String nextWord : wordListForAMask) {
-                            if (nextWord.equals(endWord)) {
-                                curPair.getValue().add(endWord);
-                                List<String> newRes = new ArrayList<>(
-                                    Arrays.asList(new String[curPair.getValue().size()]));
-                                Collections.copy(newRes, curPair.getValue());
-                                if (newRes.size() <= resSize) {
-                                    res.add(newRes);
-                                    resSize = newRes.size();
-                                }
-                            }
-                            if (isVistedE.containsKey(nextWord)) {
-                                List<String> newRes = new ArrayList<>();
-                                newRes.addAll(curPair.getValue());
-                                List<List<String>> anotherParts = isVistedE.get(nextWord);
-                                for (List<String> anotherPart : anotherParts) {
-                                    List<String> wholeRes = new ArrayList<>(newRes);
-                                    wholeRes.addAll(anotherPart);
-                                    if (wholeRes.size() <= resSize) {
-                                        res.add(wholeRes);
-                                        resSize = wholeRes.size();
-                                    }
-                                }
-                            } else {
-                                List<String> next = new ArrayList<>();
-                                next.addAll(curPair.getValue());
-                                next.add(nextWord);
-                                List<List<String>> allPath = isVistedF
-                                    .getOrDefault(nextWord, new ArrayList<>());
-                                allPath.add(next);
-                                isVistedF.put(nextWord, allPath);
-                                qF.offer(new Pair<>(nextWord, next));
-                            }
-                        }
-                    }
-                }
+        Map<String, Set<String>> wordDict = new HashMap<>();
+        wordList.add(beginWord);
+        for (String word : wordList) {
+            Set<String> set = wordDict.getOrDefault(word, new HashSet<>());
+            for (int i = 0; i < beginWord.length(); i++) {
+                StringBuilder mask = new StringBuilder();
+                mask.append(word.substring(0, i));
+                mask.append("*");
+                mask.append(word.substring(i + 1));
+                List<String> wordListForAMask = comboDic
+                    .getOrDefault(mask.toString(), new ArrayList<>());
+                set.addAll(wordListForAMask);
             }
-            if (!qE.isEmpty()) {
-                Pair<String, List<String>> curPair = qE.remove();
-                if (!(!res.isEmpty() && resSize <= curPair.getValue().size())) {
-                    String curWord = curPair.getKey();
-                    for (int i = 0; i < curPair.getKey().length(); i++) {
-                        StringBuilder mask = new StringBuilder();
-                        mask.append(curWord.substring(0, i));
-                        mask.append("*");
-                        mask.append(curWord.substring(i + 1));
-                        List<String> wordListForAMask = comboDic
-                            .getOrDefault(mask.toString(), new ArrayList<>());
-                        for (String nextWord : wordListForAMask) {
-                            if (nextWord.equals(endWord)) {
-                                curPair.getValue().add(endWord);
-                                List<String> newRes = new ArrayList<>(
-                                    Arrays.asList(new String[curPair.getValue().size()]));
-                                Collections.copy(newRes, curPair.getValue());
-                                if (newRes.size() <= resSize) {
-                                    res.add(newRes);
-                                    resSize = newRes.size();
-                                }
-                            }
-                            if (isVistedF.containsKey(nextWord)) {
-                                List<String> newRes = new ArrayList<>(curPair.getValue());
-                                List<List<String>> anotherParts = isVistedF.get(nextWord);
-                                for (List<String> anotherPart : anotherParts) {
-                                    List<String> wholeRes = new ArrayList<>(anotherPart);
-                                    wholeRes.addAll(newRes);
-                                    if (wholeRes.size() <= resSize) {
-                                        res.add(wholeRes);
-                                        resSize = wholeRes.size();
-                                    }
-                                }
-                            } else {
-                                List<String> next = new LinkedList<>();
-                                next.addAll(curPair.getValue());
-                                next.add(0, nextWord);
-                                List<List<String>> allPath = isVistedF
-                                    .getOrDefault(nextWord, new ArrayList<>());
-                                allPath.add(next);
-                                isVistedE.put(nextWord, allPath);
-                                qE.offer(new Pair<>(nextWord, next));
-                            }
-                        }
-                    }
-                }
-
-            }
-        }
-        return new ArrayList<>(res);
-    }
-
-
-    public List<List<String>> findLaddersZUIJIA(String beginWord, String endWord,
-        List<String> wordList) {
-        List<List<String>> ans = new ArrayList<>();
-        if (!wordList.contains(endWord)) {
-            return ans;
+            set.remove(word);
+            wordDict.put(word, set);
         }
         // 利用 BFS 得到所有的邻居节点
         HashMap<String, ArrayList<String>> map = new HashMap<>();
-        bfs(beginWord, endWord, wordList, map);
+        bfs(beginWord, endWord, wordList, map, wordDict);
         ArrayList<String> temp = new ArrayList<String>();
         // temp 用来保存当前的路径
         temp.add(beginWord);
@@ -2105,6 +2175,8 @@ public class Main {
         return ans;
     }
 
+    //dfs find all possible ans
+    //此时map里保存了所有可能的最短路径解，只需dfs一遍全找出来
     private void findLaddersHelper(String beginWord, String endWord,
         HashMap<String, ArrayList<String>> map,
         ArrayList<String> temp, List<List<String>> ans) {
@@ -2121,32 +2193,33 @@ public class Main {
         }
     }
 
-    //利用递归实现了双向搜索
+    /*
+    利用递归实现了双向搜索
+    1.词语列表中删除当前已存的节点（避免走回头路，强制往中间靠拢）
+    2.永远从当前层级少的方向搜索（比如从上到下2，从下到上3 则从上到下搜，因为bfs面越窄速度越快）
+    3.如果相遇，则停止该条路径，将结果保存在map里，返回。
+     */
     private void bfs(String beginWord, String endWord, List<String> wordList,
-        HashMap<String, ArrayList<String>> map) {
+        HashMap<String, ArrayList<String>> map, Map<String, Set<String>> wordDict) {
         Set<String> set1 = new HashSet<String>();
         set1.add(beginWord);
         Set<String> set2 = new HashSet<String>();
         set2.add(endWord);
         Set<String> wordSet = new HashSet<String>(wordList);
-        bfsHelper(set1, set2, wordSet, true, map);
+        bfsHelper(set1, set2, wordSet, true, map, wordDict);
     }
 
     // direction 为 true 代表向下扩展，false 代表向上扩展
-    private boolean bfsHelper(Set<String> set1, Set<String> set2, Set<String> wordSet,
+    private void bfsHelper(Set<String> set1, Set<String> set2, Set<String> wordSet,
         boolean direction,
-        HashMap<String, ArrayList<String>> map) {
-        //set1 为空了，就直接结束
+        HashMap<String, ArrayList<String>> map, Map<String, Set<String>> wordDict) {
+        //set1 为空了，就直接结束,没有能继续搜索的点了
         //比如下边的例子就会造成 set1 为空
     /*	"hot"
 		"dog"
 		["hot","dog"]*/
         if (set1.isEmpty()) {
-            return false;
-        }
-        // set1 的数量多，就反向扩展
-        if (set1.size() > set2.size()) {
-            return bfsHelper(set2, set1, wordSet, !direction, map);
+            return;
         }
         // 将已经访问过单词删除
         wordSet.removeAll(set1);
@@ -2158,49 +2231,67 @@ public class Main {
         Set<String> set = new HashSet<String>();
 
         for (String str : set1) {
-            //遍历每一位
-            for (int i = 0; i < str.length(); i++) {
-                char[] chars = str.toCharArray();
+            for (String word : wordDict.get(str)) {
+//遍历每一位来获取同义词
+//            for (int i = 0; i < str.length(); i++) {
+//                char[] chars = str.toCharArray();
+//
+//                // 尝试所有字母
+//                for (char ch = 'a'; ch <= 'z'; ch++) {
+//                    if (chars[i] == ch) {
+//                        continue;
+//                    }
+//                    chars[i] = ch;
+//
+//                    String word = new String(chars);
 
-                // 尝试所有字母
-                for (char ch = 'a'; ch <= 'z'; ch++) {
-                    if (chars[i] == ch) {
-                        continue;
-                    }
-                    chars[i] = ch;
+                // 根据方向得到 map 的 key 和 val
 
-                    String word = new String(chars);
+//                }
+//            }
+                String key = direction ? str : word;
+                String val = direction ? word : str;
 
-                    // 根据方向得到 map 的 key 和 val
-                    String key = direction ? str : word;
-                    String val = direction ? word : str;
+                ArrayList<String> list =
+                    map.containsKey(key) ? map.get(key) : new ArrayList<>();
 
-                    ArrayList<String> list =
-                        map.containsKey(key) ? map.get(key) : new ArrayList<String>();
+                //如果相遇了就保存结果
+                if (set2.contains(word)) {
+                    done = true;
+                    list.add(val);
+                    map.put(key, list);
+                }
 
-                    //如果相遇了就保存结果
-                    if (set2.contains(word)) {
-                        done = true;
-                        list.add(val);
-                        map.put(key, list);
-                    }
-
-                    //如果还没有相遇，并且新的单词在 word 中，那么就加到 set 中
-                    if (!done && wordSet.contains(word)) {
-                        set.add(word);
-                        list.add(val);
-                        map.put(key, list);
-                    }
+                //如果还没有相遇，并且新的单词在 word 中，那么就加到 set 中
+                //在该层已经done之后，不再继续延长path长度，保证搜索结果为最短解
+                if (!done && wordSet.contains(word)) {
+                    set.add(word);
+                    list.add(val);
+                    map.put(key, list);
                 }
             }
+
+
         }
 
-        //一般情况下新扩展的元素会多一些，所以我们下次反方向扩展  set2
-        return done || bfsHelper(set2, set, wordSet, !direction, map);
-
+        if (!done) {
+            //下次从小的待扩展的方向的set开始扩展，bfs越窄效率越高
+            int size2 = set2.size();
+            int size = set.size();
+            if (size2 > size) {
+                bfsHelper(set, set2, wordSet, direction, map, wordDict);
+            } else {
+                bfsHelper(set2, set, wordSet, !direction, map, wordDict);
+            }
+        }
     }
 
+
     //word ladder length
+    //Time O(M*N)  where MM is the length of words and NN is the total number of words in the input word list
+    //Space Complexity: O(M * N), to store all MM transformations for each of the NN words,
+    // in the all_combo_dict dictionary, same as one directional. But bidirectional reduces the search space.
+    // It narrows down because of meeting in the middle.
     public static int ladderLength(String beginWord, String endWord, List<String> wordList) {
         Map<String, List<String>> comboDic = new HashMap<>();
         if (!wordList.contains(endWord)) {
@@ -2423,7 +2514,8 @@ public class Main {
         nums.set(i, temp);
     }
 
-    public static Node copyRandomList(Node head) {
+    //O(N2)
+    public static Node copyRandomListOld(Node head) {
         if (head == null) {
             return null;
         }
@@ -2464,6 +2556,54 @@ public class Main {
                 : null;
         return target.get(0);
     }
+
+
+    //time & space O(N) using a dict to have old node-> new node
+    //interweave 交织法可以O(1) space
+    //将新的node变成old node.next 然后新的node的random就是old node.random.next
+    //之后再unweave 变成一个正常链表
+    public Node copyRandomList(Node head) {
+        HashMap<Node, Node> visited = new HashMap<Node, Node>();
+        if (head == null) {
+            return null;
+        }
+
+        Node oldNode = head;
+
+        // Creating the new head node.
+        Node newNode = new Node(oldNode.val);
+        visited.put(oldNode, newNode);
+
+        // Iterate on the linked list until all nodes are cloned.
+        while (oldNode != null) {
+            // Get the clones of the nodes referenced by random and next pointers.
+            newNode.random = this.getClonedNode(oldNode.random, visited);
+            newNode.next = this.getClonedNode(oldNode.next, visited);
+
+            // Move one step ahead in the linked list.
+            oldNode = oldNode.next;
+            newNode = newNode.next;
+        }
+        return visited.get(head);
+    }
+
+    public Node getClonedNode(Node node, Map<Node, Node> visited) {
+
+        // If the node exists then
+        if (node != null) {
+            // Check if the node is in the visited dictionary
+            if (visited.containsKey(node)) {
+                // If its in the visited dictionary then return the new node reference from the dictionary
+                return visited.get(node);
+            } else {
+                // Otherwise create a new node, add to the dictionary and return it
+                visited.put(node, new Node(node.val, null, null));
+                return visited.get(node);
+            }
+        }
+        return null;
+    }
+
 
     //search word in 2d board
     public static boolean exist(char[][] board, String word) {
@@ -3140,6 +3280,8 @@ public class Main {
         return R - L - 1;
     }
 
+
+    //zig zag
     public static String convertZ(String s, int numRows) {
         if (numRows == 1 || s.length() < numRows) {
             return s;
@@ -3444,338 +3586,14 @@ class Node {
     public Node() {
     }
 
+    public Node(int val) {
+        this.val = val;
+    }
+
     public Node(int _val, Node _next, Node _random) {
         val = _val;
         next = _next;
         random = _random;
-    }
-}
-
-class MinStack {
-
-    // 数据栈
-    private Stack<Integer> data;
-    // 辅助栈
-    private Stack<Integer> helper;
-
-    /**
-     * initialize your data structure here.
-     */
-    public MinStack() {
-        data = new Stack<>();
-        helper = new Stack<>();
-    }
-
-    // 思路 2：辅助栈和数据栈不同步
-    // 关键 1：辅助栈的元素空的时候，必须放入新进来的数
-    // 关键 2：新来的数小于或者等于辅助栈栈顶元素的时候，才放入（特别注意这里等于要考虑进去）
-    // 关键 3：出栈的时候，辅助栈的栈顶元素等于数据栈的栈顶元素，才出栈，即"出栈保持同步"就可以了
-
-    public void push(int x) {
-        // 辅助栈在必要的时候才增加
-        data.add(x);
-        // 关键 1 和 关键 2
-        if (helper.isEmpty() || helper.peek() >= x) {
-            helper.add(x);
-        }
-    }
-
-    public void pop() {
-        // 关键 3：data 一定得 pop()
-        if (!data.isEmpty()) {
-            // 注意：声明成 int 类型，这里完成了自动拆箱，从 Integer 转成了 int，因此下面的比较可以使用 "==" 运算符
-            // 参考资料：https://www.cnblogs.com/GuoYaxiang/p/6931264.html
-            // 如果把 top 变量声明成 Integer 类型，下面的比较就得使用 equals 方法
-            int top = data.pop();
-            if (top == helper.peek()) {
-                helper.pop();
-            }
-        }
-    }
-
-    public int top() {
-        if (!data.isEmpty()) {
-            return data.peek();
-        }
-        throw new RuntimeException("栈中元素为空，此操作非法");
-    }
-
-    public int getMin() {
-        if (!helper.isEmpty()) {
-            return helper.peek();
-        }
-        throw new RuntimeException("栈中元素为空，此操作非法");
-    }
-
-}
-
-//Not allow two events at the same time
-class MyCalendar {
-
-    TreeMap<Integer, Integer> tm;
-
-    public MyCalendar() {
-        tm = new TreeMap<>();
-    }
-
-    public boolean book(int start, int end) {
-        if (end <= start) {
-            return false;
-        }
-        Map.Entry<Integer, Integer> low = tm.floorEntry(start);
-        Map.Entry<Integer, Integer> high = tm.ceilingEntry(start);
-        if (low == null && high == null) {
-            tm.put(start, end);
-            return true;
-        }
-        if (low != null && low.getValue() > start) {
-            return false;
-        }
-        if (high != null && end > high.getKey()) {
-            return false;
-        }
-        tm.put(start, end);
-        return true;
-    }
-}
-
-//not allow three events at the same time
-class MyCalendarTwo {
-
-    List<int[]> calendar;
-    List<int[]> overlaps;
-
-    MyCalendarTwo() {
-        calendar = new ArrayList();
-        overlaps = new ArrayList<>();
-    }
-
-    public boolean book(int start, int end) {
-        for (int[] iv : overlaps) {
-            if (iv[0] < end && start < iv[1]) {
-                return false;
-            }
-        }
-        for (int[] iv : calendar) {
-            if (iv[0] < end && start < iv[1]) {
-                overlaps.add(new int[]{Math.max(start, iv[0]), Math.min(end, iv[1])});
-            }
-        }
-        calendar.add(new int[]{start, end});
-        return true;
-    }
-}
-
-//Return Largest num of events that hold together
-class MyCalendarThree {
-
-    TreeMap<Integer, Integer> delta;
-
-    public MyCalendarThree() {
-        delta = new TreeMap();
-    }
-
-    public int book(int start, int end) {
-        delta.put(start, delta.getOrDefault(start, 0) + 1);
-        delta.put(end, delta.getOrDefault(end, 0) - 1);
-
-        int active = 0, ans = 0;
-        for (int d : delta.values()) {
-            active += d;
-            if (active > ans) {
-                ans = active;
-            }
-        }
-        return ans;
-    }
-}
-
-class RandomizedSet {
-
-    Map<Integer, Integer> dict;
-    List<Integer> list;
-    Random rand = new Random();
-
-    /**
-     * Initialize your data structure here.
-     */
-    public RandomizedSet() {
-        dict = new HashMap();
-        list = new ArrayList();
-    }
-
-    /**
-     * Inserts a value to the set. Returns true if the set did not already contain the specified
-     * element.
-     */
-    public boolean insert(int val) {
-        if (dict.containsKey(val)) {
-            return false;
-        }
-
-        dict.put(val, list.size());
-        list.add(val);
-        return true;
-    }
-
-    /**
-     * Removes a value from the set. Returns true if the set contained the specified element.
-     */
-    public boolean remove(int val) {
-        if (!dict.containsKey(val)) {
-            return false;
-        }
-
-        // move the last element to the place idx of the element to delete
-        int lastElement = list.get(list.size() - 1);
-        int idx = dict.get(val);
-        list.set(idx, lastElement);
-        dict.put(lastElement, idx);
-        // delete the last element
-        list.remove(list.size() - 1);
-        dict.remove(val);
-        return true;
-    }
-
-    /**
-     * Get a random element from the set.
-     */
-    public int getRandom() {
-        return list.get(rand.nextInt(list.size()));
-    }
-}
-
-class ShuffleArray {
-
-    int[] nums;
-    int[] originNums;
-
-    Random rand = new Random();
-
-    private int randRange(int min, int max) {
-        return rand.nextInt(max - min) + min;
-    }
-
-    private void swapAt(int i, int j) {
-        int temp = nums[i];
-        nums[i] = nums[j];
-        nums[j] = temp;
-    }
-
-    public ShuffleArray(int[] nums) {
-        this.nums = nums;
-        this.originNums = Arrays.copyOf(nums, nums.length);
-    }
-
-    public int[] reset() {
-        nums = Arrays.copyOf(originNums, nums.length);
-        return nums;
-    }
-
-    public int[] shuffle() {
-        for (int i = 0; i < nums.length; i++) {
-            swapAt(i, randRange(i, nums.length));
-        }
-        return nums;
-    }
-}
-
-class MyStack {
-
-    private Queue<Integer> q1;
-
-    /**
-     * Initialize your data structure here.
-     */
-    public MyStack() {
-        q1 = new LinkedList<>();
-    }
-
-    /**
-     * Push element x onto stack.
-     */
-    public void push(int x) {
-        q1.add(x);
-        int sz = q1.size();
-        while (sz > 1) {
-            q1.add(q1.remove());
-            sz--;
-        }
-    }
-
-    /**
-     * Removes the element on top of the stack and returns that element.
-     */
-    public int pop() {
-        return q1.remove();
-    }
-
-    /**
-     * Get the top element.
-     */
-    public int top() {
-        return q1.peek();
-    }
-
-    /**
-     * Returns whether the stack is empty.
-     */
-    public boolean empty() {
-        return q1.isEmpty();
-    }
-}
-
-class MyQueue {
-
-
-    private Stack<Integer> s1 = new Stack<>();
-    private Stack<Integer> s2 = new Stack<>();
-    int front;
-
-    /**
-     * Initialize your data structure here.
-     */
-    public MyQueue() {
-
-    }
-
-    /**
-     * Push element x to the back of queue.
-     */
-    public void push(int x) {
-        if (s1.empty()) {
-            front = x;
-        }
-        s1.push(x);
-    }
-
-    /**
-     * Removes the element from in front of queue and returns that element.
-     */
-    public int pop() {
-        if (s2.isEmpty()) {
-            while (!s1.isEmpty()) {
-                s2.push(s1.pop());
-            }
-        }
-        return s2.pop();
-    }
-
-    /**
-     * Get the front element.
-     */
-    public int peek() {
-        if (!s2.isEmpty()) {
-            return s2.peek();
-        }
-        return front;
-    }
-
-    /**
-     * Returns whether the queue is empty.
-     */
-    public boolean empty() {
-        return s1.isEmpty() && s2.isEmpty();
     }
 }
 
@@ -3874,67 +3692,6 @@ class WordSearch2 {
         // Optimization: incrementally remove the leaf nodes
         if (currNode.children.isEmpty()) {
             parent.children.remove(letter);
-        }
-    }
-}
-
-//存的时候带时间，取的时候返回一个刚好小于等于这个取的时间的值
-class TimeMap {
-
-    /**
-     * Initialize your data structure here.
-     */
-    Map<String, TreeMap<Integer, String>> map;
-
-    public TimeMap() {
-        map = new HashMap<>();
-    }
-
-    public void set(String key, String value, int timestamp) {
-        if (!map.containsKey(key)) {
-            map.put(key, new TreeMap());
-        }
-        TreeMap<Integer, String> treeMap = map.get(key);
-        treeMap.put(timestamp, value);
-    }
-
-    public String get(String key, int timestamp) {
-        TreeMap<Integer, String> treeMap = map.get(key);
-        Integer tmKey = treeMap.floorKey(timestamp);
-        if (tmKey == null) {
-            return "";
-        } else {
-            return treeMap.get(tmKey);
-        }
-    }
-}
-
-class Logger {
-
-    private Map<String, Integer> map;
-
-    /**
-     * Initialize your data structure here.
-     */
-    public Logger() {
-        map = new HashMap<>();
-    }
-
-    /**
-     * Returns true if the message should be printed in the given timestamp, otherwise returns
-     * false. If this method returns false, the message will not be printed. The timestamp is in
-     * seconds granularity.
-     */
-    public boolean shouldPrintMessage(int timestamp, String message) {
-        if (map.containsKey(message)) {
-            if (timestamp - map.get(message) >= 10) {
-                map.put(message, timestamp);
-                return true;
-            }
-            return false;
-        } else {
-            map.put(message, timestamp);
-            return true;
         }
     }
 }
