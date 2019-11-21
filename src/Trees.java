@@ -137,6 +137,72 @@ public class Trees {
         return levels;
     }
 
+    //lc617 合并两棵树
+    public TreeNode mergeTrees(TreeNode t1, TreeNode t2) {
+        if (t1 == null && t2 == null) {
+            return null;
+        } else if (t1 != null && t2 == null) {
+            return t1;
+        } else if (t1 == null && t2 != null) {
+            return t2;
+        } else {
+            TreeNode node = new TreeNode(t1.val + t2.val);
+            node.left = mergeTrees(t1.left, t2.left);
+            node.right = mergeTrees(t1.right, t2.right);
+            return node;
+        }
+    }
+
+    public TreeNode mergeTreesIterative(TreeNode t1, TreeNode t2) {
+        if (t1 == null) {
+            return t2;
+        }
+        Stack<TreeNode[]> stack = new Stack<>();
+        stack.push(new TreeNode[]{t1, t2});
+        while (!stack.isEmpty()) {
+            TreeNode[] t = stack.pop();
+            if (t[0] == null || t[1] == null) {
+                continue;
+            }
+            t[0].val += t[1].val;
+            if (t[0].left == null) {
+                t[0].left = t[1].left;
+            } else {
+                stack.push(new TreeNode[]{t[0].left, t[1].left});
+            }
+            if (t[0].right == null) {
+                t[0].right = t[1].right;
+            } else {
+                stack.push(new TreeNode[]{t[0].right, t[1].right});
+            }
+        }
+        return t1;
+    }
+
+
+    //124 Binary Tree Maximum Path Sum 任意path sum最大，不一定要经过root
+    private class MaxPathSum {
+
+        int res = Integer.MIN_VALUE;
+
+        public int maxPathSum(TreeNode root) {
+            maxSumForOneNode(root);
+            return res;
+        }
+
+        //the max sum that pass this node and its not a root
+        private int maxSumForOneNode(TreeNode node) {
+            if (node == null) {
+                return 0;
+            }
+            int left = Math.max(maxSumForOneNode(node.left), 0);
+            int right = Math.max(maxSumForOneNode(node.right), 0);
+            int maxChild = Math.max(left, right);
+            res = Math.max(res, node.val + left + right);
+            return node.val + maxChild;
+        }
+    }
+
 
     public void addLeaves(List<Integer> res, TreeNode root) {
         if (isLeaf(root)) {
@@ -534,6 +600,56 @@ public class Trees {
     }
 
 
+    //模拟二叉搜索树的中根遍历来构造BST
+    private class SortedListToBST {
+
+        private ListNode head;
+
+        private int findSize(ListNode head) {
+            ListNode ptr = head;
+            int c = 0;
+            while (ptr != null) {
+                ptr = ptr.next;
+                c += 1;
+            }
+            return c;
+        }
+
+        private TreeNode convertListToBST(int l, int r) {
+            // Invalid case
+            if (l > r) {
+                return null;
+            }
+
+            int mid = (l + r) / 2;
+
+            // First step of simulated inorder traversal. Recursively form
+            // the left half
+            TreeNode left = this.convertListToBST(l, mid - 1);
+
+            // Once left half is traversed, process the current node
+            TreeNode node = new TreeNode(this.head.val);
+            node.left = left;
+
+            // Maintain the invariance mentioned in the algorithm
+            this.head = this.head.next;
+
+            // Recurse on the right hand side and form BST out of them
+            node.right = this.convertListToBST(mid + 1, r);
+            return node;
+        }
+
+        public TreeNode sortedListToBST(ListNode head) {
+            // Get the size of the linked list first
+            int size = this.findSize(head);
+
+            this.head = head;
+
+            // Form the BST now that we know the size
+            return convertListToBST(0, size - 1);
+        }
+    }
+
     public TreeNode sortedArrayToBST(int[] nums) {
         if (nums.length == 0) {
             return null;
@@ -674,6 +790,118 @@ public class Trees {
 
 }
 
+class Codec {
+
+    /*
+    Time complexity : in both serialization and deserialization functions,
+    we visit each node exactly once, thus the time complexity is O(N)O(N),
+     where NN is the number of nodes, i.e. the size of tree.
+     */
+    class CodecBiT {
+
+        public StringBuilder rserialize(TreeNode root, StringBuilder str) {
+            // Recursive serialization.
+            if (root == null) {
+                str.append("#,");
+            } else {
+                str.append(root.val);
+                str.append(",");
+                rserialize(root.left, str);
+                rserialize(root.right, str);
+            }
+            return str;
+        }
+
+        // Encodes a tree to a single string.
+        public String serialize(TreeNode root) {
+            return rserialize(root, new StringBuilder()).toString();
+        }
+
+        // Decodes your encoded data to tree.
+        public TreeNode deserialize(String data) {
+            String[] data_array = data.split(",");
+            List<String> data_list = new LinkedList<String>(Arrays.asList(data_array));
+            return rdeserialize(data_list);
+        }
+
+        public TreeNode rdeserialize(List<String> l) {
+            // Recursive deserialization.
+            if (l.get(0).equals("#")) {
+                l.remove(0);
+                return null;
+            }
+
+            TreeNode root = new TreeNode(Integer.valueOf(l.get(0)));
+            l.remove(0);
+            root.left = rdeserialize(l);
+            root.right = rdeserialize(l);
+
+            return root;
+        }
+    }
+
+    class CodecNTree {
+
+        class Node {
+
+            public int val;
+            public List<Node> children;
+
+            public Node() {
+            }
+
+            public Node(int _val, List<Node> _children) {
+                val = _val;
+                children = _children;
+            }
+        }
+
+        // Encodes a tree to a single string.
+        public String serialize(Node root) {
+            List<String> list = new LinkedList<>();
+            serializeHelper(root, list);
+            return String.join(",", list);
+        }
+
+        private void serializeHelper(Node root, List<String> list) {
+            if (root == null) {
+                return;
+            } else {
+                list.add(String.valueOf(root.val));
+                list.add(String.valueOf(root.children.size()));
+                for (Node child : root.children) {
+                    serializeHelper(child, list);
+                }
+            }
+        }
+
+        // Decodes your encoded data to tree.
+        public Node deserialize(String data) {
+            if (data.isEmpty()) {
+                return null;
+            }
+
+            String[] ss = data.split(",");
+            List<String> q = new LinkedList<>(Arrays.asList(ss));
+            return deserializeHelper(q);
+        }
+
+        private Node deserializeHelper(List<String> q) {
+            Node root = new Node();
+            root.val = Integer.parseInt(q.remove(0));
+            int size = Integer.parseInt(q.remove(0));
+            root.children = new ArrayList<Node>(size);
+            for (int i = 0; i < size; i++) {
+                root.children.add(deserializeHelper(q));
+            }
+            return root;
+        }
+    }
+
+
+}
+
+
 class TreeNode {
 
     int val;
@@ -682,5 +910,53 @@ class TreeNode {
 
     TreeNode(int x) {
         val = x;
+    }
+}
+
+class BSTIterator {
+
+    Stack<TreeNode> stack;
+
+    public BSTIterator(TreeNode root) {
+
+        // Stack for the recursion simulation
+        this.stack = new Stack<TreeNode>();
+
+        // Remember that the algorithm starts with a call to the helper function
+        // with the root node as the input
+        this._leftmostInorder(root);
+    }
+
+    private void _leftmostInorder(TreeNode root) {
+
+        // For a given node, add all the elements in the leftmost branch of the tree
+        // under it to the stack.
+        while (root != null) {
+            this.stack.push(root);
+            root = root.left;
+        }
+    }
+
+    /**
+     * @return the next smallest number
+     */
+    public int next() {
+        // Node at the top of the stack is the next smallest element
+        TreeNode topmostNode = this.stack.pop();
+
+        // Need to maintain the invariant. If the node has a right child, call the
+        // helper function for the right child
+        if (topmostNode.right != null) {
+            this._leftmostInorder(topmostNode.right);
+        }
+
+        return topmostNode.val;
+    }
+
+    /**
+     * @return whether we have a next smallest number
+     */
+    public boolean hasNext() {
+        return this.stack.size() > 0;
     }
 }

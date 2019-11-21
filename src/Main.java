@@ -10,12 +10,259 @@ public class Main {
     public static void main(String[] args) {
         int[] nums = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
         Main m = new Main();
-        System.out.print(m.findLadders("hit", "cog",
-            new ArrayList<String>(Arrays.asList(
-                new String[]{"hot", "dot", "dog", "lot", "log", "cog"}))
-        ));
+        m.combinationSum4(new int[]{8, 7, 4, 3}, 11);
 
+    }
 
+    /*
+        lc75
+        time O(N) one pass
+        space O(1)
+        While curr <= p2 :
+
+        If nums[curr] = 0 : swap currth and p0th elements and move both pointers to the right.
+
+        If nums[curr] = 2 : swap currth and p2th elements. Move pointer p2 to the left.
+
+        If nums[curr] = 1 : move pointer curr to the right.
+     */
+    public void sortColors(int[] nums) {
+        int i = 0;
+        //表示左边的0的边界
+        int lo = 0;
+        //表示右边2的边界
+        int hi = nums.length - 1;
+        while (i <= hi) {
+            if (nums[i] == 0) {
+                swap(nums, lo, i);
+                lo++;
+                i++;
+            } else if (nums[i] == 2) {
+                swap(nums, hi, i);
+                hi--;
+            } else if (nums[i] == 1) {
+                i++;
+            }
+        }
+    }
+
+    /*
+    224. Basic Calculator
+    1.中缀变后缀表达式
+    2.后缀表达式用栈直接算：
+    碰到数字入栈
+    碰到符号 将栈顶两个数字拿出来运算后再入栈
+     */
+
+    //计算器
+    public int calculate(String exp) {
+        List<String> suffixExp = toSuffixExpression(exp);
+        Stack<String> helper = new Stack<>();
+        int res = 0;
+        for (String c : suffixExp) {
+            if (!isOperator(c.charAt(0))) {
+                helper.push(c);
+            } else if (!helper.isEmpty()) {
+                int b;
+                try {
+                    b = Integer.parseInt(helper.pop());
+                } catch (Exception e) {
+                    b = Integer.MIN_VALUE;
+                }
+
+                int a = 0;
+                if (helper.isEmpty()) {
+                    a = 0;
+                } else {
+                    a = Integer.parseInt(helper.pop());
+                }
+                switch (c) {
+                    case "+":
+                        res = a + b;
+                        break;
+                    case "-":
+                        res = a - b;
+                        break;
+                    case "*":
+                        res = a * b;
+                        break;
+                    case "/":
+                        res = a / b;
+                        break;
+                }
+
+                helper.push(String.valueOf(res));
+            }
+        }
+        return Integer.parseInt(helper.pop());
+    }
+
+    //计算器 中缀表达式转后缀表达式
+    /*
+    1.遇到操作数：直接添加到后缀表达式中
+    2.栈为空时，遇到运算符，直接入栈
+    3.遇到左括号：将其入栈
+    4.遇到右括号：执行出栈操作，并将出栈的元素输出，直到弹出栈的是左括号，左括号不输出。
+    5.遇到其他运算符：加减乘除：弹出所有优先级大于或者等于该运算符的栈顶元素，然后将该运算符入栈。
+    6.最终将栈中的元素依次出栈，输出。
+     */
+    private List<String> toSuffixExpression(String exp) {
+        Stack<Character> help = new Stack<>();
+        List<String> res = new ArrayList<>();
+        StringBuilder lastNumber = new StringBuilder();
+        char lastValid = 0;
+        for (int i = 0; i < exp.length(); i++) {
+            if (exp.charAt(i) == ' ') {
+                continue;
+            }
+            //是数字
+            if (isNumber(exp.charAt(i))) {
+                lastNumber.append(exp.charAt(i));
+            } else if (lastNumber.length() > 0) {
+                res.add(lastNumber.toString());
+                lastNumber = new StringBuilder();
+            }
+            if (exp.charAt(i) == '(') {
+                help.push(exp.charAt(i));
+            } else if (exp.charAt(i) == ')') {
+                while (help.peek() != '(') {
+                    res.add(String.valueOf(help.pop()));
+                }
+                help.pop();
+            } else if (isOperator(exp.charAt(i))) {
+                if (i == 0 || (!isNumber(lastValid) && lastValid != ')')) {
+                    res.add("0");
+                }
+                while (!help.isEmpty() && isOperator(help.peek()) && isPriority(help.peek(),
+                    exp.charAt(i))) {
+                    res.add(String.valueOf(help.pop()));
+                }
+                help.push(exp.charAt(i));
+            }
+            lastValid = exp.charAt(i);
+        }
+        if (lastNumber.length() > 0) {
+            res.add(lastNumber.toString());
+        }
+        while (!help.isEmpty()) {
+            res.add(String.valueOf(help.pop()));
+        }
+        return res;
+    }
+
+    private boolean isNumber(char c) {
+        return c >= '0' && c <= '9';
+    }
+
+    private boolean isPriority(char a, char b) {
+
+        return (a == '/' || a == '*') || (b == '+' || b == '-');
+    }
+
+    private boolean isOperator(char c) {
+        return c == '+' || c == '*' || c == '-' || c == '/';
+    }
+
+    //计算器one pass
+    int k = 0;
+
+    public int calculateOnePass(String s) {
+        char sign = '+';
+        int curr = 0;
+        int prev = 0;
+        int num = 0;
+        while (k < s.length()) {
+            char ch = s.charAt(k);
+            k++;
+            if (ch == ' ') {
+                continue;
+            } else if (Character.isDigit(ch)) {
+                num = num * 10 + ch - '0';
+            } else if (ch == '(') {
+                num = calculateOnePass(s);
+            } else if (ch == ')') {
+                break;
+            } else {
+                //先算乘除
+                if (sign == '/') {
+                    curr /= num;
+                } else if (sign == '*') {
+                    curr *= num;
+                } else if (sign == '+') {
+                    curr = num;
+                } else {
+                    curr = -num;
+                }
+                num = 0;
+                sign = ch;
+                //后算加减
+                if (ch == '+' || ch == '-') {
+                    prev += curr;
+                    curr = 0;
+                }
+            }
+        }
+        if (sign == '/') {
+            curr /= num;
+        } else if (sign == '*') {
+            curr *= num;
+        } else if (sign == '+') {
+            curr = num;
+        } else {
+            curr = -num;
+        }
+        return prev + curr;
+    }
+
+    /*
+    二分查找法
+    1.找出二维矩阵中最小的数left，最大的数right，那么第k小的数必定在left~right之间
+    2.mid=(left+right) / 2；在二维矩阵中寻找小于等于mid的元素个数count
+    3.若这个count小于k，表明第k小的数在右半部分且不包含mid，即left=mid+1, right=right，又保证了第k小的数在left~right之间
+    4.若这个count大于k，表明第k小的数在左半部分且可能包含mid，即left=left, right=mid，又保证了第k小的数在left~right之间
+    5.因为每次循环中都保证了第k小的数在left~right之间，当left==right时，第k小的数即被找出，等于right
+     */
+
+    public int kthSmallestBS(int[][] matrix, int k) {
+        int lo = matrix[0][0], hi = matrix[matrix.length - 1][matrix[0].length - 1] + 1;//[lo, hi)
+        while (lo < hi) {
+            int mid = lo + (hi - lo) / 2;
+            int count = 0, j = matrix[0].length - 1;
+            for (int i = 0; i < matrix.length; i++) {
+                while (j >= 0 && matrix[i][j] > mid) {
+                    j--;
+                }
+                count += (j + 1);
+            }
+            if (count < k) {
+                lo = mid + 1;
+            } else {
+                hi = mid;
+            }
+        }
+        return lo;
+    }
+
+    //time: O(min(n,k)*LogN) to build heap 使用堆
+    public int kthSmallest(int[][] matrix, int k) {
+        int length = matrix.length;
+        if (length == 0) {
+            return -1;
+        }
+        int width = matrix[0].length;
+        PriorityQueue<Pair<Pair<Integer, Integer>, Integer>> smallestHeap = new PriorityQueue<Pair<Pair<Integer, Integer>, Integer>>(
+            Comparator.comparingInt(Pair::getValue));
+        for (int i = 0; i < width; i++) {
+            smallestHeap.offer(new Pair(new Pair(0, i), matrix[0][i]));
+        }
+        for (int K = 0; K < k - 1; K++) {
+            Pair<Integer, Integer> p = smallestHeap.poll().getKey();
+            if (p.getKey() + 1 < length) {
+                smallestHeap.offer(new Pair(new Pair(p.getKey() + 1, p.getValue()),
+                    matrix[p.getKey() + 1][p.getValue()]));
+            }
+        }
+        return smallestHeap.peek().getValue();
     }
 
 
@@ -52,7 +299,9 @@ public class Main {
         return count;
     }
 
-
+    /*
+    lc 472 输出所有能被list里其他单词拼接而成的词
+     */
     //O(n(words)*m(ave letters))  O(Letters Numbers)
     public List<String> findAllConcatenatedWordsInADict(String[] words) {
         Arrays.sort(words, Comparator.comparingInt(String::length));
@@ -130,6 +379,15 @@ public class Main {
 
     }
 
+    /*
+    lc205
+    给定两个字符串 s 和 t，判断它们是否是同构的。
+
+    如果 s 中的字符可以被替换得到 t ，那么这两个字符串是同构的。
+
+    所有出现的字符都必须用另一个字符替换，同时保留字符的顺序。两个字符不能映射到同一个字符上，但字符可以映射自己本身。
+
+     */
     public static boolean isIsomorphic(String s, String t) {
         Map<Character, Character> smap = new HashMap<>();
         Set<Character> hasAssign = new HashSet<>();
@@ -1030,6 +1288,42 @@ public class Main {
         return next;
     }
 
+    /*
+    Initialize left pointer to 0 and right pointer to size-1
+    While left<right, do:
+        If height[left] is smaller than height[right]
+            If height[left]≥left_max, update left_max
+        Else add left_max−height[left] to ans
+        Add 1 to left.
+    Else
+        If height[right]≥right_max, update right_max
+        Else add right_max−height[right] to ans
+        Subtract 1 from right.
+     */
+    public int trapWater(int[] height) {
+        int left = 0, right = height.length - 1;
+        int ans = 0;
+        int left_max = 0, right_max = 0;
+        while (left < right) {
+            if (height[left] < height[right]) {
+                if (height[left] >= left_max) {
+                    left_max = height[left];
+                } else {
+                    ans += (left_max - height[left]);
+                }
+                ++left;
+            } else {
+                if (height[right] >= right_max) {
+                    right_max = height[right];
+                } else {
+                    ans += (right_max - height[right]);
+                }
+                --right;
+            }
+        }
+        return ans;
+    }
+
     public static int waterPlants(int[] plants, int cap1, int cap2) {
         int n = plants.length;
         int count = 2;
@@ -1804,26 +2098,73 @@ public class Main {
         return dp[n][m];
     }
 
+    /*
+    lc 39
+     */
     public List<List<Integer>> combinationSum(int[] candidates, int target) {
-        List<List<Integer>> res = new LinkedList<>();
-        findResult(candidates, target, new Stack<>(), res, 0);
+        //Arrays.sort(candidates);
+        List<List<Integer>> res = new ArrayList<>();
+        findResult(candidates, target, new LinkedList<>(), res, 0);
         return res;
     }
 
-    static void findResult(int[] candidates, int target, Stack<Integer> nums,
+    void findResult(int[] candidates, int target, Deque<Integer> nums,
         List<List<Integer>> res, int start) {
         if (target < 0) {
             return;
         }
         if (target == 0) {
-            res.add(new LinkedList(nums));
+            res.add(new ArrayList(nums));
         } else {
             for (int i = start; i < candidates.length && target - candidates[i] >= 0; i++) {
+                //假如一个数字只用一次
+//                if(i>start&&candidates[i]==candidates[i-1])
+//                    continue;
                 nums.add(candidates[i]);
-                findResult(candidates, target - candidates[i], nums, res, i);
-                nums.pop();
+                findResult(candidates, target - candidates[i], nums, res, i);//只用一次的话为i+1
+                nums.removeLast();
             }
         }
+    }
+
+    /*
+        lc377
+        combination sum的总数 数字可以重复，不同次序有效
+        1、状态
+
+对于“状态”，我们首先思考能不能就用问题当中问的方式定义状态，上面递归树都画出来了。当然就用问题问的方式。
+
+dp[i] ：对于给定的由正整数组成且不存在重复数字的数组，和为 i 的组合的个数。
+
+思考输出什么？因为状态就是问题当中问的方式而定义的，因此输出就是最后一个状态 dp[n]。
+
+2、状态转移方程
+
+由上面的树形图，可以很容易地写出状态转移方程：
+
+dp[i] = sum{dp[i - num] for num in nums and if i >= num}
+注意：在 00 这一点，我们定义 dp[0] = 1 的，它表示如果 nums 里有一个数恰好等于 target，它单独成为 11 种可能。
+
+     */
+    public int combinationSum4(int[] nums, int target) {
+
+        int len = nums.length;
+        if (len == 0) {
+            return 0;
+        }
+        int[] dp = new int[target + 1];
+
+        // 注意：理解这一句代码的含义
+        dp[0] = 1;
+        for (int i = 1; i <= target; i++) {
+            for (int j = 0; j < len; j++) {
+                if (i - nums[j] >= 0) {
+                    dp[i] += dp[i - nums[j]];
+                }
+            }
+        }
+        return dp[target];
+
     }
 
     public static int searchInsert(int[] nums, int target) {
@@ -3337,6 +3678,7 @@ public class Main {
         return result;
     }
 
+    //atoi string 转 int
     public static int myAtoi(String str) {
         if (str == null) {
             return 0;

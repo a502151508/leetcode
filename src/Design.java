@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -206,7 +207,7 @@ class LFUCache {
     private int capacity;
     private Map<Integer, Integer> freqMap;
     private Map<Integer, Integer> map;
-    private Map<Integer, LinkedList<Integer>> freqGroup;
+    private Map<Integer, LinkedHashSet<Integer>> freqGroup;
     private int leastFreq = 1;
 
     public LFUCache(int capacity) {
@@ -220,35 +221,36 @@ class LFUCache {
         int res = map.getOrDefault(key, -1);
         if (res != -1) {
             int freq = freqMap.get(key);
-            LinkedList<Integer> currentGroup = freqGroup.get(freq);
+            LinkedHashSet<Integer> currentGroup = freqGroup.get(freq);
             currentGroup.remove(key);
             freq++;
             freqMap.put(key, freq);
-            LinkedList<Integer> freqList = freqGroup.getOrDefault(freq, new LinkedList<>());
-            freqList.addLast(key);
+            LinkedHashSet<Integer> freqList = freqGroup.getOrDefault(freq, new LinkedHashSet<>());
+            freqList.add(key);
             freqGroup.put(freq, freqList);
         }
         return res;
     }
 
     public void put(Integer key, int value) {
-        if (capacity == 0) {
+        if (capacity <= 0) {
             return;
         }
         if (map.size() == capacity && !map.containsKey(key)) {
-            LinkedList<Integer> leastFreqGroup = freqGroup.get(leastFreq);
+            LinkedHashSet<Integer> leastFreqGroup = freqGroup.get(leastFreq);
             while (leastFreqGroup == null || leastFreqGroup.size() == 0) {
                 leastFreq++;
                 leastFreqGroup = freqGroup.getOrDefault(leastFreq, null);
             }
-            int removedKey = leastFreqGroup.removeFirst();
+            int removedKey = leastFreqGroup.iterator().next();
+            leastFreqGroup.remove(removedKey);
             freqMap.remove(removedKey);
             map.remove(removedKey);
         }
 
         int freq = freqMap.getOrDefault(key, 0);
         if (freq > 0) {
-            LinkedList<Integer> currentGroup = freqGroup.get(freq);
+            LinkedHashSet<Integer> currentGroup = freqGroup.get(freq);
             currentGroup.remove(key);
         }
         freq++;
@@ -257,8 +259,8 @@ class LFUCache {
         if (freq < leastFreq) {
             leastFreq = freq;
         }
-        LinkedList<Integer> freqList = freqGroup.getOrDefault(freq, new LinkedList<>());
-        freqList.addLast(key);
+        LinkedHashSet<Integer> freqList = freqGroup.getOrDefault(freq, new LinkedHashSet<>());
+        freqList.add(key);
         freqGroup.put(freq, freqList);
 
     }
