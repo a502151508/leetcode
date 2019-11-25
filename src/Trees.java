@@ -137,6 +137,109 @@ public class Trees {
         return levels;
     }
 
+    //lc 684
+    //time inverse Ackermann function nearly to O(N)
+    public int[] findRedundantConnection(int[][] edges) {
+
+        // initialize n isolated islands
+        int[] nums = new int[edges.length * 2];
+        Arrays.fill(nums, -1);
+        int[] res = new int[2];
+        // perform union find
+        for (int i = 0; i < edges.length; i++) {
+            int x = find(nums, edges[i][0]);
+            int y = find(nums, edges[i][1]);
+
+            // if two vertices happen to be in the same set
+            // then there's a cycle
+            //find the last cycle
+            if (x == y) {
+                res[0] = edges[i][0];
+                res[1] = edges[i][1];
+            } else {
+                // union
+                nums[y] = x;
+
+            }
+        }
+        return res;
+    }
+
+
+    /*
+    261 Graph valid tree
+    dfs solution time O(N) space O(N)
+     */
+    Map<Integer, List<Integer>> connectMap;
+    Set<Integer> isVisited;
+
+    public boolean validTree(int n, int[][] edges) {
+
+        isVisited = new HashSet<>();
+        connectMap = new HashMap<>();
+        //get a adjacent list
+        for (int[] edge : edges) {
+            List<Integer> connection1 = connectMap.getOrDefault(edge[0], new ArrayList<>());
+            List<Integer> connection2 = connectMap.getOrDefault(edge[1], new ArrayList<>());
+            connection1.add(edge[1]);
+            connection2.add(edge[0]);
+            connectMap.put(edge[0], connection1);
+            connectMap.put(edge[1], connection2);
+        }
+        return n == 1 || dfs(0, -1) && isVisited.size() == n;
+
+    }
+
+    private boolean dfs(int cur, int parent) {
+        if (!connectMap.containsKey(cur)) {
+            return false;
+        }
+        isVisited.add(cur);
+        for (int neighbour : connectMap.get(cur)) {
+            if (neighbour == parent) {
+                continue;
+            }
+            if (isVisited.contains(neighbour)) {
+                return false;
+            }
+            if (!dfs(neighbour, cur)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    //space(N) time(N)
+    public boolean validTreeUnionFind(int n, int[][] edges) {
+        // initialize n isolated islands
+        int[] nums = new int[n];
+        Arrays.fill(nums, -1);
+
+        // perform union find
+        for (int i = 0; i < edges.length; i++) {
+            int x = find(nums, edges[i][0]);
+            int y = find(nums, edges[i][1]);
+
+            // if two vertices happen to be in the same set
+            // then there's a cycle
+            if (x == y) {
+                return false;
+            }
+
+            // union
+            nums[y] = x;
+        }
+
+        return edges.length == n - 1;
+    }
+
+    int find(int nums[], int i) {
+        if (nums[i] == -1) {
+            return i;
+        }
+        return find(nums, nums[i]);
+    }
+
     //lc617 合并两棵树
     public TreeNode mergeTrees(TreeNode t1, TreeNode t2) {
         if (t1 == null && t2 == null) {

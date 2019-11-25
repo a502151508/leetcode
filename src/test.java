@@ -11,11 +11,6 @@ public class test {
 
     public static void main(String[] args) {
 
-        List<String> res = new ArrayList<>();
-        res.add("a");
-        String a = res.get(0);
-        a += '3';
-        System.out.println(calculate("0-2147483648"));
     }
 
     public static int calculate(String s) {
@@ -75,22 +70,6 @@ public class test {
         }
         return res;
     }
-
-//web crawler
-//    public List<String> crawl(String startUrl, HtmlParser htmlParser) {
-//        List<String> urls = htmlParser.getUrls(startUrl);
-//        String hostName = getHostname(startUrl);
-//        Set<String> res = new HashSet<>();
-//        for(String url:urls){
-//            if(hostName.equals(getHostname(url))){
-//                res.add(url);
-//            }
-//        }
-//        return new ArrayList(res);
-//    }
-//    private String getHostname(String url){
-//        return url.substring(a.indexOf("//")+2).split("/")[0];
-//    }
 
 
     public static void main99(String[] args) {

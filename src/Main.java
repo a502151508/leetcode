@@ -8,10 +8,393 @@ import java.util.*;
 public class Main {
 
     public static void main(String[] args) {
-        int[] nums = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
         Main m = new Main();
-        m.combinationSum4(new int[]{8, 7, 4, 3}, 11);
+        Map<Integer, Integer> map = new HashMap<>();
+        List<List<String>> accounts = new ArrayList<>();
+        List<String> a1 = new ArrayList<>();
+        List<String> a2 = new ArrayList<>();
+        List<String> a3 = new ArrayList<>();
+        List<String> a4 = new ArrayList<>();
+        a4.add("John");
+        a4.add("johnnybravo@mail.com");
+        a1.add("John");
+        a2.add("John");
+        a3.add("Mary");
+        a1.add("johnsmith@mail.com");
+        a1.add("john_newyork@mail.com");
+        a2.add("johnsmith@mail.com");
+        a2.add("john00@mail.com");
+        a3.add("mary@mail.com");
+        accounts.add(a1);
+        accounts.add(a2);
+        accounts.add(a3);
+        accounts.add(a4);
+        System.out.println(m.accountsMerge(accounts));
+    }
 
+/*
+lc 721 accounts merge
+another solution union find. assign a id for each email
+ */
+
+    public List<List<String>> accountsMergeDFS(List<List<String>> accounts) {
+        Map<String, String> emailToName = new HashMap();
+        Map<String, ArrayList<String>> graph = new HashMap();
+        for (List<String> account : accounts) {
+            String name = "";
+            for (String email : account) {
+                if (name == "") {
+                    name = email;
+                    continue;
+                }
+                graph.computeIfAbsent(email, x -> new ArrayList<String>()).add(account.get(1));
+                graph.computeIfAbsent(account.get(1), x -> new ArrayList<String>()).add(email);
+                emailToName.put(email, name);
+            }
+        }
+
+        Set<String> seen = new HashSet();
+        List<List<String>> ans = new ArrayList();
+        for (String email : graph.keySet()) {
+            if (!seen.contains(email)) {
+                seen.add(email);
+                Stack<String> stack = new Stack();
+                stack.push(email);
+                List<String> component = new ArrayList();
+                while (!stack.empty()) {
+                    String node = stack.pop();
+                    component.add(node);
+                    for (String nei : graph.get(node)) {
+                        if (!seen.contains(nei)) {
+                            seen.add(nei);
+                            stack.push(nei);
+                        }
+                    }
+                }
+                Collections.sort(component);
+                component.add(0, emailToName.get(email));
+                ans.add(component);
+            }
+        }
+        return ans;
+    }
+
+    public List<List<String>> accountsMerge(List<List<String>> accounts) {
+        Map<String, List<String>> accountDict = new HashMap<>();
+        //for each account
+        for (List<String> account : accounts) {
+            //for each email address
+            for (int i = 1; i < account.size(); i++) {
+                String email = account.get(i);
+                //find duplicate email
+                if (accountDict.containsKey(email)) {
+                    mergeTwoAccounts(account, accountDict.get(email), accountDict);
+                    break;
+                } else {
+                    accountDict.put(email, account);
+                }
+            }
+        }
+        Set<List<String>> res = new HashSet<>();
+        for (List<String> mergedAccount : new HashSet<>(accountDict.values())) {
+            String name = mergedAccount.get(0);
+            mergedAccount.remove(0);
+            mergedAccount = new ArrayList<>(new HashSet<>(mergedAccount));
+            Collections.sort(mergedAccount);
+            mergedAccount.add(0, name);
+            res.add(mergedAccount);
+        }
+        return new ArrayList<>(res);
+    }
+
+    //move emails from account1 to account2
+    private void mergeTwoAccounts(List<String> account1, List<String> account2,
+        Map<String, List<String>> accountDict) {
+        if (account1.size() > account2.size()) {
+            mergeTwoAccounts(account2, account1, accountDict);
+            return;
+        }
+        for (int i = 1; i < account1.size(); i++) {
+            String email = account1.get(i);
+            account2.add(account1.get(i));
+            accountDict.put(email, account2);
+
+        }
+    }
+
+
+    /*
+    lc 133 clone graph
+     */
+
+    /*
+// Definition for a Node.
+class Node {
+    public int val;
+    public List<Node> neighbors;
+
+    public Node() {}
+
+    public Node(int _val,List<Node> _neighbors) {
+        val = _val;
+        neighbors = _neighbors;
+    }
+};
+*/
+
+    private Map<Node, Node> oldToNew = new HashMap<>();
+
+    public Node cloneGraph(Node node) {
+        dfs(node);
+        return oldToNew.get(node);
+    }
+
+    void dfs(Node node) {
+        if (oldToNew.containsKey(node)) {
+            return;
+        }
+        Node newNode = getClonedNode(node);
+        List<Node> neighbors = new ArrayList<>();
+        for (Node nei : node.neighbors) {
+            dfs(nei);
+            neighbors.add(getClonedNode(nei));
+        }
+
+        newNode.neighbors = neighbors;
+    }
+
+    Node getClonedNode(Node n) {
+        if (!oldToNew.containsKey(n)) {
+            Node newNode = new Node();
+            newNode.val = n.val;
+            oldToNew.put(n, newNode);
+        }
+        return oldToNew.get(n);
+    }
+
+    /*
+    lc 438
+    Time O(n) two pointer sliding window two pass.
+     */
+    public List<Integer> findAnagrams(String s, String p) {
+        List<Integer> res = new ArrayList<>();
+        if (s.length() == 0) {
+            return res;
+        }
+        //can speed up by using int[] to do counting
+        Map<Character, Integer> pCount = new HashMap<>();
+        for (char c : p.toCharArray()) {
+            pCount.put(c, pCount.getOrDefault(c, 0) + 1);
+        }
+        Map<Character, Integer> curCount = new HashMap<>();
+        //make a deep copy of pCount
+        curCount.putAll(pCount);
+        int i = 0;
+        int j = i;
+        while (j < s.length()) {
+            char curChar = s.charAt(j);
+            if (curCount.containsKey(curChar)) {
+                int curCharCount = curCount.get(curChar);
+                if (curCharCount == 1) {
+                    curCount.remove(curChar);
+                } else {
+                    curCount.put(curChar, curCharCount - 1);
+                }
+                j++;
+            } else {
+                //check if this letter original needed
+                if (pCount.containsKey(curChar)) {
+                    curCount.put(s.charAt(i), curCount.getOrDefault(s.charAt(i), 0) + 1);
+                    i++;
+                } else {
+                    j++;
+                    i = j;
+                    curCount = new HashMap<>();
+                    //reset count dict.
+                    curCount.putAll(pCount);
+                }
+            }
+            if (curCount.size() == 0) {
+                res.add(i);
+                curCount.put(s.charAt(i), curCount.getOrDefault(s.charAt(i), 0) + 1);
+                i++;
+            }
+        }
+        return res;
+    }
+
+    interface HtmlParser {
+
+        List<String> getUrls(String url);
+    }
+
+    //lc1236 web crawler
+    public List<String> crawl(String startUrl, HtmlParser htmlParser) {
+        Set<String> set = new HashSet<>();
+        Queue<String> queue = new LinkedList<>();
+        String hostname = getHostname(startUrl);
+
+        queue.offer(startUrl);
+        set.add(startUrl);
+
+        while (!queue.isEmpty()) {
+            String currentUrl = queue.poll();
+            for (String url : htmlParser.getUrls(currentUrl)) {
+                if (hostname.equals(getHostname(url)) && !set.contains(url)) {
+                    queue.offer(url);
+                    set.add(url);
+                }
+            }
+        }
+
+        return new ArrayList<String>(set);
+    }
+
+    private String getHostname(String url) {
+        return url.substring(url.indexOf("//") + 2).split("/")[0];
+    }
+
+    /*
+    159. Longest Substring with At Most Two Distinct Characters
+    Example 1:
+
+    Input: "eceba"
+    Output: 3
+    Explanation: t is "ece" which its length is 3.
+    Example 2:
+
+    Input: "ccaabbb"
+    Output: 5
+    Explanation: t is "aabbb" which its length is 5.
+    Time complexity : O(N) where N is a number of characters in the input string.
+    Space complexity : O(1) since additional space is used only for a hashmap with at most 3 elements.
+     */
+    public int lengthOfLongestSubstringTwoDistinct(String s) {
+        Map<Character, Integer> dict = new HashMap<>();
+        int l = 0, cur = 0;
+        int res = 0;
+        while (cur < s.length()) {
+            char c = s.charAt(cur);
+            if (dict.containsKey(c)) {
+                dict.put(c, dict.get(c) + 1);
+            } else {
+                while (l <= cur && dict.size() == 2) {
+                    char leftChar = s.charAt(l);
+                    dict.put(leftChar, dict.get(leftChar) - 1);
+                    if (dict.get(leftChar) == 0) {
+                        dict.remove(leftChar);
+                    }
+                    l++;
+                }
+                dict.put(c, 1);
+            }
+            res = Math.max(res, cur - l + 1);
+            cur++;
+        }
+        return res;
+    }
+
+    /*
+    340. Longest Substring with At Most K Distinct Characters
+    Time complexity : O(N) where N is a number of characters in the input string.
+    Space complexity : O(k) since additional space is used only for a hashmap with at most k elements.
+     */
+    public int lengthOfLongestSubstringKDistinct(String s, int k) {
+        if (k <= 0) {
+            return 0;
+        }
+        Map<Character, Integer> dict = new HashMap<>();
+        int l = 0, cur = 0;
+        int res = 0;
+        while (cur < s.length()) {
+            char c = s.charAt(cur);
+            if (dict.containsKey(c)) {
+                dict.put(c, dict.get(c) + 1);
+            } else {
+                while (l <= cur && dict.size() == k) {
+                    char leftChar = s.charAt(l);
+                    dict.put(leftChar, dict.get(leftChar) - 1);
+                    if (dict.get(leftChar) == 0) {
+                        dict.remove(leftChar);
+                    }
+                    l++;
+                }
+                dict.put(c, 1);
+            }
+            res = Math.max(res, cur - l + 1);
+            cur++;
+        }
+        return res;
+    }
+
+    /*
+    76. Minimum Window Substring
+Time complexity O(s.length+t.length) calculate chars count in t. and then sliding window in s. both one pass
+space complexity O(t.length)
+     */
+    public String minWindow(String s, String t) {
+        if (s.length() == 0 || t.length() == 0 || t.length() > s.length()) {
+            return "";
+        }
+        Map<Character, Integer> charCount = new HashMap<>();
+        for (char c : t.toCharArray()) {
+            charCount.put(c, charCount.getOrDefault(c, 0) + 1);
+        }
+        int cur = 0, start = 0;
+        //remain means how many letters still needed
+        int remain = charCount.size();
+        //stored the min windows's start index and end index
+        int[] ans = new int[2];
+        ans[1] = s.length() - 1;
+        while (cur < s.length()) {
+            char curChar = s.charAt(cur);
+            if (charCount.containsKey(curChar)) {
+                //if there is a letter we need, update the count dict with -1, which means we need 1 less this letter.
+                charCount.put(curChar, charCount.get(curChar) - 1);
+                //when it reach 0. means we need no more this letter.
+                //remain--, means one less letter needed.
+                if (charCount.get(curChar) == 0) {
+                    remain--;
+                }
+            }
+            //no more letters needed, is potential valid answer.
+            if (remain == 0) {
+                while (start <= cur) {
+                    //if now have better solution, store it.
+                    if (cur - start < ans[1] - ans[0]) {
+                        ans[0] = start;
+                        ans[1] = cur;
+                    }
+                    char left = s.charAt(start);
+                    if (charCount.containsKey(left)) {
+                        //can't move to right, current left letter is needed
+                        if (charCount.get(left) == 0) {
+                            break;
+                        }
+                        //update the count
+                        charCount.put(left, charCount.get(left) + 1);
+                    }
+                    //keep sliding to right
+                    start++;
+                }
+            }
+            cur++;
+        }
+        //if remain!=0, then no solution
+        return remain == 0 ? s.substring(ans[0], ans[1] + 1) : "";
+    }
+
+    //lc 191 count how many 1s in a integer
+    public int hammingWeight(int n) {
+        int bits = 0;
+        int mask = 1;
+        for (int i = 0; i < 32; i++) {
+            if ((n & mask) != 0) {
+                bits++;
+            }
+            mask <<= 1;
+        }
+        return bits;
     }
 
     /*
@@ -588,6 +971,7 @@ public class Main {
 
 
     public boolean searchPartitionK(int[] groups, int row, int[] nums, int target) {
+        //if each number had been placed, its successful.
         if (row < 0) {
             return true;
         }
@@ -600,6 +984,9 @@ public class Main {
                 }
                 groups[i] -= v;
             }
+            //Because all numbers are positive, groups[i]==0 happens when there is a number can't fit into an empty group.
+            //However, it also means the number can't be fitted into any group.
+            //Therefore, there is no way to partition into k equal sum subsets.
             if (groups[i] == 0) {
                 break;
             }
@@ -607,16 +994,24 @@ public class Main {
         return false;
     }
 
-    //平分成k组  回溯法暴力搜索
+    /*平分成k组  回溯法暴力搜索 k parts
+    lc698 Time Complexity:O(k^(N−k)*k!), where NN is the length of nums,
+    and kk is as given. As we skip additional zeroes in groups, naively we will make O(k!) calls to search,
+    then an additional O(k^(N−k) ) calls after every element of groups is nonzero.
+    Space Complexity: O(N)O(N), the space used by recursive calls to search in our call stack.
+     */
     public boolean canPartitionKSubsets(int[] nums, int k) {
         int sum = Arrays.stream(nums).sum();
         if (sum % k > 0) {
             return false;
         }
+        //必定为sum/k
         int target = sum / k;
 
         Arrays.sort(nums);
+        //search from back to front
         int row = nums.length - 1;
+        //prune the search space
         if (nums[row] > target) {
             return false;
         }
@@ -665,7 +1060,7 @@ public class Main {
         for (int i = 0; i < N - 1; i++) {
             for (int j = i + 1; j < N; j++) {
                 if (M[i][j] == 1) {
-                    unionFind(i, j, root, ids);
+                    union(i, j, root, ids);
                 }
             }
         }
@@ -1176,15 +1571,15 @@ public class Main {
         }
         StringBuilder res = new StringBuilder();
         for (char c : S.toCharArray()) {
-            char c1 = (char) (getRoot(c - 'a', root) + 'a');
+            char c1 = (char) (find(c - 'a', root) + 'a');
             res.append(c1);
         }
         return res.toString();
     }
 
     private static void unionFindSmallDicString(int a, int b, int[] root) {
-        int aRoot = getRoot(a, root);
-        int bRoot = getRoot(b, root);
+        int aRoot = find(a, root);
+        int bRoot = find(b, root);
         if (aRoot == bRoot) {
             return;
         }
@@ -1604,7 +1999,7 @@ public class Main {
 
         for (int i = g + 1; i <= n; i++) {
             for (int j = 2 * i; j <= n; j += i) {
-                unionFind(j, i, root, ids);
+                union(j, i, root, ids);
             }
         }
 
@@ -1613,7 +2008,7 @@ public class Main {
         Iterator<Integer> itDest = destinationCities.iterator();
 
         while (itSrc.hasNext() && itDest.hasNext()) {
-            res.add(getRoot(itSrc.next(), root) == getRoot(itDest.next(), root) ? 1 : 0);
+            res.add(find(itSrc.next(), root) == find(itDest.next(), root) ? 1 : 0);
         }
 
         return res;
@@ -1644,10 +2039,10 @@ public class Main {
         for (Map.Entry<Integer, Integer> e : s.entrySet()) {
 
             if (s.containsKey(e.getKey() + 1)) {
-                unionFind(e.getValue(), s.get(e.getKey() + 1), root, ids);
+                union(e.getValue(), s.get(e.getKey() + 1), root, ids);
             }
             if (s.containsKey(e.getKey() - 1)) {
-                unionFind(e.getValue(), s.get(e.getKey() - 1), root, ids);
+                union(e.getValue(), s.get(e.getKey() - 1), root, ids);
             }
         }
         int max = Integer.MIN_VALUE;
@@ -1657,13 +2052,24 @@ public class Main {
         return max;
     }
 
-    private static void unionFind(int a, int b, int[] root, int[] ids) {
-        int aRoot = getRoot(a, root);
-        int bRoot = getRoot(b, root);
+    //理论上，从一个完全不相连通的N个对象的集合开始，任意顺序的M次union()调用所需的时间为O(N+Mlg*N)。
+    //其中lg*N称为迭代对数（iterated logarithm）。实数的迭代对数是指须对实数连续进行几次对数运算后，
+    // 其结果才会小于等于1。这个函数增加非常缓慢，可以视为近似常数（例如2^65535的迭代对数为5）。
+    //worst O(lgN)
+    // aveg inverse Ackermann function nearly O(N)
+    /*
+    Definition: A function of two parameters whose value grows very, very slowly.
+     Formal Definition: α(m,n) = min{i≥ 1: A(i, ⌊ m/n⌋) > log2 n} where A(i,j)
+     is Ackermann's function.
+     */
+    private static void union(int a, int b, int[] root, int[] ids) {
+        int aRoot = find(a, root);
+        int bRoot = find(b, root);
         if (aRoot == bRoot) {
             return;
         }
 
+        //link it to the root with more connections, which will minimum the root numbers
         if (ids[aRoot] < ids[bRoot]) {
             root[aRoot] = root[bRoot];
             ids[bRoot] += ids[aRoot];
@@ -1673,8 +2079,11 @@ public class Main {
         }
     }
 
-    private static int getRoot(int a, int[] root) {
+    //worst O(lgN) since path compression
+    //avg  nearly to O(N)
+    private static int find(int a, int[] root) {
         while (a != root[a]) {
+            //compress the path
             root[a] = root[root[a]];
             a = root[a];
         }
@@ -1684,7 +2093,7 @@ public class Main {
     private int countSets(int[] root) {
         int cnt = 0;
         for (int i = 0; i <= root.length - 1; i++) {
-            if (getRoot(i, root) == i) {
+            if (find(i, root) == i) {
                 cnt++;
             }
         }
@@ -3511,6 +3920,10 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         return first;
     }
 
+
+    /*
+    3 Longest Substring Without Repeating Characters
+     */
     public int lengthOfLongestSubstring(String s) {
         int i = 0;
         if (s.length() == 0) {
@@ -3622,7 +4035,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
     }
 
 
-    //zig zag
+    //zig zag zigzag String
     public static String convertZ(String s, int numRows) {
         if (numRows == 1 || s.length() < numRows) {
             return s;
@@ -3924,6 +4337,7 @@ class Node {
     public int val;
     public Node next;
     public Node random;
+    public List<Node> neighbors;
 
     public Node() {
     }
