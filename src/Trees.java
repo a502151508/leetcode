@@ -88,9 +88,11 @@ public class Trees {
                     prev = prev.right;
                 }
                 if (prev.right == null) {
+                    //将中根下面的最后一个节点的右节点设为 predecessor节点 即为返回节点
                     prev.right = cur;
                     cur = cur.left;
                 } else {
+                    //第二次dfs 发现这是之前设置过的节点，表示已经遍历过左子树，此时复原 并继续遍历右子树
                     prev.right = null;
                     System.out.println(cur.val);
                     cur = cur.right;
@@ -856,9 +858,11 @@ public class Trees {
         int x = -1, y = -1;
         for (int i = 0; i < n - 1; ++i) {
             if (nums.get(i + 1) < nums.get(i)) {
+                //假如颠倒的两个数挨着，就刚好是第一次取得x，y 不然y是下一个比前面一个数大的数
                 y = nums.get(i + 1);
                 // first swap occurence
                 if (x == -1) {
+                    //x为第一个确定的数
                     x = nums.get(i);
                 }
                 // second swap occurence
@@ -889,6 +893,39 @@ public class Trees {
         inorder(root, nums);
         int[] swapped = findTwoSwapped(nums);
         recover(root, 2, swapped[0], swapped[1]);
+    }
+
+    public void swap(TreeNode a, TreeNode b) {
+        int tmp = a.val;
+        a.val = b.val;
+        b.val = tmp;
+    }
+
+    //use prev to record the last node, instead of store the inorder array.
+    //Time O(N) finish a dfs  Space O(H) at most stored H node in stack.
+    public void recoverTreeOneDfs(TreeNode root) {
+        Deque<TreeNode> stack = new ArrayDeque();
+        TreeNode x = null, y = null, pred = null;
+
+        while (!stack.isEmpty() || root != null) {
+            while (root != null) {
+                stack.add(root);
+                root = root.left;
+            }
+            root = stack.removeLast();
+            if (pred != null && root.val < pred.val) {
+                y = root;
+                if (x == null) {
+                    x = pred;
+                } else {
+                    break;
+                }
+            }
+            pred = root;
+            root = root.right;
+        }
+
+        swap(x, y);
     }
 
 }
@@ -1063,3 +1100,4 @@ class BSTIterator {
         return this.stack.size() > 0;
     }
 }
+

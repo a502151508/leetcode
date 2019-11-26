@@ -1,7 +1,4 @@
-import java.util.concurrent.DelayQueue;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.math.BigDecimal;
 import javafx.util.Pair;
 import java.util.*;
 
@@ -9,28 +6,207 @@ public class Main {
 
     public static void main(String[] args) {
         Main m = new Main();
-        Map<Integer, Integer> map = new HashMap<>();
-        List<List<String>> accounts = new ArrayList<>();
-        List<String> a1 = new ArrayList<>();
-        List<String> a2 = new ArrayList<>();
-        List<String> a3 = new ArrayList<>();
-        List<String> a4 = new ArrayList<>();
-        a4.add("John");
-        a4.add("johnnybravo@mail.com");
-        a1.add("John");
-        a2.add("John");
-        a3.add("Mary");
-        a1.add("johnsmith@mail.com");
-        a1.add("john_newyork@mail.com");
-        a2.add("johnsmith@mail.com");
-        a2.add("john00@mail.com");
-        a3.add("mary@mail.com");
-        accounts.add(a1);
-        accounts.add(a2);
-        accounts.add(a3);
-        accounts.add(a4);
-        System.out.println(m.accountsMerge(accounts));
+        int[][] p = new int[][]{{0, 0}, {94911151, 94911150}, {94911152, 94911151}};
+        System.out.println(m.gcd(-8, 16));
+
     }
+
+
+
+
+    /*
+937. Reorder Data in Log Files
+Time O(NlogN)
+Space O(N)
+     */
+
+    public String[] reorderLogFiles(String[] logs) {
+        Arrays.sort(logs, (log1, log2) -> {
+            String[] split1 = log1.split(" ", 2);
+            String[] split2 = log2.split(" ", 2);
+            boolean isDigit1 = Character.isDigit(split1[1].charAt(0));
+            boolean isDigit2 = Character.isDigit(split2[1].charAt(0));
+            if (!isDigit1 && !isDigit2) {
+                int cmp = split1[1].compareTo(split2[1]);
+                if (cmp != 0) {
+                    return cmp;
+                }
+                return split1[0].compareTo(split2[0]);
+            }
+            return isDigit1 ? (isDigit2 ? 0 : 1) : -1;
+        });
+        return logs;
+    }
+
+    /*
+        505. The Maze II
+        shortest distance to destination
+
+        Time complexity : O(m∗n∗max(m,n)).
+        Complete traversal of maze will be done in the worst case.
+        Here, mm and nn refers to the number of rows and columns of the maze.
+        Further, for every current node chosen, we can travel up to a maximum
+        depth of max(m,n) in any direction.
+
+        Space complexity :O(mn). distance array of size m*nm∗n is used.
+     */
+    private int[][] distance;
+
+    public int shortestDistance(int[][] maze, int[] start, int[] destination) {
+        if (maze.length == 0) {
+            return -1;
+        }
+        distance = new int[maze.length][maze[0].length];
+        for (int[] d : distance) {
+            Arrays.fill(d, -1);
+        }
+        dfs(maze, start, destination, 0);
+        return distance[destination[0]][destination[1]];
+    }
+
+    private void dfs(int[][] maze, int[] cur, int[] dest, int count) {
+        if (distance[cur[0]][cur[1]] != -1 && distance[cur[0]][cur[1]] <= count) {
+            return;
+        }
+        distance[cur[0]][cur[1]] = count;
+        if (cur[0] == dest[0] && cur[1] == dest[1]) {
+            return;
+        }
+        for (int i = 0; i < 4; i++) {
+            int x = cur[0];
+            int y = cur[1];
+            int moveRow = rowOffset[i];
+            int moveCol = colOffset[i];
+            int moveCount = count;
+            while (inMaze(x + moveRow, y + moveCol, maze) && maze[x + moveRow][y + moveCol] == 0) {
+                x += moveRow;
+                y += moveCol;
+                moveCount++;
+            }
+            if (distance[x][y] != -1 && distance[x][y] <= moveCount) {
+                continue;
+            }
+            dfs(maze, new int[]{x, y}, dest, moveCount);
+        }
+    }
+
+    /*
+    490 the maze
+    Time complexity : O(mn). Complete traversal of maze will be done in the worst case.
+    Here, mm and nn refers to the number of rows and coloumns of the maze.
+    Space complexity : O(mn). visited array of size
+    m∗n is used and m*n stack used by dfs.
+     */
+
+    private int[] rowOffset = new int[]{1, 0, -1, 0};
+    private int[] colOffset = new int[]{0, -1, 0, 1};
+    private boolean[][] isVisited;
+
+    public boolean hasPath(int[][] maze, int[] start, int[] destination) {
+        if (maze.length == 0) {
+            return false;
+        }
+        isVisited = new boolean[maze.length][maze[0].length];
+        return dfs(maze, start, destination);
+    }
+
+    private boolean dfs(int[][] maze, int[] cur, int[] dest) {
+        if (isVisited[cur[0]][cur[1]] == true) {
+            return false;
+        }
+        isVisited[cur[0]][cur[1]] = true;
+        if (cur[0] == dest[0] && cur[1] == dest[1]) {
+            return true;
+        }
+        boolean flag = false;
+        for (int i = 0; i < 4; i++) {
+            int x = cur[0];
+            int y = cur[1];
+            int moveRow = rowOffset[i];
+            int moveCol = colOffset[i];
+            while (inMaze(x + moveRow, y + moveCol, maze) && maze[x + moveRow][y + moveCol] == 0) {
+                x += moveRow;
+                y += moveCol;
+            }
+            flag = dfs(maze, new int[]{x, y}, dest);
+            if (flag) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean inMaze(int x, int y, int[][] maze) {
+        return x >= 0 && x < maze.length && y >= 0 && y < maze[0].length;
+    }
+
+    /*
+    lc 149 max points on a line
+    Time O(N^2) enum each line based on two points which is N-1+N-2+...+2+1 ~~= N^2
+    Space O(N)  to track down not more than N - 1 lines.
+     */
+
+    public int maxPoints(int[][] points) {
+        if (points.length < 3) {
+            return points.length;
+        }
+        int max = 2;
+        for (int i = 0; i < points.length - 1; i++) {
+            max = Math.max(max, pointsCountOnlinesThatPassOnePoint(points, i));
+        }
+        return max;
+    }
+
+    // i means index of current point.
+    //precision is a problem when using double to calculate slope
+    private int pointsCountOnlinesThatPassOnePoint(int[][] points, int i) {
+        int max = 1;
+        int samePoint = 0;
+        //slope -> count
+        Map<String, Integer> count = new HashMap<>();
+        for (int j = i + 1; j < points.length; j++) {
+            int x1 = points[i][0];
+            int y1 = points[i][1];
+            int x2 = points[j][0];
+            int y2 = points[j][1];
+            if (x1 == x2 && y1 == y2) {
+                samePoint++;
+                continue;
+            }
+            String slope;
+            //represents horizontal line
+            if (y1 == y2) {
+                slope = "0";
+            }
+            //represents vertical line
+            else if (x1 == x2) {
+                slope = "Infinity";
+            } else {
+                int x = x1 - x2;
+                int y = y1 - y2;
+                int gcd = gcd(x, y);
+                //gcd should be same sign as x
+                x /= gcd;
+                y /= gcd;
+                //so x would always positive. y would represents positive or negative
+                slope = Integer.toString(y) + "/" + Integer.toString(x);
+            }
+            count.put(slope, count.getOrDefault(slope, 1) + 1);
+            max = Math.max(max, count.get(slope));
+        }
+        return max + samePoint;
+    }
+
+    //辗转相除法 最大公因数 greatest common divisor
+    int gcd(int a, int b) {
+        if (b == 0) {
+            return a;
+        }
+        return gcd(b, a % b);
+    }
+
+
+
 
 /*
 lc 721 accounts merge
@@ -648,9 +824,6 @@ space complexity O(t.length)
         return smallestHeap.peek().getValue();
     }
 
-
-    int[] rowOffset = {-1, 0, 1, 0};
-    int[] colOffset = {0, 1, 0, -1};
 
     public int maxAreaOfIsland(int[][] grid) {
         int row = grid.length;
@@ -2069,7 +2242,7 @@ space complexity O(t.length)
             return;
         }
 
-        //link it to the root with more connections, which will minimum the root numbers
+        //link it to the root with more connections, which will shorten the tree's height
         if (ids[aRoot] < ids[bRoot]) {
             root[aRoot] = root[bRoot];
             ids[bRoot] += ids[aRoot];
@@ -3847,6 +4020,16 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         return null;
     }
 
+
+    static int getLength(ListNode l1) {
+        int res = 0;
+        while (l1 != null) {
+            res++;
+            l1 = l1.next;
+        }
+        return res;
+    }
+
     //数字个位在最后
     public static ListNode addTwoNumbers2(ListNode l1, ListNode l2) {
         Stack<Integer> s1 = new Stack<Integer>();
@@ -3856,7 +4039,6 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
             s1.push(l1.val);
             l1 = l1.next;
         }
-        ;
         while (l2 != null) {
             s2.push(l2.val);
             l2 = l2.next;
@@ -3881,16 +4063,8 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         return list.val == 0 ? list.next : list;
     }
 
-    static int getLength(ListNode l1) {
-        int res = 0;
-        while (l1 != null) {
-            res++;
-            l1 = l1.next;
-        }
-        return res;
-    }
-
-    //数字个位在链表第一个
+    //lc 2 数字个位在链表第一个
+    //T&S O(max(m,n))
     public static ListNode addTwoNumbers(ListNode l1, ListNode l2) {
 
         ListNode ln = new ListNode((l1.val + l2.val) % 10);
@@ -4450,4 +4624,100 @@ class WordSearch2 {
             parent.children.remove(letter);
         }
     }
+}
+
+/*
+lc 305
+
+Time O(m*n+positions.length)  union find take nearly O(N)
+when using path compression and union by rank
+ */
+class NumberOfIsland2 {
+
+    private int[][] grid;
+    private int count = 0;
+    private int[] rowOffset = new int[]{0, 1, -1, 0};
+    private int[] colOffset = new int[]{1, 0, 0, -1};
+
+    public List<Integer> numIslands2(int m, int n, int[][] positions) {
+        List<Integer> res = new ArrayList<>();
+        if (m == 0) {
+            return res;
+        }
+        grid = new int[m][n];
+        int[] root = new int[m * n];
+        int[] weight = new int[m * n];
+        //init union find array
+        for (int i = 0; i < m * n; i++) {
+            root[i] = i;
+            weight[i] = 1;
+        }
+        //begin addLand
+        for (int[] p : positions) {
+            //if this point already is a land. skip
+            if (grid[p[0]][p[1]] == 1) {
+                res.add(count);
+                continue;
+            }
+            count++;
+            grid[p[0]][p[1]] = 1;
+            for (int i = 0; i < 4; i++) {
+                int newRow = p[0] + rowOffset[i];
+                int newCol = p[1] + colOffset[i];
+                //out of bound, skip
+                if (!checkInGrid(newRow, newCol)) {
+                    continue;
+                }
+                //if there is a land to connect
+                if (grid[newRow][newCol] == 1) {
+                    //find out whether it is already connected
+                    //if so, do nothing, the new land just be a part of that island
+                    //if not already connected, this connection would cause one less island in total
+                    if (union(cordinateToId(p[0], p[1]), cordinateToId(newRow, newCol), root,
+                        weight)) {
+                        count--;
+                    }
+                }
+            }
+            res.add(count);
+        }
+        return res;
+    }
+
+    private int cordinateToId(int x, int y) {
+        return x * grid[0].length + y;
+    }
+
+    private boolean checkInGrid(int x, int y) {
+        return x >= 0 && x < grid.length && y >= 0 && y < grid[0].length;
+    }
+
+    private int find(int a, int[] root) {
+        //while a is not a root
+        while (a != root[a]) {
+            //shorten the path to compress the tree.
+            root[a] = root[root[a]];
+            a = root[a];
+        }
+        return a;
+    }
+
+    private boolean union(int aId, int bId, int[] root, int[] weight) {
+        int aRoot = find(aId, root);
+        int bRoot = find(bId, root);
+        //this two is already unioned.
+        if (aRoot == bRoot) {
+            return false;
+        }
+        //always use the heavy root to make sure
+        if (weight[aRoot] > weight[bRoot]) {
+            root[bRoot] = root[aRoot];
+            weight[aRoot] += weight[bRoot];
+        } else {
+            root[aRoot] = root[bRoot];
+            weight[bRoot] += root[aRoot];
+        }
+        return true;
+    }
+
 }
