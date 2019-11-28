@@ -875,3 +875,109 @@ class TicTacToe {
         return 0;
     }
 }
+
+/*
+lc 706 design a hashmap
+ */
+
+class MyHashMap {
+
+    Node[] table;
+
+    private class Node {
+
+        Node next;
+        int key;
+        int val;
+
+        public Node(int key, int val) {
+            this.key = key;
+            this.val = val;
+        }
+    }
+
+    /**
+     * Initialize your data structure here.
+     */
+    public MyHashMap() {
+        table = new Node[1024];
+    }
+
+    /**
+     * value will always be non-negative.
+     */
+    public void put(int key, int value) {
+        int index = findIndex(Integer.hashCode(key));
+        if (table[index] == null) {
+            table[index] = new Node(key, value);
+        } else {
+            Node cur = table[index];
+            Node prev = null;
+            while (cur != null) {
+                //find an old one ,edit it.
+                if (cur.key == key) {
+                    cur.val = value;
+                    return;
+                }
+                prev = cur;
+                cur = cur.next;
+            }
+            prev.next = new Node(key, value);
+        }
+    }
+
+    /**
+     * Returns the value to which the specified key is mapped, or -1 if this map contains no mapping
+     * for the key
+     */
+    public int get(int key) {
+        Node e = findNode(key);
+        return e == null ? -1 : e.val;
+    }
+
+    /**
+     * Removes the mapping of the specified value key if this map contains a mapping for the key
+     */
+    public void remove(int key) {
+        Node prev = null;
+        if (table[findIndex(Integer.hashCode(key))] == null) {
+            return;
+        } else {
+            Node cur = table[findIndex(Integer.hashCode(key))];
+            if (cur.key == key) {
+                table[findIndex(Integer.hashCode(key))] = cur.next;
+                return;
+            }
+            while (cur != null && cur.key != key) {
+                prev = cur;
+                cur = cur.next;
+            }
+            if (cur == null) {
+                return;
+            } else {
+                prev.next = cur.next;
+                cur = null;
+            }
+        }
+    }
+
+    private Node findNode(int key) {
+        if (table[findIndex(Integer.hashCode(key))] == null) {
+            return null;
+        } else {
+            Node cur = table[findIndex(Integer.hashCode(key))];
+            while (cur != null && cur.key != key) {
+                cur = cur.next;
+            }
+            if (cur == null) {
+                return null;
+            } else {
+                return cur;
+            }
+        }
+    }
+
+    private int findIndex(int hash) {
+        return (table.length - 1) & hash;
+    }
+}

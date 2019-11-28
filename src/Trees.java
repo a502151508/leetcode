@@ -139,6 +139,93 @@ public class Trees {
         return levels;
     }
 
+    /*
+    lc 236. Lowest Common Ancestor of a Binary Tree
+    time O(N)
+    space O(H)
+     */
+    private TreeNode ans;
+
+    private boolean recurseTree(TreeNode currentNode, TreeNode p, TreeNode q) {
+
+        // If reached the end of a branch, return false.
+        if (currentNode == null) {
+            return false;
+        }
+
+        // Left Recursion. If left recursion returns true, set left = 1 else 0
+        boolean left = this.recurseTree(currentNode.left, p, q);
+
+        // Right Recursion
+        boolean right = this.recurseTree(currentNode.right, p, q);
+
+        // If the current node is one of p or q
+        boolean mid = (currentNode == p || currentNode == q);
+
+        // If any two of the flags left, right or mid become True
+        if (mid) {
+            if (right || left) {
+                ans = currentNode;
+            }
+        } else if (left && right) {
+            ans = currentNode;
+        }
+
+        // Return true if any one of the three bool values is True.
+        return mid || left || right;
+    }
+
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        // Traverse the tree
+        this.recurseTree(root, p, q);
+        return ans;
+    }
+
+
+    public TreeNode lowestCommonAncestorIterative(TreeNode root, TreeNode p, TreeNode q) {
+
+        // Stack for tree traversal
+        Deque<TreeNode> stack = new ArrayDeque<>();
+
+        // HashMap for parent pointers
+        Map<TreeNode, TreeNode> parent = new HashMap<>();
+
+        parent.put(root, null);
+        stack.push(root);
+
+        // Iterate until we find both the nodes p and q
+        while (!parent.containsKey(p) || !parent.containsKey(q)) {
+
+            TreeNode node = stack.pop();
+
+            // While traversing the tree, keep saving the parent pointers.
+            if (node.left != null) {
+                parent.put(node.left, node);
+                stack.push(node.left);
+            }
+            if (node.right != null) {
+                parent.put(node.right, node);
+                stack.push(node.right);
+            }
+        }
+
+        // Ancestors set() for node p.
+        Set<TreeNode> ancestors = new HashSet<>();
+
+        // Process all ancestors for node p using parent pointers.
+        while (p != null) {
+            ancestors.add(p);
+            p = parent.get(p);
+        }
+
+        // The first ancestor of q which appears in
+        // p's ancestor set() is their lowest common ancestor.
+        while (!ancestors.contains(q)) {
+            q = parent.get(q);
+        }
+        return q;
+    }
+
     //lc 684
     //time inverse Ackermann function nearly to O(N)
     public int[] findRedundantConnection(int[][] edges) {
@@ -773,6 +860,12 @@ public class Trees {
         return root;
     }
 
+    /*
+    lc 543  Diameter of Binary Tree
+    dfs the tree and calculate each depth. return the max depth sum from left child and right child.
+    Time O(N) whole tree dfs traversal
+    Space O(LogN) or O(H) stack need to store maximum the number of height of nodes.
+     */
     public int diameterOfBinaryTree(TreeNode root) {
         int[] ans = new int[]{1};
         depthOfTree(root, ans);
@@ -789,7 +882,14 @@ public class Trees {
         return Math.max(L, R) + 1;
     }
 
-    //树右边看
+    /*
+    树右边看
+    lc 199. Binary Tree Right Side View
+    dfs遍历 根 右 左顺序，并记录当前深度，使用set记录到过的层数，如果是新到一层则加入到res
+    bfs同理
+    time O(N)
+    space O(H) best case H = logN worst H = N
+     */
     public List<Integer> rightSideView(TreeNode root) {
         List<Integer> res = new ArrayList<>();
         Set<Integer> set = new HashSet<>();

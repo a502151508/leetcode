@@ -1,15 +1,88 @@
-import java.math.BigDecimal;
+
 import javafx.util.Pair;
 import java.util.*;
 
 public class Main {
 
     public static void main(String[] args) {
-        Main m = new Main();
-        int[][] p = new int[][]{{0, 0}, {94911151, 94911150}, {94911152, 94911151}};
-        System.out.println(m.gcd(-8, 16));
 
+        MyHashMap m = new MyHashMap();
+        m.put(3, 11);
+        m.put(4, 13);
+        m.put(15, 6);
+        m.put(6, 15);
+        m.put(8, 8);
+        m.put(11, 0);
+        System.out.print(m.get(11));
     }
+
+    /*
+    692. Top K Frequent Words
+    time O(Nlogk)
+    space O(N)
+     */
+    public List<String> topKFrequent(String[] words, int k) {
+        Map<String, Integer> count = new HashMap();
+        for (String word : words) {
+            count.put(word, count.getOrDefault(word, 0) + 1);
+        }
+        PriorityQueue<String> heap = new PriorityQueue<String>(
+            (w1, w2) -> count.get(w1).equals(count.get(w2)) ?
+                w2.compareTo(w1) : count.get(w1) - count.get(w2));
+        for (String word : count.keySet()) {
+            heap.offer(word);
+            if (heap.size() > k) {
+                heap.poll();
+            }
+        }
+
+        List<String> ans = new ArrayList();
+        while (!heap.isEmpty()) {
+            ans.add(heap.poll());
+        }
+        Collections.reverse(ans);
+        return ans;
+    }
+
+    /*
+    lc 347 347. Top K Frequent Elements
+    Time complexity : O(Nlog(k)). The complexity of Counter method is
+     O(N). To build a heap and output list takes O(Nlog(k)). Hence the overall complexity
+      of the algorithm is O(N+Nlog(k))=O(Nlog(k)).
+
+    Space complexity : O(N) to store the hash map.
+     */
+    public List<Integer> topKFrequent(int[] nums, int k) {
+        // build hash map : character and how often it appears
+        HashMap<Integer, Integer> count = new HashMap();
+        for (int n : nums) {
+            count.put(n, count.getOrDefault(n, 0) + 1);
+        }
+
+        // init heap 'the less frequent element first'
+        PriorityQueue<Integer> heap =
+            new PriorityQueue<Integer>((n1, n2) -> count.get(n1) - count.get(n2));
+
+        // keep k top frequent elements in the heap
+        for (int n : count.keySet()) {
+            heap.add(n);
+            if (heap.size() > k) {
+                heap.poll();
+            }
+        }
+
+        // build output list
+        List<Integer> top_k = new LinkedList();
+        while (!heap.isEmpty()) {
+            top_k.add(heap.poll());
+        }
+        Collections.reverse(top_k);
+        return top_k;
+    }
+
+
+
+
 
 
 
@@ -1635,44 +1708,6 @@ space complexity O(t.length)
     }
 
 
-    public int nextGreaterElement(int n) {
-        char[] a = ("" + n).toCharArray();
-        int i = a.length - 2;
-        while (i >= 0 && a[i + 1] <= a[i]) {
-            i--;
-        }
-        if (i < 0) {
-            return -1;
-        }
-        int j = a.length - 1;
-        while (j >= 0 && a[j] <= a[i]) {
-            j--;
-        }
-        swap(a, i, j);
-        reverse(a, i + 1);
-        try {
-            return Integer.parseInt(new String(a));
-        } catch (Exception e) {
-            return -1;
-        }
-    }
-
-    private void reverse(char[] a, int start) {
-        int i = start, j = a.length - 1;
-        while (i < j) {
-            swap(a, i, j);
-            i++;
-            j--;
-        }
-    }
-
-    private void swap(char[] a, int i, int j) {
-        char temp = a[i];
-        a[i] = a[j];
-        a[j] = temp;
-    }
-
-
     public static int[][] floodFill(int[][] image, int sr, int sc, int newColor) {
         if (image.length == 0) {
             return image;
@@ -1764,6 +1799,11 @@ space complexity O(t.length)
     }
 
 
+    /*
+    lc 23 merge k sorted list
+    Time O(NLogK)
+    Space O(k+N)
+     */
     public ListNode mergeKLists(ListNode[] lists) {
         ListNode head = new ListNode(0);
         ListNode cur = head;
@@ -2273,11 +2313,64 @@ space complexity O(t.length)
         return cnt;
     }
 
+    /*
+    lc 556 Next Greater Element III
+    similar to next permutation
+    Time O(N)
+    Space O(N) N for array
+    1. find from end, find the first decreasing element
+    2. swap the first decreasing element with the number just larger than it from the end
+    3.swap this two,
+    4. reverse the numbers after the first decreasing number.
+     */
+    public int nextGreaterElement(int n) {
+        char[] a = ("" + n).toCharArray();
+        int i = a.length - 2;
+        while (i >= 0 && a[i + 1] <= a[i]) {
+            i--;
+        }
+        if (i < 0) {
+            return -1;
+        }
+        int j = a.length - 1;
+        while (j >= 0 && a[j] <= a[i]) {
+            j--;
+        }
+        swap(a, i, j);
+        reverse(a, i + 1);
+        try {
+            return Integer.parseInt(new String(a));
+        } catch (Exception e) {
+            return -1;
+        }
+    }
 
+    private void reverse(char[] a, int start) {
+        int i = start, j = a.length - 1;
+        while (i < j) {
+            swap(a, i, j);
+            i++;
+            j--;
+        }
+    }
+
+    private void swap(char[] a, int i, int j) {
+        char temp = a[i];
+        a[i] = a[j];
+        a[j] = temp;
+    }
+
+    /*
+    503. Next Greater Element II
+    Time O(N)
+    Space O(N)
+     */
     public static int[] nextGreaterElements2(int[] nums) {
+        //store index in stack
         Stack<Integer> stack = new Stack<>();
         int[] res = new int[nums.length];
         Arrays.fill(res, -1);
+        // two pass
         for (int i = 0; i < 2 * nums.length; i++) {
             while (!stack.empty() && nums[i % nums.length] > nums[stack.peek()]) {
                 res[stack.pop()] = nums[i % nums.length];
@@ -2290,26 +2383,8 @@ space complexity O(t.length)
         return res;
     }
 
-    public int[] nextGreaterElement1(int[] findNums, int[] nums) {
-        Stack<Integer> stack = new Stack<>();
-        HashMap<Integer, Integer> map = new HashMap<>();
-        int[] res = new int[findNums.length];
-        for (int i = 0; i < nums.length; i++) {
-            while (!stack.empty() && nums[i] > stack.peek()) {
-                map.put(stack.pop(), nums[i]);
-            }
-            stack.push(nums[i]);
-        }
-        while (!stack.empty()) {
-            map.put(stack.pop(), -1);
-        }
-        for (int i = 0; i < findNums.length; i++) {
-            res[i] = map.get(findNums[i]);
-        }
-        return res;
-    }
-
-    public int[] nextGreaterElements(int[] nums) {
+    //O(n^2)
+    public int[] nextGreaterElements2Old(int[] nums) {
         int[] result = new int[nums.length];
         for (int i = 0; i <= nums.length - 1; i++) {
             int j = i;
@@ -2332,6 +2407,32 @@ space complexity O(t.length)
         }
         return result;
     }
+
+    /*
+    lc 496
+    Next Greater Element I
+    Time O(N+M)
+    Space O(N+M)
+     */
+    public int[] nextGreaterElement1(int[] findNums, int[] nums) {
+        Stack<Integer> stack = new Stack<>();
+        HashMap<Integer, Integer> map = new HashMap<>();
+        int[] res = new int[findNums.length];
+        for (int i = 0; i < nums.length; i++) {
+            while (!stack.empty() && nums[i] > stack.peek()) {
+                map.put(stack.pop(), nums[i]);
+            }
+            stack.push(nums[i]);
+        }
+        while (!stack.empty()) {
+            map.put(stack.pop(), -1);
+        }
+        for (int i = 0; i < findNums.length; i++) {
+            res[i] = map.get(findNums[i]);
+        }
+        return res;
+    }
+
 
     public int[][] generateMatrix(int n) {
         int[][] res = new int[n][n];
@@ -3331,6 +3432,15 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         return res;
     }
 
+    /*
+    lc 31. Next Permutation
+    Time O(N)
+    space O(1)
+    1. find from end, find the first decreasing element
+    2. swap the first decreasing element with the number just larger than it from the end
+    3.swap this two,
+    4. reverse the numbers after the first decreasing number.
+     */
     public static void nextPermutation(int[] nums) {
         if (nums.length <= 1) {
             return;
@@ -3878,20 +3988,26 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         }
     }
 
+
+    /*
+    lc 21. Merge Two Sorted Lists
+    Time O(n+m)
+    Space(1)
+     */
     public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
         ListNode head = new ListNode(0);
-        ListNode copyHead = head;
+        ListNode cur = head;
         while (l1 != null && l2 != null) {
             if (l1.val <= l2.val) {
-                copyHead.next = l1;
+                cur.next = l1;
                 l1 = l1.next;
             } else {
-                copyHead.next = l2;
+                cur.next = l2;
                 l2 = l2.next;
             }
-            copyHead = copyHead.next;
+            cur = cur.next;
         }
-        copyHead.next = l1 == null ? l2 : l1;
+        cur.next = l1 == null ? l2 : l1;
         return head.next;
     }
 
@@ -4266,6 +4382,9 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
     }
 
     //atoi string 转 int
+    /*
+    lc 8 String to Integer (atoi)
+     */
     public static int myAtoi(String str) {
         if (str == null) {
             return 0;
@@ -4429,6 +4548,11 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
     }
 }
 
+/*
+215. Kth Largest Element in an Array
+time O(N)
+space O(1)
+ */
 class KthLargestElementInAnArray {
 
     int[] nums;
