@@ -1,14 +1,18 @@
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Random;
+import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -384,6 +388,14 @@ class Logger {
     }
 }
 
+
+/*
+895. Maximum Frequency Stack
+one map to store element's count,
+another map to store a stack for all elements with same frequency. stack can keep the order.
+Time O(1)
+space O(N)
+ */
 class FreqStack {
 
     Map<Integer, Integer> freq;
@@ -423,11 +435,20 @@ class FreqStack {
 }
 
 
+/*
+LC  380. Insert Delete GetRandom O(1)
+using hashmap to record data -> index in arrayList
+when add, add it to the end of the list, and add val -> index to the hashmap.
+when delete, swap the delete one with the last one in list. delete the last one, remove the val from hashmap
+when getRandom, just get a random number in list.size,and return that element, array list can do that in O(1)
+Time O(1)
+sapce O(N)to store data
+ */
 class RandomizedSet {
 
     Map<Integer, Integer> dict;
     List<Integer> list;
-    Random rand = new Random();
+    Random rand;
 
     /**
      * Initialize your data structure here.
@@ -435,6 +456,7 @@ class RandomizedSet {
     public RandomizedSet() {
         dict = new HashMap();
         list = new ArrayList();
+        rand = new Random();
     }
 
     /**
@@ -474,7 +496,82 @@ class RandomizedSet {
      * Get a random element from the set.
      */
     public int getRandom() {
-        return list.get(rand.nextInt(list.size()));
+        if (list.size() > 0) {
+            return list.get(rand.nextInt(list.size()));
+        } else {
+            return -1;
+        }
+    }
+}
+
+
+/*
+lc 381. Insert Delete GetRandom O(1) - Duplicates allowed
+time O(1)
+space O(N)
+ */
+class RandomizedCollection {
+
+    Map<Integer, Set<Integer>> map;
+    List<Integer> data;
+    Random rand;
+
+    /**
+     * Initialize your data structure here.
+     */
+    public RandomizedCollection() {
+        rand = new Random();
+        map = new HashMap<>();
+        data = new ArrayList<>();
+    }
+
+    /**
+     * Inserts a value to the collection. Returns true if the collection did not already contain the
+     * specified element.
+     */
+    public boolean insert(int val) {
+        //linkedList is good for many insert and delete, which can be Done in O(1)
+        Set<Integer> indexes = map.getOrDefault(val, new HashSet<>());
+        indexes.add(data.size());
+        data.add(val);
+        map.put(val, indexes);
+        return indexes.size() == 1;
+    }
+
+    /**
+     * Removes a value from the collection. Returns true if the collection contained the specified
+     * element.
+     */
+    public boolean remove(int val) {
+        if (map.containsKey(val)) {
+            Set<Integer> indexes = map.get(val);
+            int index = indexes.iterator().next();
+            //delete from index dict
+            indexes.remove(index);
+            if (indexes.size() == 0) {
+                map.remove(val);
+            }
+            //delete from data list
+            int lastElement = data.get(data.size() - 1);
+            //if lastElement is not been deleted.
+            if (map.containsKey(lastElement)) {
+                Set<Integer> lastElementIndexes = map.get(lastElement);
+                lastElementIndexes.remove(data.size() - 1);
+                lastElementIndexes.add(index);
+            }
+            data.set(index, lastElement);
+            data.remove(data.size() - 1);
+            return true;
+        }
+        return false;
+
+    }
+
+    /**
+     * Get a random element from the collection.
+     */
+    public int getRandom() {
+        return data.get(rand.nextInt(data.size()));
     }
 }
 
@@ -979,5 +1076,63 @@ class MyHashMap {
 
     private int findIndex(int hash) {
         return (table.length - 1) & hash;
+    }
+}
+
+class MedianFinder {
+
+    PriorityQueue<Integer> rightPartMinHeap;
+    PriorityQueue<Integer> leftPartMaxHeap;
+
+    /**
+     * initialize your data structure here.
+     */
+    public MedianFinder() {
+        rightPartMinHeap = new PriorityQueue<>(Comparator.comparingInt(o -> o));
+        leftPartMaxHeap = new PriorityQueue<>(Comparator.comparingInt(o -> -o));
+    }
+
+    public void addNum(int num) {
+        //init
+        if (leftPartMaxHeap.isEmpty()) {
+            leftPartMaxHeap.add(num);
+        } else if (rightPartMinHeap.isEmpty()) {
+            if (num > leftPartMaxHeap.peek()) {
+                rightPartMinHeap.add(num);
+            } else {
+                rightPartMinHeap.add(leftPartMaxHeap.poll());
+                leftPartMaxHeap.add(num);
+            }
+        }
+        //when two heap both have elements.
+        else {
+            int leftMax = leftPartMaxHeap.peek();
+            int rightMin = rightPartMinHeap.peek();
+            if (leftPartMaxHeap.size() == rightPartMinHeap.size()) {
+                if (num < rightMin) {
+                    leftPartMaxHeap.add(num);
+                } else {
+                    leftPartMaxHeap.add(rightPartMinHeap.poll());
+                    rightPartMinHeap.add(num);
+                }
+            }
+            //this means left size is one more large than right, we should place one to right.
+            else {
+                if (num > leftMax) {
+                    rightPartMinHeap.add(num);
+                } else {
+                    rightPartMinHeap.add(leftPartMaxHeap.poll());
+                    leftPartMaxHeap.add(num);
+                }
+            }
+        }
+    }
+
+    public double findMedian() {
+        if (leftPartMaxHeap.size() == rightPartMinHeap.size()) {
+            return (leftPartMaxHeap.peek() + rightPartMinHeap.peek()) / 2.0;
+        } else {
+            return leftPartMaxHeap.peek();
+        }
     }
 }

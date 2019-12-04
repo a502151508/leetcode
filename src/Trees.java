@@ -139,6 +139,40 @@ public class Trees {
         return levels;
     }
 
+
+    /*
+        105. Construct Binary Tree from Preorder and Inorder Traversal
+        Time O(N)
+        Space O(N)
+     */
+    Map<Integer, Integer> inorderDict;
+
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
+        if (preorder.length == 0) {
+            return null;
+        }
+        inorderDict = new HashMap<>();
+        for (int i = 0; i < inorder.length; i++) {
+            inorderDict.put(inorder[i], i);
+        }
+        return buildTreeHelper(preorder, 0, preorder.length,
+            inorder, 0, inorder.length);
+    }
+
+    private TreeNode buildTreeHelper(int[] preorder, int preFrom, int preTo, int[] inorder,
+        int inFrom, int inTo) {
+        if (preFrom >= preTo || inFrom >= inTo) {
+            return null;
+        }
+        TreeNode root = new TreeNode(preorder[preFrom]);
+        int index = inorderDict.get(preorder[preFrom]);
+        root.left = buildTreeHelper(preorder, preFrom + 1, preFrom + 1 + index - inFrom, inorder,
+            inFrom, index);
+        root.right = buildTreeHelper(preorder, preFrom + 1 + index - inFrom, preTo, inorder,
+            index + 1, inTo);
+        return root;
+    }
+
     /*
     lc 236. Lowest Common Ancestor of a Binary Tree
     time O(N)
@@ -409,7 +443,10 @@ public class Trees {
         }
     }
 
-    //time O(n) space O(N)
+    /*
+        545. Boundary of Binary Tree
+        time O(n) space O(N) stack
+     */
     public List<Integer> boundaryOfBinaryTree(TreeNode root) {
         ArrayList<Integer> res = new ArrayList<>();
         if (root == null) {

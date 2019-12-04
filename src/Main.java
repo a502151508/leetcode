@@ -6,15 +6,189 @@ public class Main {
 
     public static void main(String[] args) {
 
-        MyHashMap m = new MyHashMap();
-        m.put(3, 11);
-        m.put(4, 13);
-        m.put(15, 6);
-        m.put(6, 15);
-        m.put(8, 8);
-        m.put(11, 0);
-        System.out.print(m.get(11));
+        Main m = new Main();
+        m.mincostTickets(new int[]{1, 4, 6, 7, 8, 20}, new int[]{2, 7, 15});
     }
+
+    /*
+        30. Substring with Concatenation of All Words
+        Time O(s.length() * wordLengthSum)
+        Space O(N)
+     */
+    public List<Integer> findSubstring(String s, String[] words) {
+        List<Integer> res = new ArrayList<>();
+        if (words.length == 0) {
+            return res;
+        }
+        Map<String, Integer> count = new HashMap<>();
+        for (String word : words) {
+            count.put(word, count.getOrDefault(word, 0) + 1);
+        }
+        int singleLength = words[0].length();
+        int wordLengthSum = words.length * singleLength;
+        int start = 0;
+        outer:
+        while (start <= s.length() - wordLengthSum) {
+            Map<String, Integer> countCopy = new HashMap<>();
+            countCopy.putAll(count);
+            int i = start;
+            while (i - start < wordLengthSum) {
+                String curWord = s.substring(i, i + singleLength);
+                int curWordFreq = countCopy.getOrDefault(curWord, 0);
+                if (curWordFreq > 0) {
+                    i = i + singleLength;
+                    countCopy.put(curWord, curWordFreq - 1);
+                } else {
+                    start++;
+                    continue outer;
+                }
+            }
+            res.add(start);
+            start++;
+        }
+        return res;
+    }
+
+    /*
+        lc 25. Reverse Nodes in k-Group
+        time O(N) length of the list
+        space O(1)
+     */
+
+    public ListNode reverseKGroup(ListNode head, int k) {
+        if (k <= 1) {
+            return head;
+        }
+        int length = getLengthOfALinkedList(head);
+        if (length == 1 || k > length) {
+            return head;
+        }
+        ListNode prev = null, cur = head, next = null;
+        int groups = length / k;
+        //mark the result's head.
+        ListNode resHead = null;
+        //mark each groups end, to link each group after reverse.
+        ListNode prevGroupEnd = null, curGroupEnd = null;
+        for (int t = 0; t < groups; t++) {
+            //moving groups
+            prevGroupEnd = curGroupEnd;
+            curGroupEnd = cur;
+            //reverse k times
+            for (int i = 0; i < k; i++) {
+                next = cur.next;
+                cur.next = prev;
+                prev = cur;
+                cur = next;
+            }
+            if (resHead == null) {
+                resHead = prev;
+            }
+            //link prevGroupEnding element to this group's first one.
+            if (prevGroupEnd != null) {
+                prevGroupEnd.next = prev;
+            }
+        }
+        //link the last group to the remains next elements. if there is no more, link it to null.
+        curGroupEnd.next = cur;
+        return resHead;
+    }
+
+    private int getLengthOfALinkedList(ListNode head) {
+        int count = 0;
+        while (head != null) {
+            count++;
+            head = head.next;
+        }
+        return count;
+    }
+
+    /*
+        239. Sliding Window Maximum
+        Time O(klogk) to init heap, O(nk) to slide the window.
+        Space O( max(k,nums.length-k+1))
+
+        opt to O(N)
+        The algorithm is quite straight forward :
+        Process the first k elements separately to initiate the deque.
+        Iterate over the array. At each step :
+        Clean the deque :
+            Keep only the indexes of elements from the current sliding window.
+            Remove indexes of all elements smaller than the current one, since they will not be the maximum ones.
+        Append the current element to the deque.
+        Append deque[0] to the output.
+        Return the output array.
+        第一次把前k个的index加入队列
+        每往后滑动时，将不在window里的element移除
+        并比较此刻队列中的所有
+
+     */
+
+    public int[] maxSlidingWindowOpt(int[] nums, int k) {
+        int n = nums.length;
+        if (n * k == 0) {
+            return new int[0];
+        }
+        if (k == 1) {
+            return nums;
+        }
+        Deque<Integer> deq = new ArrayDeque<>();
+        for (int i = 0; i < k; i++) {
+            clean_deque(i, k, deq, nums);
+            deq.addLast(i);
+        }
+        int[] output = new int[n - k + 1];
+        output[0] = nums[deq.getFirst()];
+
+        // build output
+        for (int i = k; i < n; i++) {
+            clean_deque(i, k, deq, nums);
+            deq.addLast(i);
+            output[i - k + 1] = nums[deq.getFirst()];
+        }
+        return output;
+    }
+
+    public void clean_deque(int i, int k, Deque<Integer> deq, int[] nums) {
+        // remove indexes of elements not from sliding window
+        if (!deq.isEmpty() && deq.getFirst() == i - k) {
+            deq.removeFirst();
+        }
+
+        // remove from deq indexes of all elements
+        // which are smaller than current element nums[i]
+        //可先采用遍历数组方法删除所有小于当前与元素的序号
+        //opt：从后往前删，因为从前到后是递减的，这样子不会删漏，也可不用遍历整个数组
+
+        while (!deq.isEmpty() && nums[i] > nums[deq.getLast()]) {
+            deq.removeLast();
+        }
+    }
+
+    public int[] maxSlidingWindow(int[] nums, int k) {
+        //if nums is empty
+        if (nums.length == 0) {
+            return new int[]{};
+        }
+        //if window is larger than nums.length
+        if (nums.length < k) {
+            k = nums.length;
+        }
+        PriorityQueue<Integer> window = new PriorityQueue<>(
+            Comparator.comparingInt(o -> -o));
+        for (int i = 0; i < k; i++) {
+            window.add(nums[i]);
+        }
+        int[] res = new int[nums.length - k + 1];
+        for (int i = 0; i < res.length; i++) {
+            res[i] = window.peek();
+            if (i < nums.length - k) {
+                window.remove(nums[i]);
+                window.add(nums[i + k]);
+            }
+        }
+        return res;
+    }
+
 
     /*
     692. Top K Frequent Words
@@ -650,30 +824,30 @@ space complexity O(t.length)
         lc75
         time O(N) one pass
         space O(1)
-        While curr <= p2 :
+        While curr <= right :
 
-        If nums[curr] = 0 : swap currth and p0th elements and move both pointers to the right.
+        If nums[cur] = 0 : swap cur and left elements and move both pointers to the right.
 
-        If nums[curr] = 2 : swap currth and p2th elements. Move pointer p2 to the left.
+        If nums[cur] = 2 : swap cur and right elements. Move pointer p2 to the left.
 
-        If nums[curr] = 1 : move pointer curr to the right.
+        If nums[cur] = 1 : move pointer cur to the right.
      */
     public void sortColors(int[] nums) {
-        int i = 0;
+        int cur = 0;
         //表示左边的0的边界
-        int lo = 0;
+        int left = 0;
         //表示右边2的边界
-        int hi = nums.length - 1;
-        while (i <= hi) {
-            if (nums[i] == 0) {
-                swap(nums, lo, i);
-                lo++;
-                i++;
-            } else if (nums[i] == 2) {
-                swap(nums, hi, i);
-                hi--;
-            } else if (nums[i] == 1) {
-                i++;
+        int right = nums.length - 1;
+        while (cur <= right) {
+            if (nums[cur] == 0) {
+                swap(nums, left, cur);
+                left++;
+                cur++;
+            } else if (nums[cur] == 2) {
+                swap(nums, right, cur);
+                right--;
+            } else if (nums[cur] == 1) {
+                cur++;
             }
         }
     }
@@ -931,7 +1105,7 @@ space complexity O(t.length)
     /*
     lc 472 输出所有能被list里其他单词拼接而成的词
      */
-    //O(n(words)*m(ave letters))  O(Letters Numbers)
+    //time O(n(words)*m(ave letters))  space O(Letters Numbers)
     public List<String> findAllConcatenatedWordsInADict(String[] words) {
         Arrays.sort(words, Comparator.comparingInt(String::length));
         TrieNodeArray root = new TrieNodeArray();
@@ -949,16 +1123,12 @@ space complexity O(t.length)
             node.word = new String(word);
 
             int count = 0;
-            boolean flag = false;
             TrieNodeArray curNode = root;
             for (char c : word.toCharArray()) {
                 curNode = curNode.children[c - 'a'];
                 count++;
                 if (curNode != null && !word.equals(curNode.word)) {
-                    if (curNode.word != null) {
-                        flag = checkIfConcatenated(root, word.substring(count));
-                    }
-                    if (flag) {
+                    if (curNode.word != null && checkIfConcatenated(root, word.substring(count))) {
                         res.add(word);
                         break;
                     }
@@ -975,19 +1145,17 @@ space complexity O(t.length)
         }
         TrieNodeArray node = root;
         int count = 0;
-        boolean flag = false;
         for (char c : word.toCharArray()) {
             if (node.children[c - 'a'] != null) {
                 node = node.children[c - 'a'];
                 count++;
                 if (node.word != null) {
-                    flag = checkIfConcatenated(root, word.substring(count));
+                    if (checkIfConcatenated(root, word.substring(count))) {
+                        return true;
+                    }
                 }
             } else {
                 return false;
-            }
-            if (flag) {
-                return true;
             }
         }
         return false;
@@ -1313,6 +1481,10 @@ space complexity O(t.length)
         return countSets(root);
     }
 
+    /*
+    983. Minimum Cost For Tickets
+    Time O(N)天
+     */
     public int mincostTickets(int[] days, int[] costs) {
         int[] dp = new int[days.length];
         int[] durations = new int[]{1, 7, 30};
@@ -1320,12 +1492,14 @@ space complexity O(t.length)
             int j = i;
             int min = Integer.MAX_VALUE;
             for (int d = 0; d < durations.length; d++) {
+                //找到刚好此时票种无法覆盖到的最大的j
                 while (j <= days.length - 1 && days[j] - days[i] < durations[d]) {
                     j++;
                 }
                 if (j == days.length) {
                     min = Math.min(min, costs[d]);
                 } else {
+                    //通过计算买了这个票种之后，到j天再买票的价格
                     min = Math.min(min, dp[j] + costs[d]);
                 }
             }
@@ -1334,6 +1508,10 @@ space complexity O(t.length)
         return dp[0];
     }
 
+    /*
+        322. Coin Change
+        Time O(amount*coins.length)
+     */
     public int coinChange(int[] coins, int amount) {
         int[] dp = new int[amount + 1];
         Arrays.fill(dp, -1);
@@ -1343,8 +1521,8 @@ space complexity O(t.length)
             boolean flag = false;
             for (int c : coins) {
                 if (i - c >= 0 && dp[i - c] != -1) {
-                    flag = true;
                     min = Math.min(min, dp[i - c] + 1);
+                    flag = true;
                 }
             }
             if (flag) {
@@ -1708,6 +1886,12 @@ space complexity O(t.length)
     }
 
 
+    /*
+    lc 733. Flood Fill
+    dfs
+    Time O(N) N is cell numbers
+    Space O(N) max stack depth would be N
+     */
     public static int[][] floodFill(int[][] image, int sr, int sc, int newColor) {
         if (image.length == 0) {
             return image;
@@ -1717,6 +1901,7 @@ space complexity O(t.length)
         return image;
     }
 
+    //dfs
     private static void fillFlood(int[][] image, int sr, int sc, int oldColor, int newColor,
         boolean[][] visited) {
         int r = image.length;
@@ -1824,6 +2009,10 @@ space complexity O(t.length)
         return head.next;
     }
 
+    /*
+        516. Longest Palindromic Subsequence
+        Time(n^2)
+     */
     public static int longestPalindromeSubseq(String s) {
         int length = s.length();
         int[][] dp = new int[length][length];
@@ -2028,6 +2217,14 @@ space complexity O(t.length)
         return min;
     }
 
+    /*
+        724 Find Pivot Index
+        using accumulative sum.
+        for large Integer, we could have a big divisor, and then using quotient and remainder to
+        calculate accumulative sum.
+        Time O(N)
+        Space O(1)
+     */
     public static int pivotIndex(int[] nums) {
         int divisor = 1000000007;
         int quo1 = 0;
@@ -2064,13 +2261,25 @@ space complexity O(t.length)
         return -1;
     }
 
+
+    /*
+    lc 973 K Closest Points to Origin
+    1. using heap
+    2. quick select
+
+    for 1, Time O(NlogK)
+    space O(k)
+     */
     public int[][] kClosest(int[][] points, int K) {
+
         int[][] res = new int[K][2];
-        PriorityQueue<int[]> queue = new PriorityQueue<>(K, (t1, t2) -> dis(t1) - dis(t2));//构建一个小根堆
+        PriorityQueue<int[]> queue = new PriorityQueue<>(K, (t1, t2) -> dis(t2) - dis(t1));//构建一个大根堆
         for (int i = 0; i < points.length; i++) {
             queue.offer(points[i]); //将所有元素入队
+            if (queue.size() > K) {
+                queue.poll();
+            }
         }
-
         for (int i = 0; i < K; i++) {
             res[i] = queue.poll(); //前k个元素出堆，就是我们所需要的结果。
         }
@@ -2078,6 +2287,12 @@ space complexity O(t.length)
         return res;
     }
 
+
+    /*
+    quick select solution
+    Time avg O(N) worst O(N^2)
+    Space O(N)
+     */
     public int[][] kClosestQ(int[][] points, int K) {
         kClosedQuickS(points, 0, points.length - 1, K);
         return Arrays.copyOf(points, K);
@@ -2154,6 +2369,11 @@ space complexity O(t.length)
     }
 
 
+    /*
+    lc 166 Fraction to Recurring Decimal
+
+
+     */
     public String fractionToDecimal(int numerator, int denominator) {
         StringBuilder res = new StringBuilder();
         if (numerator == 0) {
@@ -2161,11 +2381,13 @@ space complexity O(t.length)
         }
         //if denominator == 0
 
+        //xor means different be true, same be false.
         if (numerator < 0 ^ denominator < 0) {
             res.append('-');
         }
         long n = Math.abs(Long.valueOf(numerator));
         long d = Math.abs(Long.valueOf(denominator));
+        //quotient 商
         long quo = n / d;
         long remainder = n % d;
         if (remainder == 0) {
@@ -2174,6 +2396,8 @@ space complexity O(t.length)
         } else {
             res.append(quo);
             res.append('.');
+            //use a hashmap to record each quotient's index, if there is a duplicate find,
+            //then we found a recurrence. end loop, add a parentheses between  first appearance and the end.
             Map<Long, Integer> map = new HashMap<>();
             while (remainder != 0) {
                 quo = remainder * 10 / d;
@@ -2183,9 +2407,9 @@ space complexity O(t.length)
                     break;
                 }
                 res.append(quo);
+                //record this remainder which divide to current quotient.
                 map.put(remainder, res.length() - 1);
                 remainder = remainder * 10 % d;
-
             }
         }
         return res.toString();
@@ -2227,6 +2451,14 @@ space complexity O(t.length)
         return res;
     }
 
+
+    /*
+        128. Longest Consecutive Sequence
+        union find solution
+        time O(N) nearly O(N) by using union find
+        space O(N)
+        and there is a set solution
+     */
     public static int longestConsecutive(int[] nums) {
         int n = nums.length;
         if (n == 0) {
@@ -2265,11 +2497,43 @@ space complexity O(t.length)
         return max;
     }
 
+    /*
+        using set
+        each time start building sequence by curnum -1 do not exist.
+        then check num + 1 and count the length.
+        time O(N)
+        space O(N)
+     */
+    public int longestConsecutiveSet(int[] nums) {
+        Set<Integer> num_set = new HashSet<Integer>();
+        for (int num : nums) {
+            num_set.add(num);
+        }
+
+        int longestStreak = 0;
+
+        for (int num : num_set) {
+            if (!num_set.contains(num - 1)) {
+                int currentNum = num;
+                int currentStreak = 1;
+
+                while (num_set.contains(currentNum + 1)) {
+                    currentNum += 1;
+                    currentStreak += 1;
+                }
+
+                longestStreak = Math.max(longestStreak, currentStreak);
+            }
+        }
+
+        return longestStreak;
+    }
+
+
     //理论上，从一个完全不相连通的N个对象的集合开始，任意顺序的M次union()调用所需的时间为O(N+Mlg*N)。
     //其中lg*N称为迭代对数（iterated logarithm）。实数的迭代对数是指须对实数连续进行几次对数运算后，
     // 其结果才会小于等于1。这个函数增加非常缓慢，可以视为近似常数（例如2^65535的迭代对数为5）。
-    //worst O(lgN)
-    // aveg inverse Ackermann function nearly O(N)
+    // aveg inverse Ackermann function nearly O(1)
     /*
     Definition: A function of two parameters whose value grows very, very slowly.
      Formal Definition: α(m,n) = min{i≥ 1: A(i, ⌊ m/n⌋) > log2 n} where A(i,j)
@@ -2292,8 +2556,7 @@ space complexity O(t.length)
         }
     }
 
-    //worst O(lgN) since path compression
-    //avg  nearly to O(N)
+    //avg  nearly to O(1)
     private static int find(int a, int[] root) {
         while (a != root[a]) {
             //compress the path
@@ -3637,7 +3900,13 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         return null;
     }
 
-
+    /*
+        79. Word Search
+        dfs and backtracking
+        Time O(M*4*3^(L-1)) 4 directions,at first move, then for the next L-1 move,it will have 3 directions.
+        M is the cell nums which is n*m
+        space O(M)
+     */
     //search word in 2d board
     public static boolean exist(char[][] board, String word) {
         int row = board.length;
@@ -3914,6 +4183,12 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
     }
 
 
+    /*
+    lc 56. Merge Intervals
+    sort the intervals,then merge the neighboring elements. if merge successfully, don't move the
+    Time O(nlogn)
+    Space O(N)
+     */
     public static int[][] merge(int[][] intervals) {
         List<int[]> s = new ArrayList<>(Arrays.asList(intervals));
         Collections.sort(s, (s1, s2) -> s1[0] - s2[0]);
@@ -3951,6 +4226,11 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         return i * i + j * j;
     }
 
+    /*
+        200. Number of Islands
+        Time O(N) since each element will be visited once.
+        Space O(N)
+     */
     public static int numIslands(char[][] grid) {
         int row = grid.length;
         if (row == 0) {
@@ -4212,7 +4492,8 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
 
 
     /*
-    3 Longest Substring Without Repeating Characters
+    lc 3 Longest Substring Without Repeating Characters
+    time O(N)
      */
     public int lengthOfLongestSubstring(String s) {
         int i = 0;
@@ -4673,6 +4954,13 @@ class TrieNode {
     }
 }
 
+/*
+lc 212. Word Search II
+dfs and backtracking
+Time O(M*4*3^(L-1)) 4 directions,at first move, then for the next L-1 move,it will have 3 directions.
+M is the cell nums which is n*m
+Space O(letter numbers)
+ */
 //use trie to search all words in matrix
 class WordSearch2 {
 
