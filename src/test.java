@@ -10,7 +10,7 @@ public class test {
     int a;
 
     public static void main(String[] args) {
-
+        System.out.println(100_000_000);
     }
 
     public static int calculate(String s) {

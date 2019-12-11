@@ -8,7 +8,236 @@ public class Main {
 
         Main m = new Main();
         m.mincostTickets(new int[]{1, 4, 6, 7, 8, 20}, new int[]{2, 7, 15});
+
     }
+
+    /*
+        866. Prime Palindrome
+           Time O(N) to find all palindrome
+     */
+    public int primePalindrome(int N) {
+        //length of root, max is 5, because largest integer is 10 digits.
+        for (int L = 1; L <= 5; ++L) {
+            //Check for odd-length palindromes
+            for (int root = (int) Math.pow(10, L - 1); root < (int) Math.pow(10, L); ++root) {
+                StringBuilder sb = new StringBuilder(Integer.toString(root));
+                for (int k = L - 2; k >= 0; --k) {
+                    sb.append(sb.charAt(k));
+                }
+                int x = Integer.valueOf(sb.toString());
+                if (x >= N && isPrime(x)) {
+                    return x;
+                }
+                //If we didn't check for even-length palindromes:
+                //return N <= 11 ? min(x, 11) : x
+            }
+
+            //Check for even-length palindromes
+            for (int root = (int) Math.pow(10, L - 1); root < (int) Math.pow(10, L); ++root) {
+                StringBuilder sb = new StringBuilder(Integer.toString(root));
+                for (int k = L - 1; k >= 0; --k) {
+                    sb.append(sb.charAt(k));
+                }
+                int x = Integer.valueOf(sb.toString());
+                if (x >= N && isPrime(x)) {
+                    return x;
+                }
+            }
+        }
+
+        throw null;
+    }
+
+    public boolean isPrime(int N) {
+        if (N < 2) {
+            return false;
+        }
+        int R = (int) Math.sqrt(N);
+        for (int d = 2; d <= R; ++d) {
+            if (N % d == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public int reverseDigit(int N) {
+        int ans = 0;
+        while (N > 0) {
+            ans = 10 * ans + (N % 10);
+            N /= 10;
+        }
+        return ans;
+    }
+
+    /*
+        97. Interleaving String
+        time O(s1.length*s2.length)
+        space O(s1.length*s2.length)
+        这个方法的前提建立于：判断一个 s3s3 的前缀（用下标 kk 表示），能否用 s1s1 和 s2s2 的前缀（下标分别为 ii 和 jj），
+        仅仅依赖于 s1 前 i 个字符和 s2 前 j 个字符，而与后面的字符无关。为了实现这个算法， 我们将使用一个 2D 的布尔数组 dp。
+        dp[i][j] 表示用 s1 的前 (i+1) 和 s2 的前 (j+1) 个字符，总共 (i+j+2)个字符，是否交错构成 s3 的前缀。为了求出 dp[i][j]，
+        我们需要考虑 2 种情况：s1 的第 i 个字符和 s2 的第 j 个字符都不能匹配 s3 的第 k 个字符，其中 k=i+j+1 。这种情况下，s1 和
+        s2 的前缀无法交错形成 s3 长度为 k+1 的前缀。因此，我们让 dp[i][j] 为 False。s1 的第 i 个字符或者 s2 的第
+        j 个字符可以匹配 s3 的第 k 个字符，其中 k=i+j+1 。假设匹配的字符是 x 且与 s1 的第 i 个字符匹配，我们就需要把 x
+        放在已经形成的交错字符串的最后一个位置。此时，为了我们必须确保 s1 的前 ((i−1) 个字符和 s2 的前 j个字符能形成 s3 的一个前缀。
+        类似的，如果我们将 s2 的第 j个字符与 s3 的第 k 个字符匹配，我们需要确保 s1的前 i 个字符和 s2 的前 (j−1) 个字符能形成s3 的一个前缀，
+        我们就让 dp[i][j] 为 TrueTrue 。
+     */
+    public boolean isInterleave(String s1, String s2, String s3) {
+        if (s3.length() != s1.length() + s2.length()) {
+            return false;
+        }
+        boolean dp[][] = new boolean[s1.length() + 1][s2.length() + 1];
+        for (int i = 0; i <= s1.length(); i++) {
+            for (int j = 0; j <= s2.length(); j++) {
+                if (i == 0 && j == 0) {
+                    dp[i][j] = true;
+                } else if (i == 0) {
+                    dp[i][j] = dp[i][j - 1] && s2.charAt(j - 1) == s3.charAt(i + j - 1);
+                } else if (j == 0) {
+                    dp[i][j] = dp[i - 1][j] && s1.charAt(i - 1) == s3.charAt(i + j - 1);
+                } else {
+                    dp[i][j] =
+                        (dp[i - 1][j] && s1.charAt(i - 1) == s3.charAt(i + j - 1)) || (dp[i][j - 1]
+                            && s2.charAt(j - 1) == s3.charAt(i + j - 1));
+                }
+            }
+        }
+        return dp[s1.length()][s2.length()];
+    }
+
+
+    /*
+        57. Insert Interval
+        Time O(N) one pass to form result
+     */
+    public int[][] insert(int[][] intervals, int[] newInterval) {
+        List<int[]> s = new ArrayList<>(Arrays.asList(intervals));
+
+        int i = 0;
+        while (i < s.size() && !canMerge(newInterval, s.get(i))) {
+            if (s.get(i)[0] > newInterval[1]) {
+                s.add(i, newInterval);
+                return listToArray(s);
+            }
+            i++;
+        }
+        if (i == s.size()) {
+            s.add(newInterval);
+            return listToArray(s);
+        }
+        //merge the current one with new interval
+        s.set(i, new int[]{Math.min(newInterval[0], s.get(i)[0]),
+            Math.max(newInterval[1], s.get(i)[1])});
+
+        //merge the rest list.
+        for (; i < s.size() - 1; i++) {
+            int j = i + 1;
+            if (canMerge(s.get(i), s.get(j))) {
+                int[] newArray = {s.get(i)[0],
+                    s.get(j)[1] > s.get(i)[1] ? s.get(j)[1] : s.get(i)[1]};
+                s.set(i, newArray);
+                s.remove(s.get(j));
+                i = i - 1;
+            }
+        }
+        return listToArray(s);
+    }
+
+    private int[][] listToArray(List<int[]> s) {
+        int[][] result = new int[s.size()][2];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = s.get(i);
+        }
+        return result;
+    }
+
+    /*
+        673. Number of Longest Increasing Subsequence
+        time O(n^2)
+     */
+    public int findNumberOfLIS(int[] nums) {
+        int N = nums.length;
+        if (N <= 1) {
+            return N;
+        }
+        int[] lengths = new int[N]; //lengths[i] = length of longest ending in nums[i]
+        int[] counts = new int[N]; //count[i] = number of longest ending in nums[i]
+        Arrays.fill(counts, 1);
+        int maxLength = 0;
+        int ans = 0;
+        for (int j = 0; j < N; ++j) {
+            for (int i = 0; i < j; ++i) {
+                if (nums[i] < nums[j]) {
+                    if (lengths[i] >= lengths[j]) {
+                        lengths[j] = lengths[i] + 1;
+                        counts[j] = counts[i];
+                        maxLength = Math.max(maxLength, lengths[j]);
+                    } else if (lengths[i] + 1 == lengths[j]) {
+                        counts[j] += counts[i];
+                    }
+
+                }
+            }
+        }
+        for (int i = 0; i < N; ++i) {
+            if (lengths[i] == maxLength) {
+                ans += counts[i];
+            }
+        }
+        return ans;
+    }
+
+    /*
+        300. Longest Increasing Subsequence
+        Time O(N^2) dp
+        Time O(N*logN) binary search with suffix array
+     */
+
+
+    public int lengthOfLISBS(int[] nums) {
+        int[] dp = new int[nums.length];
+        int maxLen = 0;
+        for (int num : nums) {
+            int i = 0;
+            int j = maxLen;
+            while (i < j) {
+                int m = (i + j) / 2;
+                if (num > dp[m]) {
+                    i = m + 1;
+                } else {
+                    j = m;
+                }
+            }
+            dp[i] = num;
+            maxLen = Math.max(i + 1, maxLen);
+        }
+        return maxLen;
+    }
+
+
+    //dp[i] means the longest increased sequence with nums[i]
+    public int lengthOfLISDP(int[] nums) {
+        if (nums.length == 0) {
+            return 0;
+        }
+        int[] dp = new int[nums.length];
+        dp[0] = 1;
+        int maxans = 1;
+        for (int i = 1; i < dp.length; i++) {
+            int maxval = 0;
+            for (int j = 0; j < i; j++) {
+                if (nums[i] > nums[j]) {
+                    maxval = Math.max(maxval, dp[j]);
+                }
+            }
+            dp[i] = maxval + 1;
+            maxans = Math.max(maxans, dp[i]);
+        }
+        return maxans;
+    }
+
 
     /*
         30. Substring with Concatenation of All Words
@@ -4209,7 +4438,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         return result;
     }
 
-    public static boolean canMerge(int[] a, int[] b) {
+    private static boolean canMerge(int[] a, int[] b) {
         return (a[0] >= b[0] && a[0] <= b[1]) || (a[1] >= b[0] && a[1] <= b[1]) || (a[0] <= b[0]
             && a[1] >= b[0]) || (a[0] <= b[1] && a[1] >= b[1]);
     }

@@ -406,7 +406,11 @@ public class Trees {
     }
 
 
-    //124 Binary Tree Maximum Path Sum 任意path sum最大，不一定要经过root
+    /*
+        124 Binary Tree Maximum Path Sum 任意path sum最大，不一定要经过root
+        Time O(N) a full traverse
+        Space O(H)
+     */
     private class MaxPathSum {
 
         int res = Integer.MIN_VALUE;
@@ -424,6 +428,7 @@ public class Trees {
             int left = Math.max(maxSumForOneNode(node.left), 0);
             int right = Math.max(maxSumForOneNode(node.right), 0);
             int maxChild = Math.max(left, right);
+            //if this node is the top one.
             res = Math.max(res, node.val + left + right);
             return node.val + maxChild;
         }
@@ -646,9 +651,14 @@ public class Trees {
     }
 
 
+    /*
+        113. Path Sum II
+        from root to leaf
+        Time O(N)
+        space n or logn
+     */
     private List<List<Integer>> res = new ArrayList<>();
 
-    //from root to leaf
     public List<List<Integer>> pathSum2(TreeNode root, int sum) {
         List<Integer> path = new ArrayList<>();
         findPathSumDFS(path, root, sum);
@@ -673,6 +683,10 @@ public class Trees {
     //from up to down
     private int pathSumCount = 0;
 
+    /*
+        437. Path Sum III use path or Optimize Hash map solution
+        Time O(NlogN) path length should be logn
+     */
     public int pathSum3(TreeNode root, int sum) {
         List<Integer> path = new ArrayList<>();
         findPathSum3DFS(path, root, sum);
@@ -695,7 +709,11 @@ public class Trees {
         findPathSumDFS(new ArrayList<>(path), node.right, sum);
     }
 
-    //O(N)
+
+    /*
+        Time O(N) dfs all nodes
+        Space O(N) for map and recursion stack
+     */
     public int pathSum3Opt(TreeNode root, int sum) {
         Map<Integer, Integer> map = new HashMap<>();
         map.put(0, 1);  //Default sum = 0 has one count
@@ -810,6 +828,11 @@ public class Trees {
     }
 
 
+    /*
+        404. Sum of Left Leaves
+        Time O(N)
+        space O(N) or logn
+     */
     public int sumOfLeftLeaves(TreeNode root) {
         int sum = 0;
         if (root == null) {
@@ -951,7 +974,12 @@ public class Trees {
         dfsOfRightSide(x.left, level + 1, set, res);
     }
 
-    //存在一个path sum等于target path sum就是从root到leaf
+    /*
+        112. Path Sum
+        Time O(N)
+        Space O(N) best O(logN)
+        存在一个path sum等于target path sum就是从root到leaf
+     */
     public boolean hasPathSum(TreeNode root, int sum) {
         if (root == null) {
             return false;

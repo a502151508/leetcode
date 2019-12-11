@@ -577,6 +577,9 @@ class RandomizedCollection {
 
 
 /*
+
+lc 384. Shuffle an Array
+Time O(N)
 Fisher–Yates
 一、算法流程：
 需要随机置乱的n个元素的数组a：
