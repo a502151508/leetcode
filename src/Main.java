@@ -3968,6 +3968,47 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         nums[j] = temp;
     }
 
+    /*
+        University Career Fair
+     */
+    public static int maxEvents(List<Integer> arrival, List<Integer> duration) {
+        List<Pair<Integer, Integer>> input = new ArrayList<>();
+
+        for (int i = 0; i < arrival.size(); i++) {
+            input.add(new Pair(arrival.get(i), duration.get(i) + arrival.get(i)));
+        }
+
+        Collections.sort(input, Comparator.comparingInt(Pair::getValue));
+
+        int max = 0;
+        int end = 0;
+        for (int i = 0; i < input.size(); i++) {
+            if (end <= input.get(i).getKey()) {
+                max++;
+                end = input.get(i).getValue();
+            }
+        }
+        return max;
+    }
+
+    /*
+    1283. Find the Smallest Divisor Given a Threshold
+     */
+    public int smallestDivisor(int[] A, int threshold) {
+        int left = 1, right = (int) 1e6;
+        while (left < right) {
+            int m = (left + right) / 2, sum = 0;
+            for (int i : A) {
+                sum += (i - 1) / m + 1;
+            }
+            if (sum > threshold) {
+                left = m + 1;
+            } else {
+                right = m;
+            }
+        }
+        return left;
+    }
 
     public static int minMeetingRooms(int[][] intervals) {
         if (intervals.length == 0) {
@@ -4889,6 +4930,32 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         }
 
         return result;
+    }
+
+    /*
+        50. Pow(x, n)
+        x的n次方
+        time(logn)
+        space 1
+     */
+    public double myPow(double x, int n) {
+
+        double sum = 1;
+        double tmp = x;
+        long N = n;
+        if (N < 0) {
+            tmp = 1 / tmp;
+            N = -N;
+        }
+
+        while (N != 0) {
+            if ((N & 1) == 1) {
+                sum *= tmp;
+            }
+            tmp *= tmp;
+            N = N >> 1;
+        }
+        return sum;
     }
 
     //atoi string 转 int

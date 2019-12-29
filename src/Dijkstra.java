@@ -44,7 +44,7 @@ public class Dijkstra {
         int[] shortPath = new int[n]; // 保存start到其他各点的最短路径
         String[] path = new String[n]; // 保存start到其他各点最短路径的字符串表示
         for (int i = 0; i < n; i++) {
-            path[i] = new String(start + "-->" + i);
+            path[i] = start + "-->" + i;
         }
         int[] visited = new int[n]; // 标记当前该顶点的最短路径是否已经求出,1表示已求出
 

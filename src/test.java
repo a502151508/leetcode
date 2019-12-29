@@ -4,14 +4,35 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javafx.util.Pair;
 
+interface a {
 
+}
 public class test {
 
     int a;
 
     public static void main(String[] args) {
-        System.out.println(100_000_000);
+        String a = "1-2";
+        for (String s : a.split("-")) {
+            System.out.println(s);
+        }
     }
+
+
+    static int pow(int x, int n) {
+        int sum = 1;
+        int tmp = x;
+        while (n != 0) {
+            if ((n & 1) == 1) {
+                sum *= tmp;
+            }
+            tmp *= tmp;
+            n = n >> 1;
+        }
+
+        return sum;
+    }
+
 
     public static int calculate(String s) {
         s = s.replaceAll("\\s+", "");
