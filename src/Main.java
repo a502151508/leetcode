@@ -7,8 +7,154 @@ public class Main {
     public static void main(String[] args) {
 
         Main m = new Main();
-        m.mincostTickets(new int[]{1, 4, 6, 7, 8, 20}, new int[]{2, 7, 15});
+        NumMatrix2 nm = new NumMatrix2(new int[][]{
+            {2, 4},
+            {-3, 5}
+        });
+        nm.update(0, 1, 3);
+        nm.update(1, 1, -3);
+        nm.update(0, 1, 1);
+        System.out.println(nm.sumRegion(0, 0, 1, 1));
 
+    }
+
+    /*
+        304. Range Sum Query 2D - Immutable
+     */
+    static class NumMatrix1 {
+
+        private int[][] sumMatrix;
+
+        //time O(N*M)
+        public NumMatrix1(int[][] matrix) {
+            int row = matrix.length;
+            int col = row == 0 ? 0 : matrix[0].length;
+            sumMatrix = new int[row][col];
+            if (row != 0) {
+                for (int i = 0; i < row; i++) {
+                    int sum = 0;
+                    for (int j = 0; j < col; j++) {
+                        sum += matrix[i][j];
+                        int cur = sum;
+                        if (i > 0) {
+                            cur += sumMatrix[i - 1][j];
+                        }
+                        sumMatrix[i][j] = cur;
+                    }
+                }
+            }
+        }
+
+        //O(1)
+        public int sumRegion(int row1, int col1, int row2, int col2) {
+            int sum = this.sumMatrix[row2][col2];
+            int flag = 0;
+            if (row1 - 1 >= 0) {
+                sum -= this.sumMatrix[row1 - 1][col2];
+                flag++;
+            }
+            if (col1 - 1 >= 0) {
+                sum -= this.sumMatrix[row2][col1 - 1];
+                flag++;
+            }
+            if (flag == 2) {
+                sum += this.sumMatrix[row1 - 1][col1 - 1];
+            }
+            return sum;
+        }
+    }
+
+    /*
+        308. Range Sum Query 2D - Mutable
+     */
+    static class NumMatrix2 {
+
+        private int[][] sumMatrix;
+        private int[][] matrix;
+
+        public NumMatrix2(int[][] matrix) {
+            this.matrix = matrix;
+            int row = matrix.length;
+            int col = row == 0 ? 0 : matrix[0].length;
+            sumMatrix = new int[row][col];
+            if (row != 0) {
+                for (int i = 0; i < row; i++) {
+                    int sum = 0;
+                    for (int j = 0; j < col; j++) {
+                        sum += matrix[i][j];
+                        int cur = sum;
+                        if (i > 0) {
+                            cur += sumMatrix[i - 1][j];
+                        }
+                        sumMatrix[i][j] = cur;
+                    }
+                }
+            }
+        }
+
+        public void update(int row, int col, int val) {
+            int diff = val - matrix[row][col];
+            matrix[row][col] = val;
+            for (int i = row; i < sumMatrix.length; i++) {
+                for (int j = col; j < sumMatrix[0].length; j++) {
+                    sumMatrix[i][j] += diff;
+                }
+            }
+        }
+
+        public int sumRegion(int row1, int col1, int row2, int col2) {
+            int sum = this.sumMatrix[row2][col2];
+            int flag = 0;
+            if (row1 - 1 >= 0) {
+                sum -= this.sumMatrix[row1 - 1][col2];
+                flag++;
+            }
+            if (col1 - 1 >= 0) {
+                sum -= this.sumMatrix[row2][col1 - 1];
+                flag++;
+            }
+            if (flag == 2) {
+                sum += this.sumMatrix[row1 - 1][col1 - 1];
+            }
+            return sum;
+        }
+    }
+
+    /*
+        lc 221. Maximal Square
+        time O(N*M)
+        Space o(1)
+     */
+    public int maximalSquare(char[][] matrix) {
+        int row = matrix.length;
+        if (row == 0) {
+            return 0;
+        }
+        int res = checkMin(matrix);
+        for (int i = 1; i < row; i++) {
+            for (int j = 1; j < matrix[0].length; j++) {
+                int min = Math.min(matrix[i - 1][j] - '0', matrix[i][j - 1] - '0');
+                min = Math.min(matrix[i - 1][j - 1] - '0', min);
+                res = Math.max(res, min + 1);
+                matrix[i][j] = (char) ('0' + min + 1);
+            }
+        }
+        return res * res;
+    }
+
+    private int checkMin(char[][] matrix) {
+        int row = matrix.length;
+        for (int i = 0; i < row; i++) {
+            if (matrix[i][0] == '1') {
+                return 1;
+            }
+        }
+        for (int i = 0; i < matrix[0].length; i++) {
+            if (matrix[0][i] == '1') {
+                return 1;
+            }
+        }
+        return 0;
     }
 
     /*
