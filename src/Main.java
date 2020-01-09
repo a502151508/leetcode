@@ -7,15 +7,304 @@ public class Main {
     public static void main(String[] args) {
 
         Main m = new Main();
-        NumMatrix2 nm = new NumMatrix2(new int[][]{
-            {2, 4},
-            {-3, 5}
-        });
-        nm.update(0, 1, 3);
-        nm.update(1, 1, -3);
-        nm.update(0, 1, 1);
-        System.out.println(nm.sumRegion(0, 0, 1, 1));
+        List<String> words = new ArrayList<>();
+        words.add("leet");
+        words.add("code");
+        System.out.println(m.wordBreak("leetcode", words));
 
+    }
+
+    /*
+        140. Word Break II
+        Time O(N^3)
+     */
+    public List<String> wordBreak(String s, Set<String> wordDict) {
+        Map<Integer, List<String>> map = new HashMap<>();
+        return word_Break(s, wordDict, 0, map);
+    }
+
+
+    public List<String> word_Break(String s, Set<String> wordDict, int start,
+        Map<Integer, List<String>> map) {
+        if (map.containsKey(start)) {
+            return map.get(start);
+        }
+        LinkedList<String> res = new LinkedList<>();
+        if (start == s.length()) {
+            res.add("");
+        }
+        for (int end = start + 1; end <= s.length(); end++) {
+            if (wordDict.contains(s.substring(start, end))) {
+                List<String> list = word_Break(s, wordDict, end, map);
+                for (String l : list) {
+                    res.add(s.substring(start, end) + (l.equals("") ? "" : " ") + l);
+                }
+            }
+        }
+        map.put(start, res);
+        return res;
+    }
+
+    /*
+        139. Word Break
+        Time O(n^2)
+        space O(N)
+         The depth of recursion tree can go up to n.
+         下面还有一个dp 解 同样时空复杂度
+
+     */
+
+    public boolean wordBreak(String s, List<String> wordDict) {
+        Set<String> dict = new HashSet<>();
+        dict.addAll(wordDict);
+        return checkSubString(s, 0, dict, new int[s.length()]);
+    }
+
+    private boolean checkSubString(String s, int index, Set<String> dict, int[] memo) {
+        if (index == s.length()) {
+            return true;
+        }
+        //memo array is used to store the result of a specific substring.
+        //avoid repeated computation
+        if (memo[index] != 0) {
+            return memo[index] == 1;
+        }
+        int cur = index + 1;
+        while (cur <= s.length()) {
+            if (dict.contains(s.substring(index, cur))) {
+                if (checkSubString(s, cur, dict, memo)) {
+                    memo[index] = 1;
+                    return true;
+                }
+            }
+            cur++;
+        }
+        memo[index] = -1;
+        return false;
+    }
+
+
+    public boolean wordBreakDP(String s, List<String> wordDict) {
+        Set<String> wordDictSet = new HashSet(wordDict);
+        boolean[] dp = new boolean[s.length() + 1];
+        dp[0] = true;
+        for (int i = 1; i <= s.length(); i++) {
+            for (int j = 0; j < i; j++) {
+                if (dp[j] && wordDictSet.contains(s.substring(j, i))) {
+                    dp[i] = true;
+                    break;
+                }
+            }
+        }
+        return dp[s.length()];
+    }
+
+    public String one(int num) {
+        switch (num) {
+            case 1:
+                return "One";
+            case 2:
+                return "Two";
+            case 3:
+                return "Three";
+            case 4:
+                return "Four";
+            case 5:
+                return "Five";
+            case 6:
+                return "Six";
+            case 7:
+                return "Seven";
+            case 8:
+                return "Eight";
+            case 9:
+                return "Nine";
+        }
+        return "";
+    }
+
+    public String twoLessThan20(int num) {
+        switch (num) {
+            case 10:
+                return "Ten";
+            case 11:
+                return "Eleven";
+            case 12:
+                return "Twelve";
+            case 13:
+                return "Thirteen";
+            case 14:
+                return "Fourteen";
+            case 15:
+                return "Fifteen";
+            case 16:
+                return "Sixteen";
+            case 17:
+                return "Seventeen";
+            case 18:
+                return "Eighteen";
+            case 19:
+                return "Nineteen";
+        }
+        return "";
+    }
+
+    public String ten(int num) {
+        switch (num) {
+            case 2:
+                return "Twenty";
+            case 3:
+                return "Thirty";
+            case 4:
+                return "Forty";
+            case 5:
+                return "Fifty";
+            case 6:
+                return "Sixty";
+            case 7:
+                return "Seventy";
+            case 8:
+                return "Eighty";
+            case 9:
+                return "Ninety";
+        }
+        return "";
+    }
+
+    public String two(int num) {
+        if (num == 0) {
+            return "";
+        } else if (num < 10) {
+            return one(num);
+        } else if (num < 20) {
+            return twoLessThan20(num);
+        } else {
+            int tenner = num / 10;
+            int rest = num - tenner * 10;
+            if (rest != 0) {
+                return ten(tenner) + " " + one(rest);
+            } else {
+                return ten(tenner);
+            }
+        }
+    }
+
+    public String three(int num) {
+        int hundred = num / 100;
+        int rest = num - hundred * 100;
+        String res = "";
+        if (hundred * rest != 0) {
+            res = one(hundred) + " Hundred " + two(rest);
+        } else if ((hundred == 0) && (rest != 0)) {
+            res = two(rest);
+        } else if ((hundred != 0) && (rest == 0)) {
+            res = one(hundred) + " Hundred";
+        }
+        return res;
+    }
+
+    /*
+        273. Integer to English Words
+        Time complexity : O(N). Intuitively the output is proportional
+        to the number N of digits in the input.
+        Space complexity : O(1) since the output is just a string.
+     */
+    public String numberToWords(int num) {
+        if (num == 0) {
+            return "Zero";
+        }
+
+        int billion = num / 1000000000;
+        int million = (num - billion * 1000000000) / 1000000;
+        int thousand = (num - billion * 1000000000 - million * 1000000) / 1000;
+        int rest = num - billion * 1000000000 - million * 1000000 - thousand * 1000;
+
+        String result = "";
+        if (billion != 0) {
+            result = three(billion) + " Billion";
+        }
+        if (million != 0) {
+            if (!result.isEmpty()) {
+                result += " ";
+            }
+            result += three(million) + " Million";
+        }
+        if (thousand != 0) {
+            if (!result.isEmpty()) {
+                result += " ";
+            }
+            result += three(thousand) + " Thousand";
+        }
+        if (rest != 0) {
+            if (!result.isEmpty()) {
+                result += " ";
+            }
+            result += three(rest);
+        }
+        return result;
+    }
+
+    /*
+        269. Alien Dictionary
+        Input:
+        [
+          "wrt",
+          "wrf",
+          "er",
+          "ett",
+          "rftt"
+        ]
+
+        Output: "wertf"
+
+        Time : O(N+M) N for number of all letters M for number of words
+        space O(N+M)
+     */
+    public String alienOrder(String[] words) {
+        Map<Character, Set<Character>> edge = new HashMap<>();
+        StringBuilder res = new StringBuilder();
+        for (String word : words) {
+            for (char c : word.toCharArray()) {
+                edge.put(c, new HashSet<>());
+            }
+        }
+        for (int wordIndex = 0; wordIndex < words.length - 1; wordIndex++) {
+            String wordA = words[wordIndex];
+            String wordB = words[wordIndex + 1];
+            int cur = 0;
+            while (cur < wordA.length() && cur < wordB.length()) {
+                if (wordA.charAt(cur) == wordB.charAt(cur)) {
+                    cur++;
+                    continue;
+                }
+                Set<Character> prevSet = edge.get(wordB.charAt(cur));
+                prevSet.add(wordA.charAt(cur));
+                edge.put(wordB.charAt(cur), prevSet);
+                break;
+            }
+
+        }
+        Queue<Character> readyForSort = new LinkedList<Character>();
+        for (Map.Entry<Character, Set<Character>> e : edge.entrySet()) {
+            if (e.getValue().isEmpty()) {
+                readyForSort.add(e.getKey());
+            }
+        }
+        int resLength = edge.size();
+
+        while (!readyForSort.isEmpty()) {
+            char curChar = readyForSort.poll();
+            res.append(curChar);
+            for (Map.Entry<Character, Set<Character>> e : edge.entrySet()) {
+                if (e.getValue().contains(curChar)) {
+                    e.getValue().remove(curChar);
+                    if (e.getValue().isEmpty()) {
+                        readyForSort.add(e.getKey());
+                    }
+                }
+            }
+        }
+        return res.length() == resLength ? res.toString() : "";
     }
 
     /*
