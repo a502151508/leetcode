@@ -11,16 +11,43 @@ public class Main {
         words.add("leet");
         words.add("code");
         System.out.println(m.wordBreak("leetcode", words));
-
     }
+
+    /*
+        189. Rotate Array
+        Original List                   : 1 2 3 4 5 6 7
+        After reversing all numbers     : 7 6 5 4 3 2 1
+        After reversing first k numbers : 5 6 7 4 3 2 1
+        After revering last n-k numbers : 5 6 7 1 2 3 4 --> Result
+        Time O(n)
+        Space O(1)
+     */
+    public void rotate(int[] nums, int k) {
+        k %= nums.length;
+        reverse(nums, 0, nums.length - 1);
+        reverse(nums, 0, k - 1);
+        reverse(nums, k, nums.length - 1);
+    }
+
+    public void reverse(int[] nums, int start, int end) {
+        while (start < end) {
+            int temp = nums[start];
+            nums[start] = nums[end];
+            nums[end] = temp;
+            start++;
+            end--;
+        }
+    }
+
 
     /*
         140. Word Break II
         Time O(N^3)
+        space O(n^3)
      */
-    public List<String> wordBreak(String s, Set<String> wordDict) {
+    public List<String> wordBreak2(String s, List<String> wordDict) {
         Map<Integer, List<String>> map = new HashMap<>();
-        return word_Break(s, wordDict, 0, map);
+        return word_Break(s, new HashSet<>(wordDict), 0, map);
     }
 
 
