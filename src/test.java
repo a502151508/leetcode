@@ -7,15 +7,19 @@ import javafx.util.Pair;
 interface a {
 
 }
+
 public class test {
 
     int a;
 
+    /*
+    ["TweetCounts","recordTweet","recordTweet","recordTweet","getTweetCountsPerFrequency","getTweetCountsPerFrequency","recordTweet","getTweetCountsPerFrequency"]
+    [[],["tweet3",0],["tweet3",60],["tweet3",10],["minute","tweet3",0,59],["minute","tweet3",0,60],["tweet3",120],["hour","tweet3",0,210]]
+    */
     public static void main(String[] args) {
-        String a = "1-2";
-        for (String s : a.split("-")) {
-            System.out.println(s);
-        }
+        ShortURLCodec s = new ShortURLCodec();
+        String surl = s.encode("https://leetcode.com/problems/design-tinyurl");
+        System.out.println(surl);
     }
 
 

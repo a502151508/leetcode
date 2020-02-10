@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -15,13 +16,208 @@ import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.LinkedBlockingQueue;
+import sun.net.InetAddressCachePolicy;
 import sun.net.www.protocol.http.HttpURLConnection.TunnelState;
 
 /**
  * Created by Sichi Zhang on 2019/11/10.
  */
 public class Design {
+
+}
+
+
+class AutocompleteSystem {
+
+    Map<Character, TrieNode[]> map;
+
+    public AutocompleteSystem(String[] sentences, int[] times) {
+
+    }
+
+    public List<String> input(char c) {
+        return null;
+    }
+}
+
+/*
+535. Encode and Decode TinyURL
+The number of URLs that can be encoded is quite large in this case, nearly of the order (62)^6
+length of encode is good
+ .
+ */
+class ShortURLCodec {
+
+    String alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    HashMap<String, String> map = new HashMap<>();
+    Random rand = new Random();
+    String key = getRand();
+
+    public String getRand() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 6; i++) {
+            sb.append(alphabet.charAt(rand.nextInt(62)));
+        }
+        return sb.toString();
+    }
+
+    public String encode(String longUrl) {
+        while (map.containsKey(key)) {
+            key = getRand();
+        }
+        map.put(key, longUrl);
+        return "http://tinyurl.com/" + key;
+    }
+
+    public String decode(String shortUrl) {
+        return map.get(shortUrl.replace("http://tinyurl.com/", ""));
+    }
+}
+
+class SnakeGame {
+
+    /**
+     * Initialize your data structure here.
+     *
+     * @param width - screen width
+     * @param height - screen height
+     * @param food - A list of food positions E.g food = [[1,1], [1,0]] means the first food is
+     * positioned at [1,1], the second is at [1,0].
+     */
+    private List<int[]> snake;
+    private Set<Integer> body;
+    private int curFood;
+    private boolean isOver;
+    private int[][] food;
+    private int width;
+    private int height;
+
+    /*
+    Space O(N*M)
+     */
+    public SnakeGame(int width, int height, int[][] food) {
+        if (width == 0 || height == 0) {
+            isOver = true;
+            return;
+        }
+        this.width = width;
+        this.height = height;
+        this.food = food;
+        snake = new ArrayList<>();
+        snake.add(new int[]{0, 0});
+        body = new HashSet<>();
+        body.add(0);
+        // 0 for nothing 1 for snake 2 for food;
+    }
+
+
+    /**
+     * Moves the snake.
+     *
+     * @param direction - 'U' = Up, 'L' = Left, 'R' = Right, 'D' = Down
+     * @return The game's score after the move. Return -1 if game over. Game over when snake crosses
+     * the screen boundary or bites its body. Time O(Snack length max N*M)
+     */
+    public int move(String direction) {
+        int[] tail = snake.get(snake.size() - 1);
+        int[] curLocation = snake.get(0);
+        //remove tail
+        body.remove(tail[0] * width + tail[1]);
+        int[] d = getDirection(direction);
+        int[] nextStep = new int[]{curLocation[0] + d[0], curLocation[1] + d[1]};
+        //collides with border or bites itself
+        if (nextStep[0] < 0 || nextStep[0] > height - 1 || nextStep[1] < 0
+            || nextStep[1] > width - 1) {
+            isOver = true;
+            return -1;
+        } else if (body.contains(nextStep[0] * width + nextStep[1])) {
+            isOver = true;
+            return -1;
+        }
+        //eat it
+        else if (curFood < food.length && food[curFood][0] == nextStep[0]
+            && food[curFood][1] == nextStep[1]) {
+            snake.add(0, nextStep);
+            body.add(nextStep[0] * width + nextStep[1]);
+            body.add(tail[0] * width + tail[1]);
+            curFood++;
+            return curFood;
+        }
+        //just move
+        else {
+            body.add(nextStep[0] * width + nextStep[1]);
+            for (int i = snake.size() - 1; i > 0; i--) {
+                snake.set(i, snake.get(i - 1));
+            }
+            snake.set(0, nextStep);
+            return curFood;
+        }
+    }
+
+    private int[] getDirection(String direction) {
+        switch (direction) {
+            case "U":
+                return new int[]{-1, 0};
+            case "D":
+                return new int[]{1, 0};
+            case "L":
+                return new int[]{0, -1};
+            case "R":
+                return new int[]{0, 1};
+            default:
+                return null;
+        }
+    }
+}
+
+class TweetCounts {
+
+    private Map<String, TreeSet<Integer>> storage;
+
+    public TweetCounts() {
+        storage = new HashMap<>();
+    }
+
+    public void recordTweet(String tweetName, int time) {
+        TreeSet<Integer> timeSet = storage
+            .getOrDefault(tweetName, new TreeSet<>(Comparator.comparingInt(o -> o)));
+        storage.put(tweetName, timeSet);
+        timeSet.add(time);
+    }
+
+    public List<Integer> getTweetCountsPerFrequency(String freq, String tweetName, int startTime,
+        int endTime) {
+        int interval = 0;
+        switch (freq) {
+            case "minute":
+                interval = 60;
+                break;
+            case "hour":
+                interval = 3600;
+                break;
+            case "day":
+                interval = 86400;
+                break;
+        }
+        TreeSet<Integer> set = storage.get(tweetName);
+        TreeSet<Integer> subSet = (TreeSet<Integer>) set.subSet(startTime, true, endTime, true);
+        Object[] arr = subSet.toArray();
+        List<Integer> res = new ArrayList<>();
+        int cur = 0;
+        for (int i = startTime / interval; i <= endTime / interval; i++) {
+            int count = 0;
+            while (cur < arr.length && (int) arr[cur] < interval * (i + 1)) {
+                count++;
+                cur++;
+            }
+            if (count != 0) {
+                res.add(count);
+            }
+        }
+        return res;
+    }
 
 }
 
