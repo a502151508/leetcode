@@ -2,23 +2,21 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import javafx.util.Pair;
 
 interface a {
 
 }
+
 public class test {
 
     int a;
 
     public static void main(String[] args) {
-        String a = "1-2";
-        for (String s : a.split("-")) {
-            System.out.println(s);
-        }
+
     }
-
-
+    
     static int pow(int x, int n) {
         int sum = 1;
         int tmp = x;
@@ -127,8 +125,8 @@ public class test {
                 }
                 for (int s = tar; s >= nums.get(i - 1); s--) {
                     dp[i][j][s] = Math
-                        .max(dp[i - 1][j - 1][s - nums.get(i - 1)] + nums.get(i - 1),
-                            dp[i - 1][j][s]);
+                            .max(dp[i - 1][j - 1][s - nums.get(i - 1)] + nums.get(i - 1),
+                                    dp[i - 1][j][s]);
                 }
             }
         }
@@ -264,7 +262,7 @@ public class test {
 
     public static int getDistance(Pair<Integer, Integer> p1, Pair<Integer, Integer> p2) {
         return (p2.getKey() - p1.getKey()) * (p2.getKey() - p1.getKey()) +
-            (p2.getValue() - p1.getValue()) * (p2.getValue() - p1.getValue());
+                (p2.getValue() - p1.getValue()) * (p2.getValue() - p1.getValue());
     }
 
     public static void main2(String[] args) {
@@ -323,7 +321,7 @@ public class test {
         for (int i = 1; i < cur; i++) {
             if (input.get(i) + i == cur - 1) {
                 res = Math
-                    .min(res, dp[i] != -1 ? (dp[i] + 1) : (findMinSteps(input, i + 1, dp) + 1));
+                        .min(res, dp[i] != -1 ? (dp[i] + 1) : (findMinSteps(input, i + 1, dp) + 1));
             }
         }
         if (res == Integer.MAX_VALUE) {
