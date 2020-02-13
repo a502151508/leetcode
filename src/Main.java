@@ -1,4 +1,5 @@
 
+import java.util.stream.Collectors;
 import javafx.util.Pair;
 
 import java.util.*;
@@ -8,7 +9,177 @@ public class Main {
     public static void main(String[] args) {
 
         Main m = new Main();
-        System.out.println(m.monotoneIncreasingDigits(14365));
+        System.out.println(m.hIndex(new int[]{1, 2}));
+    }
+    /*
+        414. Third Maximum Number
+     */
+
+    public int thirdMax(int[] nums) {
+        Integer max1 = null;
+        Integer max2 = null;
+        Integer max3 = null;
+        for (Integer n : nums) {
+            if (n.equals(max1) || n.equals(max2) || n.equals(max3)) {
+                continue;
+            }
+            if (max1 == null || n > max1) {
+                max3 = max2;
+                max2 = max1;
+                max1 = n;
+            } else if (max2 == null || n > max2) {
+                max3 = max2;
+                max2 = n;
+            } else if (max3 == null || n > max3) {
+                max3 = n;
+            }
+        }
+        return max3 == null ? max1 : max3;
+
+    }
+
+    /*
+        274. H-Index
+        bucket sort
+        Time O(N)
+        space O(N)
+    */
+    public int hIndex(int[] citations) {
+        int n = citations.length;
+        int[] papers = new int[n + 1];
+        // counting papers for each citation number
+        for (int c : citations) {
+            papers[Math.min(n, c)]++;
+        }
+        // finding the h-index
+        int s = 0;
+        for (int k = n; k >= 0; k--) {
+            s += papers[k];
+            if (s >= k) {
+                return k;
+            }
+        }
+        return -1;
+    }
+
+
+    public int minSteps(String s, String t) {
+        if (s.length() == 0) {
+            return 0;
+        }
+        Map<Character, Integer> count = new HashMap<>();
+        for (char c : s.toCharArray()) {
+            count.put(c, count.getOrDefault(c, 0) + 1);
+        }
+        int minSteps = 0;
+        for (char c : t.toCharArray()) {
+            if (!count.containsKey(c)) {
+                minSteps++;
+            } else {
+                int curCount = count.get(c);
+                if (curCount == 1) {
+                    count.remove(c);
+                } else {
+                    count.put(c, curCount - 1);
+                }
+            }
+        }
+        return minSteps;
+    }
+
+    public boolean checkIfExist(int[] arr) {
+        if (arr.length < 2) {
+            return false;
+        }
+        Set<Integer> s = new HashSet<>();
+        for (int num : arr) {
+            if (num == 0 && s.contains(0)) {
+                return true;
+            }
+            s.add(num);
+        }
+        for (int num : arr) {
+            s.remove(num);
+            if (s.contains(num * 2)) {
+                return true;
+            }
+            s.add(num);
+        }
+        return false;
+    }
+
+    /*
+        994. Rotting Oranges
+        N is the number of cells
+        time o(N)
+        space O(N)
+     */
+    public int orangesRotting(int[][] grid) {
+        int row = grid.length;
+        if (row == 0) {
+            return 0;
+        }
+        int col = grid[0].length;
+        List<int[]> rottingOranges = new LinkedList<>();
+        int freshCount = 0;
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+                if (grid[i][j] == 1) {
+                    freshCount++;
+                }
+                if (grid[i][j] == 2) {
+                    rottingOranges.add(new int[]{i, j});
+                }
+            }
+        }
+        int steps = 0;
+        int[][] offset = new int[][]{{0, 1}, {1, 0}, {-1, 0}, {0, -1}};
+        outer:
+        while (!rottingOranges.isEmpty() && freshCount != 0) {
+            List<int[]> nextTurn = new LinkedList<>();
+            steps++;
+            for (int[] orange : rottingOranges) {
+                for (int i = 0; i < 4; i++) {
+                    int newRow = orange[0] + offset[i][0];
+                    int newCol = orange[1] + offset[i][1];
+                    if (inGrid(newRow, newCol, grid) && grid[newRow][newCol] == 1) {
+                        grid[newRow][newCol] = 2;
+                        nextTurn.add(new int[]{newRow, newCol});
+                        freshCount--;
+                        if (freshCount == 0) {
+                            break outer;
+                        }
+                    }
+                }
+            }
+            rottingOranges = nextTurn;
+        }
+
+        return freshCount == 0 ? steps : -1;
+    }
+
+
+    /*
+        198. House Robber
+        dp
+        time O(N)
+        space O(1)
+     */
+    public int rob(int[] nums) {
+        if (nums.length == 0) {
+            return 0;
+        }
+        if (nums.length == 1) {
+            return nums[0];
+        }
+        int prev = nums[0];
+        int cur = Math.max(nums[0], nums[1]);
+        for (int i = 2; i < nums.length; i++) {
+            int temp = Math.max(prev + nums[i], cur);
+            prev = cur;
+            cur = temp;
+        }
+        return cur;
     }
 
     /*
@@ -31,9 +202,9 @@ public class Main {
                 i = j;
             }
         }
-        if (i == digits - 1)
+        if (i == digits - 1) {
             return N;
-        else {
+        } else {
             res[i]--;
             i++;
             for (; i < digits; i++) {
@@ -82,7 +253,7 @@ public class Main {
 
 
     public List<String> word_Break(String s, Set<String> wordDict, int start,
-                                   Map<Integer, List<String>> map) {
+        Map<Integer, List<String>> map) {
         if (map.containsKey(start)) {
             return map.get(start);
         }
@@ -591,8 +762,8 @@ public class Main {
                     dp[i][j] = dp[i - 1][j] && s1.charAt(i - 1) == s3.charAt(i + j - 1);
                 } else {
                     dp[i][j] =
-                            (dp[i - 1][j] && s1.charAt(i - 1) == s3.charAt(i + j - 1)) || (dp[i][j - 1]
-                                    && s2.charAt(j - 1) == s3.charAt(i + j - 1));
+                        (dp[i - 1][j] && s1.charAt(i - 1) == s3.charAt(i + j - 1)) || (dp[i][j - 1]
+                            && s2.charAt(j - 1) == s3.charAt(i + j - 1));
                 }
             }
         }
@@ -621,14 +792,14 @@ public class Main {
         }
         //merge the current one with new interval
         s.set(i, new int[]{Math.min(newInterval[0], s.get(i)[0]),
-                Math.max(newInterval[1], s.get(i)[1])});
+            Math.max(newInterval[1], s.get(i)[1])});
 
         //merge the rest list.
         for (; i < s.size() - 1; i++) {
             int j = i + 1;
             if (canMerge(s.get(i), s.get(j))) {
                 int[] newArray = {s.get(i)[0],
-                        s.get(j)[1] > s.get(i)[1] ? s.get(j)[1] : s.get(i)[1]};
+                    s.get(j)[1] > s.get(i)[1] ? s.get(j)[1] : s.get(i)[1]};
                 s.set(i, newArray);
                 s.remove(s.get(j));
                 i = i - 1;
@@ -895,7 +1066,7 @@ public class Main {
             k = nums.length;
         }
         PriorityQueue<Integer> window = new PriorityQueue<>(
-                Comparator.comparingInt(o -> -o));
+            Comparator.comparingInt(o -> -o));
         for (int i = 0; i < k; i++) {
             window.add(nums[i]);
         }
@@ -922,8 +1093,8 @@ public class Main {
             count.put(word, count.getOrDefault(word, 0) + 1);
         }
         PriorityQueue<String> heap = new PriorityQueue<String>(
-                (w1, w2) -> count.get(w1).equals(count.get(w2)) ?
-                        w2.compareTo(w1) : count.get(w1) - count.get(w2));
+            (w1, w2) -> count.get(w1).equals(count.get(w2)) ?
+                w2.compareTo(w1) : count.get(w1) - count.get(w2));
         for (String word : count.keySet()) {
             heap.offer(word);
             if (heap.size() > k) {
@@ -956,7 +1127,7 @@ public class Main {
 
         // init heap 'the less frequent element first'
         PriorityQueue<Integer> heap =
-                new PriorityQueue<Integer>((n1, n2) -> count.get(n1) - count.get(n2));
+            new PriorityQueue<Integer>((n1, n2) -> count.get(n1) - count.get(n2));
 
         // keep k top frequent elements in the heap
         for (int n : count.keySet()) {
@@ -1253,7 +1424,7 @@ another solution union find. assign a id for each email
 
     //move emails from account1 to account2
     private void mergeTwoAccounts(List<String> account1, List<String> account2,
-                                  Map<String, List<String>> accountDict) {
+        Map<String, List<String>> accountDict) {
         if (account1.size() > account2.size()) {
             mergeTwoAccounts(account2, account1, accountDict);
             return;
@@ -1661,7 +1832,7 @@ space complexity O(t.length)
                     res.add("0");
                 }
                 while (!help.isEmpty() && isOperator(help.peek()) && isPriority(help.peek(),
-                        exp.charAt(i))) {
+                    exp.charAt(i))) {
                     res.add(String.valueOf(help.pop()));
                 }
                 help.push(exp.charAt(i));
@@ -1778,7 +1949,7 @@ space complexity O(t.length)
         }
         int width = matrix[0].length;
         PriorityQueue<Pair<Pair<Integer, Integer>, Integer>> smallestHeap = new PriorityQueue<Pair<Pair<Integer, Integer>, Integer>>(
-                Comparator.comparingInt(Pair::getValue));
+            Comparator.comparingInt(Pair::getValue));
         for (int i = 0; i < width; i++) {
             smallestHeap.offer(new Pair(new Pair(0, i), matrix[0][i]));
         }
@@ -1786,7 +1957,7 @@ space complexity O(t.length)
             Pair<Integer, Integer> p = smallestHeap.poll().getKey();
             if (p.getKey() + 1 < length) {
                 smallestHeap.offer(new Pair(new Pair(p.getKey() + 1, p.getValue()),
-                        matrix[p.getKey() + 1][p.getValue()]));
+                    matrix[p.getKey() + 1][p.getValue()]));
             }
         }
         return smallestHeap.peek().getValue();
@@ -1962,7 +2133,7 @@ space complexity O(t.length)
                 return false; //check column
             }
             if (board[3 * (row / 3) + i / 3][3 * (col / 3) + i % 3] != '.' &&
-                    board[3 * (row / 3) + i / 3][3 * (col / 3) + i % 3] == c) {
+                board[3 * (row / 3) + i / 3][3 * (col / 3) + i % 3] == c) {
                 return false; //check 3*3 block
             }
         }
@@ -1991,7 +2162,7 @@ space complexity O(t.length)
                     continue;
                 }
                 if (row[i].contains(cur) || col[j].contains(cur) || box[boxIndex]
-                        .contains(cur)) {
+                    .contains(cur)) {
                     return false;
                 }
                 row[i].add(cur);
@@ -2028,7 +2199,7 @@ space complexity O(t.length)
         while (curr.val != key) {
             if (curr.next == head) {
                 System.out.printf("\nGiven node is not found"
-                        + " in the list!!!");
+                    + " in the list!!!");
                 break;
             }
             prev = curr;
@@ -2098,12 +2269,48 @@ space complexity O(t.length)
             //  如果第i个不符合要求，切分成左右两段分别递归求得
             if (times[chars[i] - 'a'] < k) {
                 return Math
-                        .max(countCharater(chars, k, p1, i - 1), countCharater(chars, k, i + 1, p2));
+                    .max(countCharater(chars, k, p1, i - 1), countCharater(chars, k, i + 1, p2));
             }
         }
         return p2 - p1 + 1;
     }
 
+
+    /*
+        416. Partition Equal Subset Sum
+        method 1 和698一样回溯搜索所有可能
+     */
+    public boolean canPartition(int[] nums) {
+        return canPartitionKSubsets(nums, 2);
+    }
+
+    /*平分成k组  回溯法暴力搜索 k parts
+    lc698 Time Complexity:O(k^(N−k)*k!), where N is the length of nums,
+    and kk is as given. As we skip additional zeroes in groups, naively we will make O(k!) calls to search,
+    then an additional O(k^(N−k) ) calls after every element of groups is nonzero.
+    Space Complexity: O(N)O(N), the space used by recursive calls to search in our call stack.
+     */
+    public boolean canPartitionKSubsets(int[] nums, int k) {
+        int sum = Arrays.stream(nums).sum();
+        if (sum % k > 0) {
+            return false;
+        }
+        //必定为sum/k
+        int target = sum / k;
+
+        Arrays.sort(nums);
+        //search from back to front
+        int row = nums.length - 1;
+        //prune the search space
+        if (nums[row] > target) {
+            return false;
+        }
+        while (row >= 0 && nums[row] == target) {
+            row--;
+            k--;
+        }
+        return searchPartitionK(new int[k], row, nums, target);
+    }
 
     public boolean searchPartitionK(int[] groups, int row, int[] nums, int target) {
         //if each number had been placed, its successful.
@@ -2127,34 +2334,6 @@ space complexity O(t.length)
             }
         }
         return false;
-    }
-
-    /*平分成k组  回溯法暴力搜索 k parts
-    lc698 Time Complexity:O(k^(N−k)*k!), where NN is the length of nums,
-    and kk is as given. As we skip additional zeroes in groups, naively we will make O(k!) calls to search,
-    then an additional O(k^(N−k) ) calls after every element of groups is nonzero.
-    Space Complexity: O(N)O(N), the space used by recursive calls to search in our call stack.
-     */
-    public boolean canPartitionKSubsets(int[] nums, int k) {
-        int sum = Arrays.stream(nums).sum();
-        if (sum % k > 0) {
-            return false;
-        }
-        //必定为sum/k
-        int target = sum / k;
-
-        Arrays.sort(nums);
-        //search from back to front
-        int row = nums.length - 1;
-        //prune the search space
-        if (nums[row] > target) {
-            return false;
-        }
-        while (nums[row] == target) {
-            row--;
-            k--;
-        }
-        return searchPartitionK(new int[k], row, nums, target);
     }
 
     //2d array 找最低path到终点
@@ -2481,7 +2660,7 @@ space complexity O(t.length)
                 //     3. it's not the last occurrence
                 // we remove it from the solution to keep the solution optimal
                 while (!stack.isEmpty() && c < stack.peek()
-                        && last_occurrence.get(stack.peek()) > i) {
+                    && last_occurrence.get(stack.peek()) > i) {
                     seen.remove(stack.pop());
                 }
                 seen.add(c);
@@ -2618,13 +2797,13 @@ space complexity O(t.length)
             return image;
         }
         fillFlood(image, sr, sc, image[sr][sc], newColor,
-                new boolean[image.length][image[0].length]);
+            new boolean[image.length][image[0].length]);
         return image;
     }
 
     //dfs
     private static void fillFlood(int[][] image, int sr, int sc, int oldColor, int newColor,
-                                  boolean[][] visited) {
+        boolean[][] visited) {
         int r = image.length;
         int c = image[0].length;
         if (sr >= 0 && sr < r && sc >= 0 && sc < c && !visited[sr][sc]) {
@@ -3146,7 +3325,7 @@ space complexity O(t.length)
     }
 
     public static List<Integer> connectedCities(int n, int g, List<Integer> originCities,
-                                                List<Integer> destinationCities) {
+        List<Integer> destinationCities) {
         int[] root = new int[n + 1];
         int[] ids = new int[n + 1];
 
@@ -3437,7 +3616,7 @@ space complexity O(t.length)
             res[r][c] = i + 1;
             visited[r][c] = true;
             if (!(r + nextmove[0] >= 0 && r + nextmove[0] < n && c + nextmove[1] >= 0
-                    && c + nextmove[1] < n && !visited[r + nextmove[0]][c + nextmove[1]])) {
+                && c + nextmove[1] < n && !visited[r + nextmove[0]][c + nextmove[1]])) {
                 t++;
                 nextmove = per[t % 4];
             }
@@ -3776,7 +3955,7 @@ space complexity O(t.length)
     }
 
     void findResult(int[] candidates, int target, Deque<Integer> nums,
-                    List<List<Integer>> res, int start) {
+        List<List<Integer>> res, int start) {
         if (target < 0) {
             return;
         }
@@ -4138,7 +4317,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
 //        return new ArrayList<>(res);
 //    }
     public List<List<String>> findLadders(String beginWord, String endWord,
-                                          List<String> wordList) {
+        List<String> wordList) {
         List<List<String>> ans = new ArrayList<>();
         if (!wordList.contains(endWord)) {
             return ans;
@@ -4152,7 +4331,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
                 mask.append("*");
                 mask.append(word.substring(i + 1));
                 List<String> wordListForAMask = comboDic
-                        .getOrDefault(mask.toString(), new ArrayList<>());
+                    .getOrDefault(mask.toString(), new ArrayList<>());
                 wordListForAMask.add(word);
                 comboDic.put(mask.toString(), wordListForAMask);
             }
@@ -4167,7 +4346,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
                 mask.append("*");
                 mask.append(word.substring(i + 1));
                 List<String> wordListForAMask = comboDic
-                        .getOrDefault(mask.toString(), new ArrayList<>());
+                    .getOrDefault(mask.toString(), new ArrayList<>());
                 set.addAll(wordListForAMask);
             }
             set.remove(word);
@@ -4186,8 +4365,8 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
     //dfs find all possible ans
     //此时map里保存了所有可能的最短路径解，只需dfs一遍全找出来
     private void findLaddersHelper(String beginWord, String endWord,
-                                   HashMap<String, ArrayList<String>> map,
-                                   ArrayList<String> temp, List<List<String>> ans) {
+        HashMap<String, ArrayList<String>> map,
+        ArrayList<String> temp, List<List<String>> ans) {
         if (beginWord.equals(endWord)) {
             ans.add(new ArrayList<String>(temp));
             return;
@@ -4208,7 +4387,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
     3.如果相遇，则停止该条路径，将结果保存在map里，返回。
      */
     private void bfs(String beginWord, String endWord, List<String> wordList,
-                     HashMap<String, ArrayList<String>> map, Map<String, Set<String>> wordDict) {
+        HashMap<String, ArrayList<String>> map, Map<String, Set<String>> wordDict) {
         Set<String> set1 = new HashSet<String>();
         set1.add(beginWord);
         Set<String> set2 = new HashSet<String>();
@@ -4219,8 +4398,8 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
 
     // direction 为 true 代表向下扩展，false 代表向上扩展
     private void bfsHelper(Set<String> set1, Set<String> set2, Set<String> wordSet,
-                           boolean direction,
-                           HashMap<String, ArrayList<String>> map, Map<String, Set<String>> wordDict) {
+        boolean direction,
+        HashMap<String, ArrayList<String>> map, Map<String, Set<String>> wordDict) {
         //set1 为空了，就直接结束,没有能继续搜索的点了
         //比如下边的例子就会造成 set1 为空
     /*	"hot"
@@ -4261,7 +4440,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
                 String val = direction ? word : str;
 
                 ArrayList<String> list =
-                        map.containsKey(key) ? map.get(key) : new ArrayList<>();
+                    map.containsKey(key) ? map.get(key) : new ArrayList<>();
 
                 //如果相遇了就保存结果
                 if (set2.contains(word)) {
@@ -4315,7 +4494,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
                 mask.append("*");
                 mask.append(word.substring(i + 1));
                 List<String> wordListForAMask = comboDic
-                        .getOrDefault(mask.toString(), new ArrayList<>());
+                    .getOrDefault(mask.toString(), new ArrayList<>());
                 wordListForAMask.add(word);
                 comboDic.put(mask.toString(), wordListForAMask);
             }
@@ -4338,7 +4517,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
                     mask.append("*");
                     mask.append(curWord.substring(i + 1));
                     List<String> wordListForAMask = comboDic
-                            .getOrDefault(mask.toString(), new ArrayList<>());
+                        .getOrDefault(mask.toString(), new ArrayList<>());
                     for (String nextWord : wordListForAMask) {
                         if (isVistedF.containsKey(nextWord)) {
                             continue;
@@ -4364,7 +4543,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
                     mask.append("*");
                     mask.append(curWord.substring(i + 1));
                     List<String> wordListForAMask = comboDic
-                            .getOrDefault(mask.toString(), new ArrayList<>());
+                        .getOrDefault(mask.toString(), new ArrayList<>());
                     for (String nextWord : wordListForAMask) {
                         if (isVistedE.containsKey(nextWord)) {
                             continue;
@@ -4507,7 +4686,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
             return 0;
         }
         PriorityQueue<Integer> meetingQueue = new PriorityQueue<Integer>(intervals.length,
-                Comparator.comparingInt(o -> o));
+            Comparator.comparingInt(o -> o));
         Arrays.sort(intervals, Comparator.comparingInt(o -> o[0]));
         meetingQueue.add(intervals[0][1]);
         for (int i = 1; i < intervals.length; i++) {
@@ -4610,8 +4789,8 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
             target.get(i).random = randomIndex[i] != -1 ? target.get(randomIndex[i]) : null;
         }
         target.get(target.size() - 1).random =
-                randomIndex[target.size() - 1] != -1 ? target.get(randomIndex[target.size() - 1])
-                        : null;
+            randomIndex[target.size() - 1] != -1 ? target.get(randomIndex[target.size() - 1])
+                : null;
         return target.get(0);
     }
 
@@ -4693,7 +4872,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
     }
 
     static boolean searchAround(int i, int j, char[] chars, int t, char[][] board,
-                                boolean[][] beenTo) {
+        boolean[][] beenTo) {
         int row = board.length;
         int col = board[0].length;
         if (beenTo == null) {
@@ -4704,23 +4883,23 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
             return true;
         }
         if (i < row - 1 && board[i + 1][j] == chars[t] && !beenTo[i + 1][j] && searchAround(i + 1,
-                j,
-                chars, t + 1, board, beenTo)) {
+            j,
+            chars, t + 1, board, beenTo)) {
             return true;
         }
         if (i > 0 && board[i - 1][j] == chars[t] && !beenTo[i - 1][j] && searchAround(i - 1, j,
-                chars,
-                t + 1, board, beenTo)) {
+            chars,
+            t + 1, board, beenTo)) {
             return true;
         }
         if (j > 0 && board[i][j - 1] == chars[t] && !beenTo[i][j - 1] && searchAround(i, j - 1,
-                chars,
-                t + 1, board, beenTo)) {
+            chars,
+            t + 1, board, beenTo)) {
             return true;
         }
         if (j < col - 1 && board[i][j + 1] == chars[t] && !beenTo[i][j + 1] && searchAround(i,
-                j + 1,
-                chars, t + 1, board, beenTo)) {
+            j + 1,
+            chars, t + 1, board, beenTo)) {
             return true;
         }
         beenTo[i][j] = false;
@@ -4958,7 +5137,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
             int j = i + 1;
             if (canMerge(s.get(i), s.get(j))) {
                 int[] newArray = {s.get(i)[0],
-                        s.get(j)[1] > s.get(i)[1] ? s.get(j)[1] : s.get(i)[1]};
+                    s.get(j)[1] > s.get(i)[1] ? s.get(j)[1] : s.get(i)[1]};
                 s.set(i, newArray);
                 s.remove(s.get(j));
                 i = i - 1;
@@ -4973,7 +5152,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
 
     private static boolean canMerge(int[] a, int[] b) {
         return (a[0] >= b[0] && a[0] <= b[1]) || (a[1] >= b[0] && a[1] <= b[1]) || (a[0] <= b[0]
-                && a[1] >= b[0]) || (a[0] <= b[1] && a[1] >= b[1]);
+            && a[1] >= b[0]) || (a[0] <= b[1] && a[1] >= b[1]);
     }
 
 
@@ -5111,13 +5290,13 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
             while (f < l) {
                 if (nums[i] + nums[f] + nums[l] - target < 0) {
                     dis = Math.abs(nums[i] + nums[f] + nums[l] - target) < Math.abs(dis - target) ?
-                            nums[i]
-                                    + nums[f] + nums[l] : dis;
+                        nums[i]
+                            + nums[f] + nums[l] : dis;
                     f++;
                 } else if (nums[i] + nums[f] + nums[l] - target > 0) {
                     dis = Math.abs(nums[i] + nums[f] + nums[l] - target) < Math.abs(dis - target) ?
-                            nums[i]
-                                    + nums[f] + nums[l] : dis;
+                        nums[i]
+                            + nums[f] + nums[l] : dis;
                     l--;
                 } else {
                     return target;
@@ -5496,8 +5675,8 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         for (int i = text.length(); i >= 0; i--) {
             for (int j = pattern.length() - 1; j >= 0; j--) {
                 boolean first_match = (i < text.length() &&
-                        (pattern.charAt(j) == text.charAt(i) ||
-                                pattern.charAt(j) == '.'));
+                    (pattern.charAt(j) == text.charAt(i) ||
+                        pattern.charAt(j) == '.'));
                 if (j + 1 < pattern.length() && pattern.charAt(j + 1) == '*') {
                     dp[i][j] = dp[i][j + 2] || first_match && dp[i + 1][j];
                 } else {
@@ -5808,7 +5987,7 @@ class WordSearch2 {
             int newRow = row + rowOffset[i];
             int newCol = col + colOffset[i];
             if (newRow < 0 || newRow >= this._board.length || newCol < 0
-                    || newCol >= this._board[0].length) {
+                || newCol >= this._board[0].length) {
                 continue;
             }
             if (currNode.children.containsKey(this._board[newRow][newCol])) {
@@ -5874,7 +6053,7 @@ class NumberOfIsland2 {
                     //if so, do nothing, the new land just be a part of that island
                     //if not already connected, this connection would cause one less island in total
                     if (union(cordinateToId(p[0], p[1]), cordinateToId(newRow, newCol), root,
-                            weight)) {
+                        weight)) {
                         count--;
                     }
                 }
