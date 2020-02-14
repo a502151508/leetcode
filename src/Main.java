@@ -8,9 +8,111 @@ public class Main {
 
     public static void main(String[] args) {
 
-        Main m = new Main();
-        System.out.println(m.hIndex(new int[]{1, 2}));
+        System.out.println(findDateInAYear(2007));
     }
+
+    public static int findDateInAYear(int year) {
+        Calendar c = new GregorianCalendar();
+        c.set(year, Calendar.OCTOBER, 1);
+        int diff = c.get(Calendar.DAY_OF_WEEK) - Calendar.TUESDAY;
+        if (diff > 0) {
+            int offSet = 14 - diff;
+            c.set(year, 9, offSet + 1);
+        } else {
+            c.set(year, 9, 8 - diff);
+        }
+        System.out.println(c.getTime());
+        return c.get(Calendar.DAY_OF_MONTH);
+    }
+
+    /*
+        164. Maximum Gap
+        Time O(N+ gap)
+        Space O(gap)
+        首先将min 和max 两个数字拿出来
+        将N-2个数字 平均分到N-1个桶中
+        其中必有一个桶是空的
+        所以我们的最大gap已经是在桶与桶之间，而不在桶的内部
+        只需要一次顺序扫描桶 找到最大gap
+     */
+    public int maximumGap(int[] num) {
+        if (num == null || num.length < 2) {
+            return 0;
+        }
+        // get the max and min value of the array
+        int min = num[0];
+        int max = num[0];
+        for (int i : num) {
+            min = Math.min(min, i);
+            max = Math.max(max, i);
+        }
+        // the minimum possibale gap, ceiling of the integer division
+        int gap = (int) Math.ceil((double) (max - min) / (num.length - 1));
+        int[] bucketsMIN = new int[num.length - 1]; // store the min value in that bucket
+        int[] bucketsMAX = new int[num.length - 1]; // store the max value in that bucket
+        Arrays.fill(bucketsMIN, Integer.MAX_VALUE);
+        Arrays.fill(bucketsMAX, Integer.MIN_VALUE);
+        // put numbers into buckets
+        for (int i : num) {
+            if (i == min || i == max) {
+                continue;
+            }
+            int idx = (i - min) / gap; // index of the right position in the buckets
+            bucketsMIN[idx] = Math.min(i, bucketsMIN[idx]);
+            bucketsMAX[idx] = Math.max(i, bucketsMAX[idx]);
+        }
+        // scan the buckets for the max gap
+        int maxGap = Integer.MIN_VALUE;
+        int previous = min;
+        for (int i = 0; i < num.length - 1; i++) {
+            if (bucketsMIN[i] == Integer.MAX_VALUE && bucketsMAX[i] == Integer.MIN_VALUE)
+            // empty bucket
+            {
+                continue;
+            }
+            // min value minus the previous value is the current gap
+            maxGap = Math.max(maxGap, bucketsMIN[i] - previous);
+            // update previous bucket value
+            previous = bucketsMAX[i];
+        }
+        maxGap = Math.max(maxGap, max - previous); // updata the final max value gap
+        return maxGap;
+    }
+
+    /*
+        735. Asteroid Collision
+        Time O(N)
+        Space O(N)
+     */
+    public int[] asteroidCollision(int[] asteroids) {
+        Deque<Integer> stack = new LinkedList<>();
+        List<Integer> res = new ArrayList<>();
+        for (int asteroid : asteroids) {
+            if (asteroid > 0) {
+                stack.addLast(asteroid);
+            } else {
+                if (stack.isEmpty()) {
+                    res.add(asteroid);
+                } else {
+                    while (!stack.isEmpty() && -asteroid > stack.peek()) {
+                        stack.removeLast();
+                    }
+                    if (stack.isEmpty()) {
+                        res.add(asteroid);
+                    } else if (stack.peek() == -asteroid) {
+                        stack.removeLast();
+                    }
+                }
+            }
+        }
+        res.addAll(stack);
+        int[] finalResult = new int[res.size()];
+        for (int i = 0; i < finalResult.length; i++) {
+            finalResult[i] = res.get(i);
+        }
+        return finalResult;
+    }
+
     /*
         414. Third Maximum Number
      */
@@ -1128,7 +1230,6 @@ public class Main {
         // init heap 'the less frequent element first'
         PriorityQueue<Integer> heap =
             new PriorityQueue<Integer>((n1, n2) -> count.get(n1) - count.get(n2));
-
         // keep k top frequent elements in the heap
         for (int n : count.keySet()) {
             heap.add(n);
@@ -2886,7 +2987,8 @@ space complexity O(t.length)
 
     /*
     lc 23 merge k sorted list
-    Time O(NLogK)
+    每次存入一个list的头部
+    Time O(NLogK) N is number of all nodes
     Space O(k+N)
      */
     public ListNode mergeKLists(ListNode[] lists) {
@@ -2900,7 +3002,7 @@ space complexity O(t.length)
         }
         while (pq.size() != 0) {
             ListNode min = pq.poll();
-            cur.next = new ListNode(min.val);
+            cur.next = min;
             cur = cur.next;
             if (min.next != null) {
                 pq.add(min.next);
