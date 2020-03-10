@@ -1,22 +1,243 @@
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import javafx.util.Pair;
 
 interface a {
 
 }
 
+class Solution {
+
+    int[][] dir = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+
+    public int numIslands(char[][] grid) {
+        int row = grid.length;
+        if (row == 0) {
+            return 0;
+        }
+        int col = grid[0].length;
+        UnionFind uf = new UnionFind(row * col);
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+                if (grid[i][j] == '1') {
+                    for (int t = 0; t < 4; t++) {
+                        int newRow = dir[t][0] + i;
+                        int newCol = dir[t][1] + j;
+                        if (isInGrid(newRow, newCol, grid) && grid[newRow][newCol] == '1') {
+                            uf.union(i * col + j, newRow * col + newCol);
+                        }
+                    }
+                }
+            }
+        }
+        int count = 0;
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+                if (grid[i][j] == '1' && uf.find(i * col + j) == i * col + j) {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    private boolean isInGrid(int row, int col, char[][] grid) {
+        return row >= 0 && row < grid.length && col >= 0 && col < grid[0].length;
+    }
+}
+
 public class test {
 
     int a;
 
-    public static void main(String[] args) {
 
+    public static void main(String[] args) {
+        System.out.print(Double.valueOf("959440.94f"));
     }
-    
+
+    public static boolean arraySumInAnotherArray(int[] a, int[] b) {
+        Set<Integer> setB = new HashSet<>();
+        for (int num : b) {
+            setB.add(num);
+        }
+        for (int i = 0; i < a.length - 1; i++) {
+            for (int j = i + 1; j < a.length; j++) {
+                if (setB.contains(a[i] + a[j])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+    /*
+        152. Maximum Product Subarray
+        每次储存乘到上一个数的最小和最大值，更新当前数乘上个数或者不乘的当前最小最大值
+        更新最大答案
+        Time O(N)
+        Space O(1)
+     */
+    public int maxProduct(int[] nums) {
+        int prevMax = nums[0], prevMin = nums[0];
+        int res = prevMax;
+        for (int i = 1; i < nums.length; i++) {
+            int tempMax = Math.max(nums[i], Math.max(nums[i] * prevMax, nums[i] * prevMin));
+            prevMin = Math.min(nums[i], Math.min(nums[i] * prevMax, nums[i] * prevMin));
+            prevMax = tempMax;
+            res = Math.max(res, prevMax);
+        }
+        return res;
+    }
+
+    public static int findDateInAYear(int year) {
+        Calendar c = new GregorianCalendar();
+        c.set(year, Calendar.OCTOBER, 1);
+        int diff = c.get(Calendar.DAY_OF_WEEK) - Calendar.TUESDAY;
+        if (diff > 0) {
+            int offSet = 14 - diff;
+            c.set(year, Calendar.OCTOBER, offSet + 1);
+        } else {
+            c.set(year, Calendar.OCTOBER, 8 - diff);
+        }
+        System.out.println(c.getTime());
+        return c.get(Calendar.DAY_OF_MONTH);
+    }
+
+    static class SlidingPuzzleMyOwn {
+
+        public int slidingPuzzle(int[][] board) {
+            //check if the board valid
+            if (board == null || board.length == 0 || board[0].length == 0) {
+                return -1;
+            }
+
+            int N = board.length;
+            int M = board[0].length;
+
+            //build the final state of this problem.
+            int[][] targetBoard = new int[N][M];
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < M; j++) {
+                    targetBoard[i][j] = i * M + j;
+                }
+            }
+            State targetState = new State(targetBoard, 0, 0);
+
+            int currentSteps = -1;
+
+            Set<State> visitedState = new HashSet<>();
+            Queue<State> queue = new LinkedList();
+
+            //build the original state
+            State original = null;
+            int[][] directions = new int[][]{{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+            for (int i = 0; i < board.length; i++) {
+                for (int j = 0; j < board[0].length; j++) {
+                    if (board[i][j] == 0) {
+                        original = new State(deepCopyOfBoardArray(board), i, j);
+                        break;
+                    }
+                }
+            }
+            queue.offer(original);
+            visitedState.add(original);
+
+            while (!queue.isEmpty()) {
+                int size = queue.size();
+                //one more level bfs, means one more step.
+                currentSteps++;
+                for (int i = 0; i < size; i++) {
+                    State cur = queue.poll();
+                    if (targetState.equals(cur)) {
+                        return currentSteps;
+                    }
+
+                    for (int j = 0; j < 4; j++) {
+                        int[] direction = directions[j];
+                        int nextRow = cur.posOf0[0] + direction[0];
+                        int nextCol = cur.posOf0[1] + direction[1];
+                        if (inBoard(nextRow, nextCol, cur.board)) {
+
+                            int[][] newBoard = deepCopyOfBoardArray(cur.board);
+                            //swap cur 0's position with new position.
+                            int temp = newBoard[nextRow][nextCol];
+                            newBoard[nextRow][nextCol] = newBoard[cur.posOf0[0]][cur.posOf0[1]];
+                            newBoard[cur.posOf0[0]][cur.posOf0[1]] = temp;
+                            State newState = new State(newBoard, nextRow, nextCol);
+
+                            if (!visitedState.contains(newState)) {
+                                queue.offer(newState);
+                                visitedState.add(newState);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return -1;
+        }
+
+        private boolean inBoard(int row, int col, int[][] grid) {
+            return row >= 0 && col >= 0 && row < grid.length && col < grid[0].length;
+        }
+
+        private int[][] deepCopyOfBoardArray(int[][] board) {
+            int[][] res = new int[board.length][board[0].length];
+            for (int i = 0; i < res.length; i++) {
+                for (int j = 0; j < res[0].length; j++) {
+                    res[i][j] = board[i][j];
+                }
+            }
+            return res;
+        }
+
+
+        private class State {
+
+            int[][] board;
+            int[] posOf0;
+
+            State(int[][] board, int rowOf0, int colOf0) {
+                this.board = board;
+                this.posOf0 = new int[]{rowOf0, colOf0};
+            }
+
+            /*
+                 using its String format in hash function
+             */
+            @Override
+            public int hashCode() {
+                return toString().hashCode();
+            }
+
+            /*
+                convert the 2d array to String.
+             */
+            @Override
+            public String toString() {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < board.length; i++) {
+                    for (int j = 0; j < board[0].length; j++) {
+                        sb.append(board[i][j]);
+                        sb.append("|");
+                    }
+                }
+                return sb.toString();
+            }
+
+            /*
+                Determine the equality by its String format.
+             */
+            @Override
+            public boolean equals(Object obj) {
+                return toString().equals(obj.toString());
+            }
+        }
+    }
+
+
     static int pow(int x, int n) {
         int sum = 1;
         int tmp = x;
@@ -125,8 +346,8 @@ public class test {
                 }
                 for (int s = tar; s >= nums.get(i - 1); s--) {
                     dp[i][j][s] = Math
-                            .max(dp[i - 1][j - 1][s - nums.get(i - 1)] + nums.get(i - 1),
-                                    dp[i - 1][j][s]);
+                        .max(dp[i - 1][j - 1][s - nums.get(i - 1)] + nums.get(i - 1),
+                            dp[i - 1][j][s]);
                 }
             }
         }
@@ -262,7 +483,7 @@ public class test {
 
     public static int getDistance(Pair<Integer, Integer> p1, Pair<Integer, Integer> p2) {
         return (p2.getKey() - p1.getKey()) * (p2.getKey() - p1.getKey()) +
-                (p2.getValue() - p1.getValue()) * (p2.getValue() - p1.getValue());
+            (p2.getValue() - p1.getValue()) * (p2.getValue() - p1.getValue());
     }
 
     public static void main2(String[] args) {
@@ -321,7 +542,7 @@ public class test {
         for (int i = 1; i < cur; i++) {
             if (input.get(i) + i == cur - 1) {
                 res = Math
-                        .min(res, dp[i] != -1 ? (dp[i] + 1) : (findMinSteps(input, i + 1, dp) + 1));
+                    .min(res, dp[i] != -1 ? (dp[i] + 1) : (findMinSteps(input, i + 1, dp) + 1));
             }
         }
         if (res == Integer.MAX_VALUE) {

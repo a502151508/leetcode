@@ -1,14 +1,945 @@
 
-import java.util.stream.Collectors;
 import javafx.util.Pair;
 
 import java.util.*;
+
 
 public class Main {
 
     public static void main(String[] args) {
 
-        System.out.println(findDateInAYear(2007));
+        System.out.print(arraySumInAnotherArray(new int[]{1, 2, 3, 4, 5, 6, 7}, new int[]{14}));
+
+    }
+
+    /*
+        1292. Maximum Side Length of a Square with Sum Less than or Equal to Threshold
+        Time M*N*min(M,N)
+        space MN
+     */
+    public int maxSideLength(int[][] mat, int threshold) {
+        int m = mat.length, n = mat[0].length;
+        // Find prefix sum
+        int[][] prefixSum = new int[m + 1][n + 1];
+        for (int i = 1; i <= m; i++) {
+            int sum = 0;
+            for (int j = 1; j <= n; j++) {
+                sum += mat[i - 1][j - 1];
+                prefixSum[i][j] = prefixSum[i - 1][j] + sum;
+            }
+        }
+        // Start from the largest side length
+        for (int k = Math.min(m, n) - 1; k > 0; k--) {
+            for (int i = 1; i + k <= m; i++) {
+                for (int j = 1; j + k <= n; j++) {
+                    if (prefixSum[i + k][j + k] - prefixSum[i - 1][j + k] - prefixSum[i + k][j - 1]
+                        + prefixSum[i - 1][j - 1] <= threshold) {
+                        return k + 1;
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
+    /*
+       1292. Maximum Side Length of a Square with Sum Less than or Equal to Threshold
+       边累加边判断
+       Time M*N
+       space MN
+    */
+    public int maxSideLengthOpt(int[][] mat, int threshold) {
+        int m = mat.length;
+        int n = mat[0].length;
+        int[][] sum = new int[m + 1][n + 1];
+
+        int res = 0;
+        int len = 1; // square side length
+
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                sum[i][j] = sum[i - 1][j] + sum[i][j - 1] - sum[i - 1][j - 1] + mat[i - 1][j - 1];
+
+                if (i >= len && j >= len
+                    && sum[i][j] - sum[i - len][j] - sum[i][j - len] + sum[i - len][j - len]
+                    <= threshold) {
+                    res = len++;
+                }
+            }
+        }
+
+        return res;
+    }
+
+
+    /*
+        1349. Maximum Students Taking Exam
+        2^(MN)
+        2^(MN)
+     */
+    int m, n;
+    Map<String, Integer> memo;
+
+    public int maxStudents(char[][] seats) {
+        m = seats.length;
+        if (m == 0) {
+            return 0;
+        }
+        n = seats[0].length;
+
+        memo = new HashMap<>();
+        StringBuilder sb = new StringBuilder();
+        for (char[] row : seats) {
+            sb.append(row);
+        }
+
+        return dfs(sb.toString());
+    }
+
+    /* dfs returns the max student we can place if start with the given state */
+
+    public int dfs(String state) {
+        if (memo.containsKey(state)) {
+            return memo.get(state);
+        }
+        int max = 0;
+        char[] C = state.toCharArray();
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                //we see an empty seat, there are two choices, place a student here or leave it empty.
+                if (C[i * n + j] == '.') {
+                    //choice (1): we choose not to place a student, but we place a x to mark this seat as unanvailable
+                    // so we don't repeatedly search this state again.
+
+                    C[i * n + j] = 'x';
+                    max = Math.max(max, dfs(new String(C)));
+
+                    //choice (2): we place a student, but this makes left, right, bottom left, bottom right seat unavailable.
+                    if (j + 1 < n) {
+                        if (i < m - 1 && C[(i + 1) * n + j + 1] == '.') {
+                            C[(i + 1) * n + j + 1] = 'x';
+                        }
+                        if (C[i * n + j + 1] == '.') {
+                            C[i * n + j + 1] = 'x';
+                        }
+                    }
+                    if (j - 1 >= 0) {
+                        if (i < m - 1 && C[(i + 1) * n + j - 1] == '.') {
+                            C[(i + 1) * n + j - 1] = 'x';
+                        }
+                        if (C[i * n + j - 1] == '.') {
+                            C[i * n + j - 1] = 'x';
+                        }
+                    }
+                    max = Math.max(max, 1 + dfs(new String(C)));
+                }
+            }
+        }
+        memo.put(state, max);
+        return max;
+    }
+
+
+    /*
+        1358. Number of Substrings Containing All Three Characters
+        Time N
+        O 1
+     */
+    public int numberOfSubstrings(String s) {
+        int last[] = {-1, -1, -1}, count = 0, n = s.length();
+        for (int i = 0; i < n; i++) {
+            last[s.charAt(i) - 'a'] = i;
+            int startIndex = Math.min(last[0], Math.min(last[1], last[2]));
+            if (startIndex != -1) {
+                count += 1 + startIndex;
+            }
+        }
+        return count;
+    }
+
+    /*
+        1353. Maximum Number of Events That Can Be Attended
+        Time NlogN
+        Space N
+     */
+    public int maxEvents(int[][] events) {
+        if (events == null || events.length == 0) {
+            return 0;
+        }
+        Arrays.sort(events, (a, b) -> (a[0] - b[0]));
+        PriorityQueue<Integer> minheap = new PriorityQueue<>();
+        int count = 0;
+        int curDate = 0;
+        int curEvent = 0;
+        int maxDate = events[events.length - 1][1];
+        while (!minheap.isEmpty() || curEvent < events.length) {
+            if (minheap.isEmpty()) {
+                curDate = events[curEvent][0];
+            }
+            while (curEvent < events.length && events[curEvent][0] == curDate) {
+                minheap.add(events[curEvent][1]);
+                curEvent++;
+            }
+            minheap.poll();
+            count++;
+            curDate++;
+            while (!minheap.isEmpty() && minheap.peek() < curDate) {
+                minheap.poll();
+            }
+        }
+
+        return count;
+    }
+
+    /*
+        991. Broken Calculator
+        We do Y/2 all the way until it's smaller than X,
+        time complexity is O(log(Y/X)).
+     */
+    public int brokenCalc(int X, int Y) {
+        int steps = 0;
+        while (Y > X) {
+            steps++;
+            if ((Y & 1) == 0) {
+                Y = Y >> 1;
+            } else {
+                Y++;
+            }
+        }
+        return steps + X - Y;
+    }
+
+    /*
+        53. Maximum Subarray
+        Time N
+        Space 1
+     */
+    public int maxSubArray(int[] nums) {
+        int n = nums.length;
+        int currSum = nums[0], maxSum = nums[0];
+
+        for (int i = 1; i < n; ++i) {
+            currSum = Math.max(nums[i], currSum + nums[i]);
+            maxSum = Math.max(maxSum, currSum);
+        }
+        return maxSum;
+    }
+
+
+
+    /*
+        286. Walls and Gates
+        Time MN
+        Space MN
+     */
+
+    public void wallsAndGates(int[][] rooms) {
+        int row = rooms.length;
+        if (row == 0) {
+            return;
+        }
+
+        List<int[]> roomList = new ArrayList<>();
+        int col = rooms[0].length;
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+                if (rooms[i][j] == 0) {
+                    roomList.add(new int[]{i, j});
+                }
+            }
+        }
+        bfsFromRoom(rooms, roomList);
+    }
+
+    int[][] dir = new int[][]{{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+
+    private void bfsFromRoom(int[][] rooms, List<int[]> roomList) {
+        Queue<int[]> bfsHelper = new LinkedList<>();
+        for (int[] room : roomList) {
+            bfsHelper.add(room);
+        }
+        int level = 0;
+        int col = rooms[0].length;
+        while (!bfsHelper.isEmpty()) {
+            int size = bfsHelper.size();
+            for (int i = 0; i < size; i++) {
+                int[] cur = bfsHelper.poll();
+                if (rooms[cur[0]][cur[1]] != 0 && rooms[cur[0]][cur[1]] != Integer.MAX_VALUE) {
+                    continue;
+                }
+                rooms[cur[0]][cur[1]] = level;
+                for (int d = 0; d < 4; d++) {
+                    int[] direction = dir[d];
+                    int newRow = cur[0] + direction[0];
+                    int newCol = cur[1] + direction[1];
+                    if (inGrid(newRow, newCol, rooms)
+                        && rooms[newRow][newCol] == Integer.MAX_VALUE) {
+                        bfsHelper.add(new int[]{newRow, newCol});
+                    }
+                }
+            }
+            level++;
+        }
+    }
+
+    /*
+        387. First Unique Character in a String
+        Time N
+        Space N
+     */
+    public int firstUniqChar(String s) {
+        Map<Character, Integer> dict = new HashMap<>();
+        for (char c : s.toCharArray()) {
+            dict.put(c, dict.getOrDefault(c, 0) + 1);
+        }
+        for (int i = 0; i < s.length(); i++) {
+            if (dict.get(s.charAt(i)) == 1) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /*
+        242. Valid Anagram
+     */
+    public boolean isAnagram(String s, String t) {
+        Map<Character, Integer> dict = new HashMap<>();
+        for (char c : s.toCharArray()) {
+            dict.put(c, dict.getOrDefault(c, 0) + 1);
+        }
+
+        for (char c : t.toCharArray()) {
+            if (!dict.containsKey(c)) {
+                return false;
+            }
+            int freq = dict.get(c);
+            if (freq == 1) {
+                dict.remove(c);
+            } else {
+                dict.put(c, freq - 1);
+            }
+        }
+        return dict.isEmpty();
+    }
+
+    /*
+        38. Count and Say
+        Time 2^n
+        space 2^n;
+     */
+    public String countAndSay(int n) {
+        String prev = "1";
+        if (n == 1) {
+            return prev;
+        }
+        StringBuilder next = null;
+        for (int i = 1; i < n; i++) {
+            next = new StringBuilder();
+            for (int j = 0; j < prev.length(); ) {
+                int count = 1;
+                char cur = prev.charAt(j);
+                while (++j < prev.length() && cur == prev.charAt(j)) {
+                    count++;
+                }
+                next.append(count);
+                next.append(cur);
+            }
+            prev = next.toString();
+        }
+        return next.toString();
+    }
+
+    /*
+        65. Valid Number
+        N
+        1
+     */
+    public boolean isNumber(String s) {
+        if (s == null) {
+            return false;
+        }
+        s = s.trim();
+        boolean hasDot = false;
+        boolean isBegin = false;
+        boolean hasE = false;
+        boolean hasNumberBeforeE = false;
+        boolean hasNumberAfterDot = false;
+        boolean hasNumberBeforeDot = false;
+        boolean hasNumberAfterE = false;
+        boolean hasSignAfterE = false;
+        for (int i = 0; i < s.length(); i++) {
+            char cur = s.charAt(i);
+            if (cur == '+' || cur == '-') {
+                if (isBegin && s.charAt(i - 1) == 'e' && !hasSignAfterE) {
+                    hasSignAfterE = true;
+                } else if (!isBegin) {
+                    isBegin = true;
+                } else {
+                    return false;
+                }
+            } else if (Character.isDigit(cur)) {
+                if (!hasE) {
+                    hasNumberBeforeE = true;
+                }
+                if (hasE) {
+                    hasNumberAfterE = true;
+                }
+                if (!hasDot) {
+                    hasNumberBeforeDot = true;
+                } else if (s.charAt(i - 1) == '.') {
+                    hasNumberAfterDot = true;
+                }
+            } else if (cur == '.') {
+                if (hasDot || hasE) {
+                    return false;
+                }
+                hasDot = true;
+            } else if (cur == 'e') {
+                if (!hasNumberBeforeE || hasE) {
+                    return false;
+                } else {
+                    hasE = true;
+                }
+            } else {
+                return false;
+            }
+            isBegin = true;
+        }
+        if (!isBegin) {
+            return false;
+        }
+        if (hasE) {
+            if (!hasNumberAfterE) {
+                return false;
+            }
+        }
+
+        if (hasDot) {
+            if (!hasNumberBeforeDot && !hasNumberAfterDot) {
+                return false;
+            }
+        }
+
+        return true;
+
+
+    }
+
+    /*
+        68. Text Justification
+        Time O(N)
+        Space O(N)
+     */
+    public List<String> fullJustify(String[] words, int maxWidth) {
+        List<String> res = new ArrayList<>();
+        int cur = 0;
+        //go through words list
+        while (cur < words.length) {
+            //start a new line
+            int curLength = 0;
+            List<String> curList = new ArrayList<>();
+            //while this new line is not full
+            while (cur < words.length && curLength < maxWidth) {
+                //if this is a brand new line just add the word
+                //or it will add the word and a space in the middle
+                if ((curLength == 0 && words[cur].length() <= maxWidth)
+                    || curLength + words[cur].length() + 1 <= maxWidth) {
+                    curList.add(words[cur]);
+                    curLength += curLength == 0 ? words[cur].length() : words[cur].length() + 1;
+                    cur++;
+                }
+                // if adding next word would over this line's size,
+                // end adding words to the current line.
+                else {
+                    break;
+                }
+            }
+            //calculate the space in the middle and space in the right side.
+            //let the curLength represents the total length of letters.
+            curLength -= curList.size() - 1;
+            int space = maxWidth - curLength;
+            //space between each two words
+            int spaceBetweenLength;
+            //rest space should be assign from left
+            int restSpace;
+            //if there is only 1 words, assign the space specifically.
+            if (curList.size() - 1 == 0) {
+                spaceBetweenLength = space;
+                restSpace = 0;
+            } else {
+                spaceBetweenLength = space / (curList.size() - 1);
+                restSpace = space % (curList.size() - 1);
+            }
+            //Build the space String
+            StringBuilder spaceBetween = new StringBuilder();
+            for (int i = 0; i < spaceBetweenLength; i++) {
+                spaceBetween.append(' ');
+            }
+            String middleSpace = spaceBetween.toString();
+            StringBuilder line = new StringBuilder();
+            //if this line is the last line. it should be left-justified.
+            if (cur == words.length) {
+                StringBuilder followSpace = new StringBuilder();
+                for (int i = 0; i < maxWidth - curLength - curList.size() + 1; i++) {
+                    followSpace.append(' ');
+                }
+                for (int i = 0; i < curList.size() - 1; i++) {
+                    line.append(curList.get(i));
+                    line.append(' ');
+                }
+                line.append(curList.get(curList.size() - 1));
+                line.append(followSpace);
+            }
+            //At normal line, padding the space evenly.
+            else {
+                for (int i = 0; i < curList.size(); i++) {
+                    line.append(curList.get(i));
+                    if (i < curList.size() - 1 || curList.size() == 1) {
+                        line.append(middleSpace);
+                    }
+                    if (i < restSpace) {
+                        line.append(' ');
+                    }
+                }
+            }
+
+            res.add(line.toString());
+        }
+        return res;
+    }
+
+
+    /*
+        150. Evaluate Reverse Polish Notation
+        Time N
+        Space N
+     */
+    public int evalRPN(String[] tokens) {
+        Stack<String> helper = new Stack<>();
+        for (String token : tokens) {
+            if (isOperator(token)) {
+                int res = 0;
+                try {
+                    int b = Integer.parseInt(helper.pop());
+                    int a = Integer.parseInt(helper.pop());
+                    switch (token.charAt(0)) {
+                        case '+':
+                            res = a + b;
+                            break;
+                        case '-':
+                            res = a - b;
+                            break;
+                        case '*':
+                            res = a * b;
+                            break;
+                        case '/':
+                            if (b == 0) {
+                                throw new RuntimeException("The divisor can't be 0");
+                            }
+                            res = a / b;
+                            break;
+                    }
+                } catch (EmptyStackException e) {
+                    throw new RuntimeException("Invalid Expression");
+                }
+                helper.push(String.valueOf(res));
+            } else {
+                helper.push(token);
+            }
+        }
+        return Integer.parseInt(helper.peek());
+    }
+
+    private boolean isOperator(String c) {
+        return "+".equals(c) || "-".equals(c) || "*".equals(c) || "/".equals(c);
+    }
+
+    /*
+        406. Queue Reconstruction by Height
+        Time o N^3 下面有N^2的解法
+        Space N
+
+     */
+    public int[][] reconstructQueue(int[][] people) {
+        Arrays.sort(people, (o1, o2) -> o1[1] == o2[1] ? o1[0] - o2[0] : o1[1] - o2[1]);
+        List<int[]> peopleList = new ArrayList<>();
+
+        outer:
+        for (int i = 0; i < people.length; i++) {
+            int[] curPerson = people[i];
+            int count = 0;
+            for (int j = 0; j < peopleList.size(); j++) {
+                //meet the k taller person in front. place this person.
+                if (count == curPerson[1]) {
+                    while (j < peopleList.size() && peopleList.get(j)[0] < curPerson[0]
+                        && peopleList.get(j)[1] == curPerson[1]) {
+                        j++;
+                    }
+                    //O(N) operation
+                    peopleList.add(j, curPerson);
+                    continue outer;
+                }
+
+                if (peopleList.get(j)[0] >= curPerson[0]) {
+                    count++;
+                }
+            }
+            //add to the end of the queue.
+            if (count == curPerson[1]) {
+                peopleList.add(curPerson);
+            }
+            //no solution
+            else if (count < curPerson[1]) {
+                return null;
+            }
+        }
+        return peopleList.toArray(new int[people.length][2]);
+    }
+
+    //从高到矮排队，然后每次根据前面的人数来直接插入到list
+    public int[][] reconstructQueueOPT(int[][] people) {
+
+        // if the heights are equal, compare k-values
+        Arrays.sort(people, (o1, o2) -> o1[0] == o2[0] ? o1[1] - o2[1] : o2[0] - o1[0]);
+
+        List<int[]> output = new ArrayList<>();
+        for (int[] p : people) {
+            output.add(p[1], p);
+        }
+
+        int n = people.length;
+        return output.toArray(new int[n][2]);
+    }
+
+    /*
+        234. Palindrome Linked List
+     */
+    public boolean isPalindrome(ListNode head) {
+        if (head == null) {
+            return false;
+        }
+        if (head.next == null) {
+            return true;
+        }
+        ListNode slow = head;
+        ListNode fast = head;
+        ListNode prev = null;
+        while (fast != null && fast.next != null) {
+            prev = slow;
+            slow = slow.next;
+            fast = fast.next.next;
+        }
+        //list size is even number
+        //slow pointer is at the second middle point
+        ListNode secondHalfHead = null;
+        prev.next = null;
+        if (fast == null) {
+            secondHalfHead = reverseListIterative(slow);
+        }
+        //list size is odd number
+        //slow pointer is right at the middle
+        else {
+            secondHalfHead = reverseListIterative(slow.next);
+        }
+        while (secondHalfHead != null) {
+            if (secondHalfHead.val != head.val) {
+                return false;
+            }
+            secondHalfHead = secondHalfHead.next;
+            head = head.next;
+        }
+        return true;
+    }
+
+    /*
+        86. Partition List
+        Time N
+        Space 1
+     */
+    public ListNode partition(ListNode head, int x) {
+        ListNode dummy = new ListNode(0);
+        ListNode cur = head;
+        ListNode subTail = null;
+        //pass all the value less than x
+        while (cur != null) {
+            if (cur.val < x) {
+                if (dummy.next == null) {
+                    dummy.next = cur;
+                }
+                subTail = cur;
+                cur = cur.next;
+            } else {
+                break;
+            }
+        }
+        ListNode prev = subTail;
+        //find a value
+        while (cur != null) {
+            if (cur.val < x) {
+                ListNode node = cur;
+                //insert it to head
+                if (dummy.next == null) {
+                    prev.next = node.next;
+                    dummy.next = node;
+                    node.next = head;
+                }
+                //insert it after tail
+                else {
+                    prev.next = node.next;
+                    ListNode subHead = subTail.next;
+                    subTail.next = node;
+                    node.next = subHead;
+                }
+            }
+            prev = cur;
+            cur = cur.next;
+        }
+
+        return dummy.next;
+
+    }
+
+    /*
+        92. Reverse Linked List II
+        Time O(1)
+        Space O(1)
+
+     */
+    public ListNode reverseBetween(ListNode head, int m, int n) {
+        if (head == null || m == n) {
+            return head;
+        }
+        if (m > 1) {
+            ListNode cur = head;
+            ListNode prev = null;
+            for (int i = 0; i < m - 1; i++) {
+                prev = cur;
+                cur = cur.next;
+            }
+            ListNode frontTail = prev;
+            ListNode subTail = cur;
+            prev = cur;
+            cur = cur.next;
+            for (int i = 0; i < n - m; i++) {
+                ListNode tempNext = cur.next;
+                cur.next = prev;
+                prev = cur;
+                cur = tempNext;
+                if (cur == null) {
+                    break;
+                }
+            }
+            subTail.next = cur;
+            frontTail.next = prev;
+            return head;
+        } else {
+            ListNode prev = null;
+            ListNode cur = head;
+            for (int i = 0; i < n; i++) {
+                ListNode tempNext = cur.next;
+                cur.next = prev;
+                prev = cur;
+                cur = tempNext;
+                if (cur == null) {
+                    break;
+                }
+            }
+            if (cur != null) {
+                head.next = cur;
+            }
+            return prev;
+        }
+
+    }
+
+    /*
+         206. Reverse Linked List
+         Time N
+         Space 1
+     */
+    public ListNode reverseListIterative(ListNode head) {
+        if (head == null) {
+            return null;
+        }
+        ListNode prev = null;
+        ListNode cur = head;
+        while (cur != null) {
+            ListNode tempNext = cur.next;
+            cur.next = prev;
+            prev = cur;
+            cur = tempNext;
+        }
+        return prev;
+    }
+
+    /*
+        876. Middle of the Linked List
+        Time O(N)
+        Space O(1)
+     */
+    public ListNode middleNode(ListNode head) {
+        ListNode slow = head;
+        ListNode fast = head;
+        while (fast != null && fast.next != null) {
+            fast = fast.next.next;
+            slow = slow.next;
+        }
+        return slow;
+    }
+
+    /*
+        912. Sort an Array
+        time nlogn
+        space logn
+     */
+    class qSort {
+
+        private int[] nums;
+
+        public List<Integer> sortArray(int[] nums) {
+            this.nums = nums;
+            qSort(0, nums.length - 1);
+            List<Integer> res = new ArrayList<>();
+            for (int num : nums) {
+                res.add(num);
+            }
+            return res;
+        }
+
+        private void qSort(int start, int end) {
+            if (start < end) {
+                int pivotIndex = divide(start, end);
+                qSort(start, pivotIndex);
+                qSort(pivotIndex + 1, end);
+            }
+        }
+
+        private int divide(int i, int j) {
+            int pivot = nums[i];
+
+            while (i < j) {
+                while (j > i && nums[j] >= pivot) {
+                    j--;
+                }
+                if (j > i) {
+                    nums[i] = nums[j];
+                    i++;
+                }
+                while (i < j && nums[i] < pivot) {
+                    i++;
+                }
+                if (i < j) {
+                    nums[j] = nums[i];
+                    j--;
+                }
+            }
+            nums[i] = pivot;
+            return i;
+        }
+    }
+
+
+    /*
+        1296. Divide Array in Sets of K Consecutive Numbers
+        Time  max(dlogd,n)  d is the number of distinct elements(size of the heap)
+        Space o(N)
+     */
+    public boolean isPossibleDivide(int[] nums, int k) {
+        int len = nums.length;
+        if (len % k != 0) {
+            return false;
+        }
+        Map<Integer, Integer> map = new HashMap<>();
+        PriorityQueue<Integer> pq = new PriorityQueue<>();
+        for (int n : nums) {
+            map.put(n, map.getOrDefault(n, 0) + 1);
+        }
+        for (int n : map.keySet()) {
+            pq.add(n);
+        }
+        while (!pq.isEmpty()) {
+            int cur = pq.poll();
+            if (map.get(cur) == 0) {
+                continue;
+            }
+            int times = map.get(cur);
+            for (int i = 0; i < k; i++) {
+                if (!map.containsKey(cur + i) || map.get(cur + i) < times) {
+                    return false;
+                }
+                map.put(cur + i, map.get(cur + i) - times);
+            }
+            len -= k * times;
+        }
+        return len == 0;
+    }
+
+    /*
+           628. Maximum Product of Three Numbers
+           Time O(N)
+           Space O(1)
+           找到三个最大的正数 或者两个最大的负数
+           比较两负一正 和三正哪个大
+    */
+    public int maximumProduct(int[] nums) {
+        int min1 = Integer.MAX_VALUE, min2 = Integer.MAX_VALUE;
+        int max1 = Integer.MIN_VALUE, max2 = Integer.MIN_VALUE, max3 = Integer.MIN_VALUE;
+        for (int n : nums) {
+            if (n <= min1) {
+                min2 = min1;
+                min1 = n;
+            } else if (n <= min2) {     // n lies between min1 and min2
+                min2 = n;
+            }
+            if (n >= max1) {            // n is greater than max1, max2 and max3
+                max3 = max2;
+                max2 = max1;
+                max1 = n;
+            } else if (n >= max2) {     // n lies betweeen max1 and max2
+                max3 = max2;
+                max2 = n;
+            } else if (n >= max3) {     // n lies betwen max2 and max3
+                max3 = n;
+            }
+        }
+        return Math.max(min1 * min2 * max1, max1 * max2 * max3);
+    }
+
+
+    public static boolean arraySumInAnotherArray(int[] a, int[] b) {
+        Set<Integer> setB = new HashSet<>();
+        for (int num : b) {
+            setB.add(num);
+        }
+        for (int i = 0; i < a.length - 1; i++) {
+            for (int j = i + 1; j < a.length; j++) {
+                if (setB.contains(a[i] + a[j])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+    /*
+        152. Maximum Product Subarray
+        每次储存乘到上一个数的最小和最大值，更新当前数乘上个数或者不乘的当前最小最大值
+        更新最大答案
+        Time O(N)
+        Space O(1)
+     */
+    public int maxProduct(int[] nums) {
+        int prevMax = nums[0], prevMin = nums[0];
+        int res = prevMax;
+        for (int i = 1; i < nums.length; i++) {
+            int tempMax = Math.max(nums[i], Math.max(nums[i] * prevMax, nums[i] * prevMin));
+            prevMin = Math.min(nums[i], Math.min(nums[i] * prevMax, nums[i] * prevMin));
+            prevMax = tempMax;
+            res = Math.max(res, prevMax);
+        }
+        return res;
     }
 
     public static int findDateInAYear(int year) {
@@ -17,9 +948,9 @@ public class Main {
         int diff = c.get(Calendar.DAY_OF_WEEK) - Calendar.TUESDAY;
         if (diff > 0) {
             int offSet = 14 - diff;
-            c.set(year, 9, offSet + 1);
+            c.set(year, Calendar.OCTOBER, offSet + 1);
         } else {
-            c.set(year, 9, 8 - diff);
+            c.set(year, Calendar.OCTOBER, 8 - diff);
         }
         System.out.println(c.getTime());
         return c.get(Calendar.DAY_OF_MONTH);
@@ -1544,48 +2475,45 @@ another solution union find. assign a id for each email
      */
 
     /*
-// Definition for a Node.
-class Node {
+// Definition for a Tile.
+class Tile {
     public int val;
-    public List<Node> neighbors;
+    public List<Tile> neighbors;
 
-    public Node() {}
+    public Tile() {}
 
-    public Node(int _val,List<Node> _neighbors) {
+    public Tile(int _val,List<Tile> _neighbors) {
         val = _val;
         neighbors = _neighbors;
     }
 };
 */
 
-    private Map<Node, Node> oldToNew = new HashMap<>();
+    /*
+        133. Clone Graph
+        Time V+E
+        Space N+E
+     */
+    Map<Node, Node> dict = new HashMap<>();
 
     public Node cloneGraph(Node node) {
-        dfs(node);
-        return oldToNew.get(node);
-    }
-
-    void dfs(Node node) {
-        if (oldToNew.containsKey(node)) {
-            return;
+        if (node == null) {
+            return null;
         }
-        Node newNode = getClonedNode(node);
-        List<Node> neighbors = new ArrayList<>();
-        for (Node nei : node.neighbors) {
-            dfs(nei);
-            neighbors.add(getClonedNode(nei));
+        if (dict.containsKey(node)) {
+            return dict.get(node);
+        }
+        Node newNode = new Node(node.val);
+        dict.put(node, newNode);
+        for (Node neighbor : node.neighbors) {
+            if (dict.containsKey(neighbor)) {
+                newNode.neighbors.add(dict.get(neighbor));
+            } else {
+                newNode.neighbors.add(cloneGraph(neighbor));
+            }
         }
 
-        newNode.neighbors = neighbors;
-    }
-
-    Node getClonedNode(Node n) {
-        if (!oldToNew.containsKey(n)) {
-            Node newNode = new Node();
-            newNode.val = n.val;
-            oldToNew.put(n, newNode);
-        }
-        return oldToNew.get(n);
+        return newNode;
     }
 
     /*
@@ -1745,8 +2673,8 @@ class Node {
 
     /*
     76. Minimum Window Substring
-Time complexity O(s.length+t.length) calculate chars count in t. and then sliding window in s. both one pass
-space complexity O(t.length)
+    Time complexity O(s.length+t.length) calculate chars count in t. and then sliding window in s. both one pass
+       space complexity O(t.length)
      */
     public String minWindow(String s, String t) {
         if (s.length() == 0 || t.length() == 0 || t.length() > s.length()) {
@@ -2860,30 +3788,40 @@ space complexity O(t.length)
         return count == numCourses ? res : new int[]{};
     }
 
+    /*
+        207. Course Schedule
+        Time v+e
+        Space v or e
+     */
     public static boolean canFinish(int numCourses, int[][] prerequisites) {
-        int[] inDegrees = new int[numCourses];
-        for (int[] pre : prerequisites) {
-            inDegrees[pre[0]]++;
-        }
-        Stack<Integer> readyToMove = new Stack<>();
+        int[] inDegree = new int[numCourses];
+        List<Integer>[] graph = new ArrayList[numCourses];
         for (int i = 0; i < numCourses; i++) {
-            if (inDegrees[i] == 0) {
-                readyToMove.push(i);
-            }
+            graph[i] = new ArrayList<>();
+        }
+        for (int[] pre : prerequisites) {
+            graph[pre[1]].add(pre[0]);
+            inDegree[pre[0]]++;
         }
         int count = 0;
-        while (!readyToMove.isEmpty()) {
-            int movedCourse = readyToMove.pop();
+        Queue<Integer> readyToTake = new LinkedList<>();
+        for (int i = 0; i < numCourses; i++) {
+            if (inDegree[i] == 0) {
+                readyToTake.offer(i);
+            }
+        }
+        while (!readyToTake.isEmpty()) {
+            int course = readyToTake.poll();
             count++;
-            for (int[] pre : prerequisites) {
-                if (pre[1] == movedCourse) {
-                    if (--inDegrees[pre[0]] == 0) {
-                        readyToMove.push(pre[0]);
-                    }
+            for (int link : graph[course]) {
+                if (--inDegree[link] == 0) {
+                    readyToTake.add(link);
                 }
             }
         }
         return count == numCourses;
+
+
     }
 
 
@@ -2948,6 +3886,7 @@ space complexity O(t.length)
             }
             map.put(sum, map.getOrDefault(sum, 0) + 1);
         }
+
         return count;
     }
 
@@ -3459,7 +4398,7 @@ space complexity O(t.length)
         union find solution
         time O(N) nearly O(N) by using union find
         space O(N)
-        and there is a set solution
+        and there is a map solution
      */
     public static int longestConsecutive(int[] nums) {
         int n = nums.length;
@@ -3500,7 +4439,7 @@ space complexity O(t.length)
     }
 
     /*
-        using set
+        using map
         each time start building sequence by curnum -1 do not exist.
         then check num + 1 and count the length.
         time O(N)
@@ -4137,6 +5076,11 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         return low;
     }
 
+    /*
+        45. Jump Game II
+        Time N
+        1
+     */
     public static int jump(int[] nums) {
         int end = 0;
         int maxPosition = 0;
@@ -4270,7 +5214,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
     }
 
     /**
-     * word ladder list 1.找到每个单词的转移分支，通过*来遮盖某一位来完成这个map 2。双向bfs，每个bfs节点保存当前的所有路径
+     * 126 word ladder list 1.找到每个单词的转移分支，通过*来遮盖某一位来完成这个map 2。双向bfs，每个bfs节点保存当前的所有路径
      * 3.相遇后将当前单词列表加入答案，并完成本次队列里的遍历后结束 4 该function有bug 勿用 //
      */
 //    public static List<List<String>> findLadders(String beginWord, String endWord,
@@ -4551,7 +5495,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
                     map.put(key, list);
                 }
 
-                //如果还没有相遇，并且新的单词在 word 中，那么就加到 set 中
+                //如果还没有相遇，并且新的单词在 word 中，那么就加到 map 中
                 //在该层已经done之后，不再继续延长path长度，保证搜索结果为最短解
                 if (!done && wordSet.contains(word)) {
                     set.add(word);
@@ -4576,7 +5520,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
     }
 
 
-    //word ladder length
+    //127. Word Ladder
     //Time O(M*N)  where MM is the length of words and NN is the total number of words in the input word list
     //Space Complexity: O(M * N), to store all MM transformations for each of the NN words,
     // in the all_combo_dict dictionary, same as one directional. But bidirectional reduces the search space.
@@ -4591,14 +5535,13 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         }
         for (String word : wordList) {
             for (int i = 0; i < beginWord.length(); i++) {
-                StringBuilder mask = new StringBuilder();
-                mask.append(word.substring(0, i));
-                mask.append("*");
-                mask.append(word.substring(i + 1));
+                char[] wordArray = word.toCharArray();
+                wordArray[i] = '*';
+                String mask = String.valueOf(wordArray);
                 List<String> wordListForAMask = comboDic
-                    .getOrDefault(mask.toString(), new ArrayList<>());
+                    .getOrDefault(String.valueOf(wordArray), new ArrayList<>());
                 wordListForAMask.add(word);
-                comboDic.put(mask.toString(), wordListForAMask);
+                comboDic.put(String.valueOf(wordArray), wordListForAMask);
             }
         }
         Queue<Pair<String, Integer>> qF = new LinkedList<>();
@@ -4615,9 +5558,9 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
                 String curWord = curPair.getKey();
                 for (int i = 0; i < curPair.getKey().length(); i++) {
                     StringBuilder mask = new StringBuilder();
-                    mask.append(curWord.substring(0, i));
-                    mask.append("*");
-                    mask.append(curWord.substring(i + 1));
+                    char[] wordArray = curWord.toCharArray();
+                    wordArray[i] = '*';
+                    mask.append(wordArray);
                     List<String> wordListForAMask = comboDic
                         .getOrDefault(mask.toString(), new ArrayList<>());
                     for (String nextWord : wordListForAMask) {
@@ -4897,50 +5840,70 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
     }
 
 
+    Map<Node, Node> nodeDict = new HashMap<>();
+
+    public Node copyRandomList(Node head) {
+        if (head == null) {
+            return null;
+        }
+        if (nodeDict.containsKey(head)) {
+            return nodeDict.get(head);
+        }
+        Node newNode = new Node(head.val);
+        nodeDict.put(head, newNode);
+        newNode.next = copyRandomList(head.next);
+        newNode.random = copyRandomList(head.random);
+        return newNode;
+    }
+
     //time & space O(N) using a dict to have old node-> new node
     //interweave 交织法可以O(1) space
     //将新的node变成old node.next 然后新的node的random就是old node.random.next
     //之后再unweave 变成一个正常链表
-    public Node copyRandomList(Node head) {
-        HashMap<Node, Node> visited = new HashMap<Node, Node>();
+
+    public Node copyRandomListInterweave(Node head) {
+
         if (head == null) {
             return null;
         }
 
-        Node oldNode = head;
+        // Creating a new weaved list of original and copied nodes.
+        Node ptr = head;
+        while (ptr != null) {
 
-        // Creating the new head node.
-        Node newNode = new Node(oldNode.val);
-        visited.put(oldNode, newNode);
+            // Cloned node
+            Node newNode = new Node(ptr.val);
 
-        // Iterate on the linked list until all nodes are cloned.
-        while (oldNode != null) {
-            // Get the clones of the nodes referenced by random and next pointers.
-            newNode.random = this.getClonedNode(oldNode.random, visited);
-            newNode.next = this.getClonedNode(oldNode.next, visited);
-
-            // Move one step ahead in the linked list.
-            oldNode = oldNode.next;
-            newNode = newNode.next;
+            // Inserting the cloned node just next to the original node.
+            // If A->B->C is the original linked list,
+            // Linked list after weaving cloned nodes would be A->A'->B->B'->C->C'
+            newNode.next = ptr.next;
+            ptr.next = newNode;
+            ptr = newNode.next;
         }
-        return visited.get(head);
-    }
 
-    public Node getClonedNode(Node node, Map<Node, Node> visited) {
+        ptr = head;
 
-        // If the node exists then
-        if (node != null) {
-            // Check if the node is in the visited dictionary
-            if (visited.containsKey(node)) {
-                // If its in the visited dictionary then return the new node reference from the dictionary
-                return visited.get(node);
-            } else {
-                // Otherwise create a new node, add to the dictionary and return it
-                visited.put(node, new Node(node.val, null, null));
-                return visited.get(node);
-            }
+        // Now link the random pointers of the new nodes created.
+        // Iterate the newly created list and use the original nodes' random pointers,
+        // to assign references to random pointers for cloned nodes.
+        while (ptr != null) {
+            ptr.next.random = (ptr.random != null) ? ptr.random.next : null;
+            ptr = ptr.next.next;
         }
-        return null;
+
+        // Unweave the linked list to get back the original linked list and the cloned list.
+        // i.e. A->A'->B->B'->C->C' would be broken to A->B->C and A'->B'->C'
+        Node ptr_old_list = head; // A->B->C
+        Node ptr_new_list = head.next; // A'->B'->C'
+        Node head_old = head.next;
+        while (ptr_old_list != null) {
+            ptr_old_list.next = ptr_old_list.next.next;
+            ptr_new_list.next = (ptr_new_list.next != null) ? ptr_new_list.next.next : null;
+            ptr_old_list = ptr_old_list.next;
+            ptr_new_list = ptr_new_list.next;
+        }
+        return head_old;
     }
 
     /*
@@ -5274,41 +6237,33 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         Time O(N) since each element will be visited once.
         Space O(N)
      */
-    public static int numIslands(char[][] grid) {
-        int row = grid.length;
-        if (row == 0) {
-            return 0;
-        }
-        int col = grid[0].length;
-        int result = 0;
-        for (int i = 0; i < row; i++) {
-            for (int j = 0; j < col; j++) {
+    int count = 0;
+
+    public int numIslands(char[][] grid) {
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[0].length; j++) {
                 if (grid[i][j] == '1') {
-                    findIsland(grid, i, j, row, col);
-                    result++;
+                    dfs(grid, i, j);
+                    count++;
                 }
             }
         }
-        return result;
+        return count;
     }
 
-    public static void findIsland(char[][] grid, int row, int col, int rowM, int colM) {
-        if (row < rowM - 1 && grid[row + 1][col] == '1') {
-            grid[row + 1][col] = '0';
-            findIsland(grid, row + 1, col, rowM, colM);
+    private void dfs(char[][] grid, int curRow, int curCol) {
+        grid[curRow][curCol] = 0;
+        for (int i = 0; i < 4; i++) {
+            int newRow = dir[i][0] + curRow;
+            int newCol = dir[i][1] + curCol;
+            if (isInGrid(newRow, newCol, grid) && grid[newRow][newCol] == '1') {
+                dfs(grid, newRow, newCol);
+            }
         }
-        if (col < colM - 1 && grid[row][col + 1] == '1') {
-            grid[row][col + 1] = '0';
-            findIsland(grid, row, col + 1, rowM, colM);
-        }
-        if (row > 0 && grid[row - 1][col] == '1') {
-            grid[row - 1][col] = '0';
-            findIsland(grid, row - 1, col, rowM, colM);
-        }
-        if (col > 0 && grid[row][col - 1] == '1') {
-            grid[row][col - 1] = '0';
-            findIsland(grid, row, col - 1, rowM, colM);
-        }
+    }
+
+    private boolean isInGrid(int row, int col, char[][] grid) {
+        return row >= 0 && row < grid.length && col >= 0 && col < grid[0].length;
     }
 
 
@@ -6201,4 +7156,206 @@ class NumberOfIsland2 {
         return true;
     }
 
+}
+
+/*
+    773. Sliding Puzzle
+    Time O(N*M*(N*M)!)  there are possible (N*M)! state
+    Space O(N*M*(N*M)!)
+*/
+class SlidingPuzzleMyOwn {
+
+    public int slidingPuzzle(int[][] board) {
+        //check if the board valid
+        if (board == null || board.length == 0 || board[0].length == 0) {
+            return -1;
+        }
+
+        int N = board.length;
+        int M = board[0].length;
+
+        //build the final state of this problem.
+        int[][] targetBoard = new int[N][M];
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < M; j++) {
+                targetBoard[i][j] = i * M + j + 1;
+            }
+        }
+        targetBoard[N - 1][M - 1] = 0;
+        State targetState = new State(targetBoard, N - 1, M - 1);
+
+        int currentSteps = -1;
+
+        Set<State> visitedState = new HashSet<>();
+        Queue<State> queue = new LinkedList();
+
+        //build the original state
+        State original = null;
+        int[][] directions = new int[][]{{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[0].length; j++) {
+                if (board[i][j] == 0) {
+                    original = new State(deepCopyOfBoardArray(board), i, j);
+                    break;
+                }
+            }
+        }
+        queue.offer(original);
+        visitedState.add(original);
+
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            //one more level bfs, means one more step.
+            currentSteps++;
+            for (int i = 0; i < size; i++) {
+                State cur = queue.poll();
+                if (targetState.equals(cur)) {
+                    return currentSteps;
+                }
+
+                for (int j = 0; j < 4; j++) {
+                    int[] direction = directions[j];
+                    int nextRow = cur.posOf0[0] + direction[0];
+                    int nextCol = cur.posOf0[1] + direction[1];
+                    if (inBoard(nextRow, nextCol, cur.board)) {
+
+                        int[][] newBoard = deepCopyOfBoardArray(cur.board);
+                        //swap cur 0's position with new position.
+                        int temp = newBoard[nextRow][nextCol];
+                        newBoard[nextRow][nextCol] = newBoard[cur.posOf0[0]][cur.posOf0[1]];
+                        newBoard[cur.posOf0[0]][cur.posOf0[1]] = temp;
+                        State newState = new State(newBoard, nextRow, nextCol);
+
+                        if (!visitedState.contains(newState)) {
+                            queue.offer(newState);
+                            visitedState.add(newState);
+                        }
+                    }
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    private boolean inBoard(int row, int col, int[][] grid) {
+        return row >= 0 && col >= 0 && row < grid.length && col < grid[0].length;
+    }
+
+    private int[][] deepCopyOfBoardArray(int[][] board) {
+        int[][] res = new int[board.length][board[0].length];
+        for (int i = 0; i < res.length; i++) {
+            for (int j = 0; j < res[0].length; j++) {
+                res[i][j] = board[i][j];
+            }
+        }
+        return res;
+    }
+
+
+    private class State {
+
+        int[][] board;
+        int[] posOf0;
+
+        State(int[][] board, int rowOf0, int colOf0) {
+            this.board = board;
+            this.posOf0 = new int[]{rowOf0, colOf0};
+        }
+
+        /*
+             using its String format in hash function
+         */
+        @Override
+        public int hashCode() {
+            return toString().hashCode();
+        }
+
+        /*
+            convert the 2d array to String.
+         */
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < board.length; i++) {
+                for (int j = 0; j < board[0].length; j++) {
+                    sb.append(board[i][j]);
+                    sb.append("|");
+                }
+            }
+            return sb.toString();
+        }
+
+        /*
+            Determine the equality by its String format.
+         */
+        @Override
+        public boolean equals(Object obj) {
+            return toString().equals(obj.toString());
+        }
+    }
+}
+
+
+//closed to constant time
+class UnionFind {
+
+    int[] idx;
+    int[] weight;
+
+    public UnionFind(int size) {
+        idx = new int[size];
+        weight = new int[size];
+        for (int i = 0; i < size; i++) {
+            idx[i] = i;
+            weight[i] = 1;
+        }
+    }
+
+    //avg  nearly to O(1)
+    public int find(int a) {
+        while (a != idx[a]) {
+            idx[a] = idx[idx[a]];
+            //compress the path
+            a = idx[a];
+        }
+        return a;
+    }
+
+    public int getCount() {
+        int count = 0;
+        for (int i = 0; i < idx.length; i++) {
+            if (i == idx[i]) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    //理论上，从一个完全不相连通的N个对象的集合开始，任意顺序的M次union()调用所需的时间为O(N+Mlg*N)。
+    //其中lg*N称为迭代对数（iterated logarithm）。实数的迭代对数是指须对实数连续进行几次对数运算后，
+    // 其结果才会小于等于1。这个函数增加非常缓慢，可以视为近似常数（例如2^65535的迭代对数为5）。
+    // aveg inverse Ackermann function nearly O(1)
+    /*
+    Definition: A function of two parameters whose value grows very, very slowly.
+     Formal Definition: α(m,n) = min{i≥ 1: A(i, ⌊ m/n⌋) > log2 n} where A(i,j)
+     is Ackermann's function.
+     */
+    public boolean union(int a, int b) {
+        int aRoot = find(a);
+        int bRoot = find(b);
+        //already unioned
+        if (aRoot == bRoot) {
+            return false;
+        }
+        if (weight[aRoot] > weight[bRoot]) {
+            idx[bRoot] = idx[aRoot];
+            weight[aRoot] += weight[bRoot];
+        } else {
+            idx[aRoot] = idx[bRoot];
+            weight[bRoot] += weight[aRoot];
+        }
+        return true;
+    }
 }

@@ -1,4 +1,4 @@
-import java.nio.file.Path;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Random;
@@ -18,8 +19,6 @@ import java.util.Stack;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.LinkedBlockingQueue;
-import sun.net.InetAddressCachePolicy;
-import sun.net.www.protocol.http.HttpURLConnection.TunnelState;
 
 /**
  * Created by Sichi Zhang on 2019/11/10.
@@ -656,7 +655,7 @@ class RandomizedSet {
     }
 
     /**
-     * Inserts a value to the set. Returns true if the set did not already contain the specified
+     * Inserts a value to the map. Returns true if the map did not already contain the specified
      * element.
      */
     public boolean insert(int val) {
@@ -670,7 +669,7 @@ class RandomizedSet {
     }
 
     /**
-     * Removes a value from the set. Returns true if the set contained the specified element.
+     * Removes a value from the map. Returns true if the map contained the specified element.
      */
     public boolean remove(int val) {
         if (!dict.containsKey(val)) {
@@ -689,7 +688,7 @@ class RandomizedSet {
     }
 
     /**
-     * Get a random element from the set.
+     * Get a random element from the map.
      */
     public int getRandom() {
         if (list.size() > 0) {
@@ -822,6 +821,104 @@ class ShuffleArray {
     }
 }
 
+/*
+    622. Design Circular Queue
+    Time 1
+    Space N
+*/
+class MyCircularQueue {
+
+
+    private int[] data;
+    private int head;
+    private int tail;
+    private int size;
+    private int cap;
+
+    /**
+     * Initialize your data structure here. Set the size of the queue to be k.
+     */
+    public MyCircularQueue(int k) {
+        cap = k;
+        data = new int[k];
+        head = 0;
+        tail = 0;
+        size = 0;
+    }
+
+    /**
+     * Insert an element into the circular queue. Return true if the operation is successful.
+     */
+    public boolean enQueue(int value) {
+        if (isFull()) {
+            return false;
+        } else if (isEmpty()) {
+            head = tail;
+            data[tail] = value;
+        } else {
+            tail = (tail + 1) % cap;
+            data[tail] = value;
+        }
+        size++;
+        return true;
+    }
+
+    /**
+     * Delete an element from the circular queue. Return true if the operation is successful.
+     */
+    public boolean deQueue() {
+        if (isEmpty()) {
+            return false;
+        } else {
+            head = (head + 1) % cap;
+            size--;
+            return true;
+        }
+    }
+
+    /**
+     * Get the front item from the queue.
+     */
+    public int Front() {
+        if (isEmpty()) {
+            return -1;
+        } else {
+            return data[head];
+        }
+    }
+
+    /**
+     * Get the last item from the queue.
+     */
+    public int Rear() {
+        if (isEmpty()) {
+            return -1;
+        } else {
+            return data[tail];
+        }
+    }
+
+    /**
+     * Checks whether the circular queue is empty or not.
+     */
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
+    /**
+     * Checks whether the circular queue is full or not.
+     */
+    public boolean isFull() {
+        return size == data.length;
+    }
+}
+
+/**
+ * Your MyCircularQueue object will be instantiated and called as such: MyCircularQueue obj = new
+ * MyCircularQueue(k); boolean param_1 = obj.enQueue(value); boolean param_2 = obj.deQueue(); int
+ * param_3 = obj.Front(); int param_4 = obj.Rear(); boolean param_5 = obj.isEmpty(); boolean param_6
+ * = obj.isFull();
+ */
 class MyStack {
 
     private Queue<Integer> q1;
@@ -867,61 +964,300 @@ class MyStack {
     }
 }
 
+
+/*
+    232. Implement Queue using Stacks
+ */
 class MyQueue {
 
-
-    private Stack<Integer> s1 = new Stack<>();
-    private Stack<Integer> s2 = new Stack<>();
-    int front;
+    Stack<Integer> in;
+    Stack<Integer> out;
 
     /**
      * Initialize your data structure here.
      */
     public MyQueue() {
-
+        in = new Stack<>();
+        out = new Stack<>();
     }
 
     /**
      * Push element x to the back of queue.
      */
     public void push(int x) {
-        if (s1.empty()) {
-            front = x;
-        }
-        s1.push(x);
+        in.push(x);
     }
 
     /**
      * Removes the element from in front of queue and returns that element.
      */
     public int pop() {
-        if (s2.isEmpty()) {
-            while (!s1.isEmpty()) {
-                s2.push(s1.pop());
-            }
+        if (in.isEmpty() && out.isEmpty()) {
+            return -1;
         }
-        return s2.pop();
+        moveToOut();
+        return out.pop();
     }
 
     /**
      * Get the front element.
      */
     public int peek() {
-        if (!s2.isEmpty()) {
-            return s2.peek();
+        if (in.isEmpty() && out.isEmpty()) {
+            return -1;
         }
-        return front;
+        moveToOut();
+        return out.peek();
     }
 
     /**
      * Returns whether the queue is empty.
      */
     public boolean empty() {
-        return s1.isEmpty() && s2.isEmpty();
+        return in.isEmpty() && out.isEmpty();
+    }
+
+    private void moveToOut() {
+        if (out.isEmpty()) {
+            while (!in.isEmpty()) {
+                out.push(in.pop());
+            }
+        }
+    }
+}
+
+interface NestedInteger {
+
+    // @return true if this NestedInteger holds a single integer, rather than a nested list.
+    boolean isInteger();
+
+    // @return the single integer that this NestedInteger holds, if it holds a single integer
+    // Return null if this NestedInteger holds a nested list
+    Integer getInteger();
+
+    // @return the nested list that this NestedInteger holds, if it holds a nested list
+    // Return null if this NestedInteger holds a single integer
+    List<NestedInteger> getList();
+}
+
+/*
+    341. Flatten Nested List Iterator
+    Time hasNext O(1)
+    next O(1)
+    next O(1)
+ */
+class NestedIterator implements Iterator<Integer> {
+
+    NestedInteger next;
+    List<NestedInteger> list;
+    NestedIterator it;
+    int cur;
+
+    public NestedIterator(List<NestedInteger> nestedList) {
+        list = nestedList;
+        if (nestedList.size() > 0) {
+            cur = 0;
+            getNext();
+        }
+    }
+
+    private void getNext() {
+        next = cur < list.size() ? list.get(cur++) : null;
+        if (next != null && !next.isInteger()) {
+            it = new NestedIterator(next.getList());
+            if (!it.hasNext()) {
+                getNext();
+            }
+        }
+    }
+
+    @Override
+    public Integer next() {
+        if (it != null && it.hasNext()) {
+            int res = it.next();
+            if (!it.hasNext()) {
+                getNext();
+            }
+            return res;
+        } else {
+            if (next == null) {
+                throw new RuntimeException("No elements!");
+            } else {
+                int res;
+                if (next.isInteger()) {
+                    res = next.getInteger();
+                } else {
+                    it = new NestedIterator(next.getList());
+                    res = it.next();
+                }
+                getNext();
+                return res;
+            }
+        }
+    }
+
+    @Override
+    public boolean hasNext() {
+        return (it != null && it.hasNext()) || next != null;
+    }
+}
+
+/*
+    716. Max Stack
+    Time O(N) for popMax  logN when using double linkedLIst
+    Space N
+ */
+class MaxStackLogN {
+
+    Node first;
+    Node last;
+    TreeMap<Integer, Stack<Node>> map;
+    int count;
+
+    /**
+     * initialize your data structure here.
+     */
+    public MaxStackLogN() {
+        map = new TreeMap<>(Comparator.comparingInt(o -> -o));
+        first = new Node(-1);
+        last = new Node(-1);
+        first.next = last;
+        last.prev = first;
+        count = 0;
+    }
+
+    public void push(int x) {
+        Node node = new Node(x);
+        Node prevTail = last.prev;
+        prevTail.next = node;
+        last.prev = node;
+        node.next = last;
+        node.prev = prevTail;
+        map.put(x, map.getOrDefault(x, new Stack<>()));
+        map.get(x).push(node);
+        count++;
+    }
+
+    public int pop() {
+        if (count == 0) {
+            throw new RuntimeException("stack is empty");
+        } else {
+            Node p = last.prev;
+            unLink(p);
+            Stack<Node> stack = map.get(p.val);
+            stack.pop();
+            if (stack.isEmpty()) {
+                map.remove(p.val);
+            }
+            count--;
+            return p.val;
+        }
+
+    }
+
+    private void unLink(Node n) {
+        n.prev.next = n.next;
+        n.next.prev = n.prev;
+    }
+
+    public int top() {
+        if (count == 0) {
+            throw new RuntimeException("stack is empty");
+        } else {
+            return last.prev.val;
+        }
+    }
+
+    public int peekMax() {
+        if (count == 0) {
+            throw new RuntimeException("stack is empty");
+        } else {
+            return map.firstKey();
+        }
+    }
+
+    public int popMax() {
+        if (count == 0) {
+            throw new RuntimeException("stack is empty");
+        }
+        int max = map.firstKey();
+        Stack<Node> stack = map.get(max);
+        Node maxNode = stack.pop();
+        if (stack.isEmpty()) {
+            map.remove(max);
+        }
+        count--;
+        if (maxNode == first) {
+            first = first.next;
+        } else if (maxNode == last) {
+            last = last.prev;
+        } else {
+            unLink(maxNode);
+        }
+        return maxNode.val;
+    }
+
+    private static class Node {
+
+        int val;
+        Node prev;
+        Node next;
+
+        Node(int x) {
+            val = x;
+        }
+    }
+}
+
+class MaxStack {
+
+    Stack<Integer> stack;
+    Stack<Integer> maxStack;
+
+    public MaxStack() {
+        stack = new Stack();
+        maxStack = new Stack();
+    }
+
+    public void push(int x) {
+        int max = maxStack.isEmpty() ? x : maxStack.peek();
+        maxStack.push(max > x ? max : x);
+        stack.push(x);
+    }
+
+    public int pop() {
+        maxStack.pop();
+        return stack.pop();
+    }
+
+    public int top() {
+        return stack.peek();
+    }
+
+    public int peekMax() {
+        return maxStack.peek();
+    }
+
+    public int popMax() {
+        int max = peekMax();
+        Stack<Integer> buffer = new Stack();
+        while (top() != max) {
+            buffer.push(pop());
+        }
+        pop();
+        while (!buffer.isEmpty()) {
+            push(buffer.pop());
+        }
+        return max;
     }
 }
 
 
+/*
+    155. Min Stack
+    time O(1)
+    space O(N)
+ */
 class MinStack {
 
     // 数据栈

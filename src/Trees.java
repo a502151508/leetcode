@@ -11,6 +11,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 import javafx.util.Pair;
 
 /**
@@ -114,7 +115,7 @@ public class Trees {
         int level = 0;
         while (!queue.isEmpty()) {
             // start the current level
-            levels.add(new ArrayList<Integer>());
+            levels.add(new ArrayList<>());
 
             // number of elements in the current level
             int level_length = queue.size();
@@ -141,39 +142,6 @@ public class Trees {
 
 
     /*
-        105. Construct Binary Tree from Preorder and Inorder Traversal
-        Time O(N)
-        Space O(N)
-     */
-    Map<Integer, Integer> inorderDict;
-
-    public TreeNode buildTree(int[] preorder, int[] inorder) {
-        if (preorder.length == 0) {
-            return null;
-        }
-        inorderDict = new HashMap<>();
-        for (int i = 0; i < inorder.length; i++) {
-            inorderDict.put(inorder[i], i);
-        }
-        return buildTreeHelper(preorder, 0, preorder.length,
-            inorder, 0, inorder.length);
-    }
-
-    private TreeNode buildTreeHelper(int[] preorder, int preFrom, int preTo, int[] inorder,
-        int inFrom, int inTo) {
-        if (preFrom >= preTo || inFrom >= inTo) {
-            return null;
-        }
-        TreeNode root = new TreeNode(preorder[preFrom]);
-        int index = inorderDict.get(preorder[preFrom]);
-        root.left = buildTreeHelper(preorder, preFrom + 1, preFrom + 1 + index - inFrom, inorder,
-            inFrom, index);
-        root.right = buildTreeHelper(preorder, preFrom + 1 + index - inFrom, preTo, inorder,
-            index + 1, inTo);
-        return root;
-    }
-
-    /*
     lc 236. Lowest Common Ancestor of a Binary Tree
     time O(N)
     space O(H)
@@ -187,7 +155,7 @@ public class Trees {
             return false;
         }
 
-        // Left Recursion. If left recursion returns true, set left = 1 else 0
+        // Left Recursion. If left recursion returns true, map left = 1 else 0
         boolean left = this.recurseTree(currentNode.left, p, q);
 
         // Right Recursion
@@ -208,6 +176,41 @@ public class Trees {
         // Return true if any one of the three bool values is True.
         return mid || left || right;
     }
+
+    /*
+        366. Find Leaves of Binary Tree
+        Time N
+        Space N
+     */
+    List<List<Integer>> leavesRes = new ArrayList<>();
+
+    public List<List<Integer>> findLeaves(TreeNode root) {
+        leavesRes = new ArrayList<>();
+        if (root != null) {
+            dfs(root);
+        }
+        return leavesRes;
+    }
+
+    private int dfs(TreeNode node) {
+        int level = 0;
+        if (node.left != null) {
+            level = Math.max(dfs(node.left) + 1, level);
+        }
+        if (node.right != null) {
+            level = Math.max(dfs(node.right) + 1, level);
+        }
+        addToRes(node.val, level);
+        return level;
+    }
+
+    private void addToRes(int val, int level) {
+        if (level >= leavesRes.size()) {
+            leavesRes.add(new ArrayList<>());
+        }
+        leavesRes.get(level).add(val);
+    }
+
 
     public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
         // Traverse the tree
@@ -243,7 +246,7 @@ public class Trees {
             }
         }
 
-        // Ancestors set() for node p.
+        // Ancestors map() for node p.
         Set<TreeNode> ancestors = new HashSet<>();
 
         // Process all ancestors for node p using parent pointers.
@@ -253,7 +256,7 @@ public class Trees {
         }
 
         // The first ancestor of q which appears in
-        // p's ancestor set() is their lowest common ancestor.
+        // p's ancestor map() is their lowest common ancestor.
         while (!ancestors.contains(q)) {
             q = parent.get(q);
         }
@@ -273,7 +276,7 @@ public class Trees {
             int x = find(nums, edges[i][0]);
             int y = find(nums, edges[i][1]);
 
-            // if two vertices happen to be in the same set
+            // if two vertices happen to be in the same map
             // then there's a cycle
             //find the last cycle
             if (x == y) {
@@ -286,6 +289,36 @@ public class Trees {
             }
         }
         return res;
+    }
+
+    /*
+        114. Flatten Binary Tree to Linked List
+        Time N
+        Space H
+     */
+
+    public void flatten(TreeNode root) {
+        flattenTree(root);
+    }
+
+    private TreeNode flattenTree(TreeNode root) {
+        if (root == null) {
+            return null;
+        }
+
+        if (root.right == null && root.left == null) {
+            return root;
+        }
+
+        TreeNode leftTail = flattenTree(root.left);
+        TreeNode right = root.right;
+        if (leftTail != null) {
+            leftTail.right = root.right;
+            root.right = root.left;
+            root.left = null;
+        }
+        TreeNode rightTail = flattenTree(right);
+        return right == null ? leftTail : rightTail;
     }
 
 
@@ -343,7 +376,7 @@ public class Trees {
             int x = find(nums, edges[i][0]);
             int y = find(nums, edges[i][1]);
 
-            // if two vertices happen to be in the same set
+            // if two vertices happen to be in the same map
             // then there's a cycle
             if (x == y) {
                 return false;
@@ -549,6 +582,61 @@ public class Trees {
         }
     }
 
+    /*
+        104. Maximum Depth of Binary Tree
+        Time N
+        Space H
+     */
+    public int maxDepth(TreeNode root) {
+        return dfs(root, 0);
+    }
+
+    int dfs(TreeNode t, int dep) {
+        if (t != null) {
+            dep++;
+            return Math.max(dfs(t.left, dep), dfs(t.right, dep));
+        } else {
+            return dep;
+        }
+    }
+
+    /*
+        105. Construct Binary Tree from Preorder and Inorder Traversal
+        Time N
+        Space N
+     */
+    class BuildTree {
+
+        int preCur;
+        int[] preorder;
+        Map<Integer, Integer> indexMap;
+
+        public TreeNode buildTree(int[] preorder, int[] inorder) {
+            if (preorder.length == 0 || preorder.length != inorder.length) {
+                return null;
+            }
+            this.preorder = preorder;
+            preCur = 0;
+            indexMap = new HashMap<>();
+            for (int i = 0; i < inorder.length; i++) {
+                indexMap.put(inorder[i], i);
+            }
+            return dfs(0, inorder.length - 1);
+        }
+
+        public TreeNode dfs(int inLeft, int inRight) {
+            if (inLeft > inRight) {
+                return null;
+            }
+            TreeNode root = new TreeNode(preorder[preCur++]);
+            int rootIndex = indexMap.get(root.val);
+            root.left = dfs(inLeft, rootIndex - 1);
+            root.right = dfs(rootIndex + 1, inRight);
+            return root;
+        }
+    }
+
+
     //lc 117 next right point tree is not perfect
     //straightforward 为每个节点寻找下一个节点
     public Node connect2(Node root) {
@@ -654,15 +742,35 @@ public class Trees {
     /*
         113. Path Sum II
         from root to leaf
-        Time O(N)
+        Time O(N^2) N for traversal another N for array copy
         space n or logn
      */
-    private List<List<Integer>> res = new ArrayList<>();
+    private List<List<Integer>> res;
 
-    public List<List<Integer>> pathSum2(TreeNode root, int sum) {
-        List<Integer> path = new ArrayList<>();
-        findPathSumDFS(path, root, sum);
+    public List<List<Integer>> pathSum(TreeNode root, int sum) {
+        if (root == null) {
+            return new ArrayList<List<Integer>>();
+        }
+        res = new ArrayList<>();
+        dfs(root, sum, new ArrayList<Integer>());
         return res;
+
+    }
+
+    private void dfs(TreeNode node, int sum, List<Integer> path) {
+        if (node == null) {
+            return;
+        }
+        path.add(node.val);
+        sum -= node.val;
+        if (isLeaf(node) && sum == 0) {
+            res.add(new ArrayList<>(path));
+        } else {
+            dfs(node.left, sum, path);
+            dfs(node.right, sum, path);
+        }
+        path.remove(path.size() - 1);
+
     }
 
 
@@ -736,72 +844,116 @@ public class Trees {
     }
 
 
-    public List<List<Integer>> zigzagLevelOrder(TreeNode root) {
-        Deque<Pair<TreeNode, Integer>> q = new ArrayDeque<>();
-        Pair<TreeNode, Integer> p = new Pair<>(root, 0);
-        q.addLast(p);
+    /*
+        103. Binary Tree Zigzag Level Order Traversal
+        Time N
+        Space  BFS N DFS H
+     */
+    public List<List<Integer>> zigzagLevelOrderBFS(TreeNode root) {
         List<List<Integer>> res = new ArrayList<>();
-        if (root == null) {
-            return res;
+        Queue<TreeNode> bfsHelper = new LinkedList<>();
+        if (root != null) {
+            bfsHelper.add(root);
         }
-        do {
-            Pair<TreeNode, Integer> cur = q.removeFirst();
-            List<Integer> res1 = new ArrayList<>();
-            while (cur.getValue() % 2 == 0) {
-                res1.add(cur.getKey().val);
-                if (cur.getKey().left != null) {
-                    q.addLast(new Pair<>(cur.getKey().left, cur.getValue() + 1));
-                }
-                if (cur.getKey().right != null) {
-                    q.addLast(new Pair<>(cur.getKey().right, cur.getValue() + 1));
-                }
-                if (!q.isEmpty()) {
-                    if (q.peekFirst().getValue() % 2 != 0) {
-                        break;
-                    } else {
-                        cur = q.removeFirst();
-                    }
+        while (!bfsHelper.isEmpty()) {
+            int size = bfsHelper.size();
+            LinkedList<Integer> levelList = new LinkedList<>();
+            for (int i = 0; i < size; i++) {
+                TreeNode cur = bfsHelper.poll();
+                if (res.size() % 2 == 0) {
+                    levelList.addLast(cur.val);
                 } else {
-                    break;
+                    levelList.addFirst(cur.val);
+                }
+                if (cur.left != null) {
+                    bfsHelper.offer(cur.left);
+                }
+                if (cur.right != null) {
+                    bfsHelper.offer(cur.right);
                 }
             }
-            if (!res1.isEmpty()) {
-                res.add(res1);
-            }
-
-            if (q.isEmpty()) {
-                break;
-            } else {
-                cur = q.removeLast();
-            }
-
-            res1 = new ArrayList<>();
-            while (cur.getValue() % 2 == 1) {
-                res1.add(cur.getKey().val);
-                if (cur.getKey().right != null) {
-                    q.addFirst(new Pair<>(cur.getKey().right, cur.getValue() + 1));
-                }
-                if (cur.getKey().left != null) {
-                    q.addFirst(new Pair<>(cur.getKey().left, cur.getValue() + 1));
-                }
-                if (!q.isEmpty()) {
-                    if (q.peekLast().getValue() % 2 != 1) {
-                        break;
-                    } else {
-                        cur = q.removeLast();
-                    }
-                } else {
-                    break;
-                }
-            }
-            if (!res1.isEmpty()) {
-                res.add(res1);
-            }
-        } while (!q.isEmpty());
+            res.add(levelList);
+        }
         return res;
     }
 
-    //O(n)
+
+    protected void DFS(TreeNode node, int level, List<List<Integer>> results) {
+        if (level >= results.size()) {
+            LinkedList<Integer> newLevel = new LinkedList<Integer>();
+            newLevel.add(node.val);
+            results.add(newLevel);
+        } else {
+            if (level % 2 == 0) {
+                results.get(level).add(node.val);
+            } else {
+                results.get(level).add(0, node.val);
+            }
+        }
+
+        if (node.left != null) {
+            DFS(node.left, level + 1, results);
+        }
+        if (node.right != null) {
+            DFS(node.right, level + 1, results);
+        }
+    }
+
+    public List<List<Integer>> zigzagLevelOrderDFS(TreeNode root) {
+        if (root == null) {
+            return new ArrayList<List<Integer>>();
+        }
+        List<List<Integer>> results = new ArrayList<List<Integer>>();
+        DFS(root, 0, results);
+        return results;
+    }
+
+    /*
+        101. Symmetric Tree
+     */
+    public boolean isSymmetric(TreeNode root) {
+        if (root == null) {
+            return true;
+        }
+        return isMirror(root.left, root.right);
+    }
+
+    public boolean isMirror(TreeNode t1, TreeNode t2) {
+        if (t1 == null && t2 == null) {
+            return true;
+        }
+        if (t1 == null || t2 == null) {
+            return false;
+        }
+        return (t1.val == t2.val)
+            && isMirror(t1.right, t2.left)
+            && isMirror(t1.left, t2.right);
+    }
+
+    /*
+        98. Validate Binary Search Tree
+        time n
+        space n
+     */
+    public boolean isValidBSTInOrder(TreeNode root) {
+        Stack<TreeNode> stack = new Stack<>();
+        Integer prev = null;
+        TreeNode cur = root;
+        while (!stack.isEmpty() || cur != null) {
+            while (cur != null) {
+                stack.push(cur);
+                cur = cur.left;
+            }
+            cur = stack.pop();
+            if (prev != null && cur.val <= prev) {
+                return false;
+            }
+            prev = cur.val;
+            cur = cur.right;
+        }
+        return true;
+    }
+
     public boolean isValidBST(TreeNode root) {
         if (root == null) {
             return true;
@@ -827,6 +979,57 @@ public class Trees {
             max, root.right, false, rightMost);
     }
 
+    /*
+        111. Minimum Depth of Binary Tree
+        Time N
+        Space N
+     */
+    public int minDepthBFS(TreeNode root) {
+        if (root == null) {
+            return 0;
+        }
+        Queue<TreeNode> bfsHelper = new LinkedList<>();
+        bfsHelper.add(root);
+        int depth = 0;
+        while (!bfsHelper.isEmpty()) {
+            int size = bfsHelper.size();
+            depth++;
+            for (int i = 0; i < size; i++) {
+                TreeNode n = bfsHelper.poll();
+                if (n.left != null) {
+                    bfsHelper.offer(n.left);
+                }
+                if (n.right != null) {
+                    bfsHelper.offer(n.right);
+                }
+                if (n.left == null && n.right == null) {
+                    return depth;
+                }
+            }
+        }
+        return depth;
+    }
+
+    public int minDepthDFS(TreeNode root) {
+        if (root == null) {
+            return 0;
+        }
+
+        if ((root.left == null) && (root.right == null)) {
+            return 1;
+        }
+
+        int min_depth = Integer.MAX_VALUE;
+        if (root.left != null) {
+            min_depth = Math.min(minDepthDFS(root.left), min_depth);
+        }
+        if (root.right != null) {
+            min_depth = Math.min(minDepthDFS(root.right), min_depth);
+        }
+
+        return min_depth + 1;
+
+    }
 
     /*
         404. Sum of Left Leaves
@@ -853,6 +1056,11 @@ public class Trees {
 
 
     //模拟二叉搜索树的中根遍历来构造BST
+    /*
+        109. Convert Sorted List to Binary Search Tree
+        time N
+        space logN
+     */
     private class SortedListToBST {
 
         private ListNode head;
@@ -902,21 +1110,27 @@ public class Trees {
         }
     }
 
+
+    /*
+        108. Convert Sorted Array to Binary Search Tree
+        time N
+        Space N for output  logN for recursion stack
+     */
+    int[] nums;
+
     public TreeNode sortedArrayToBST(int[] nums) {
-        if (nums.length == 0) {
+        this.nums = nums;
+        return buildTree(0, nums.length - 1);
+    }
+
+    TreeNode buildTree(int l, int r) {
+        if (l > r) {
             return null;
         }
-        if (nums.length == 1) {
-            return new TreeNode(nums[0]);
-        }
-        int mid = nums.length / 2;
+        int mid = (l + r) / 2;
         TreeNode root = new TreeNode(nums[mid]);
-        if (mid > 0) {
-            root.left = sortedArrayToBST(Arrays.copyOf(nums, mid));
-        }
-        if (mid < nums.length - 1) {
-            root.right = sortedArrayToBST(Arrays.copyOfRange(nums, mid + 1, nums.length));
-        }
+        root.left = buildTree(l, mid - 1);
+        root.right = buildTree(mid + 1, r);
         return root;
     }
 
@@ -950,28 +1164,22 @@ public class Trees {
     time O(N)
     space O(H) best case H = logN worst H = N
      */
+    List<Integer> res199;
     public List<Integer> rightSideView(TreeNode root) {
-        List<Integer> res = new ArrayList<>();
-        Set<Integer> set = new HashSet<>();
-        if (root == null) {
-            return res;
-        }
-        dfsOfRightSide(root, 0, set, res);
-        return res;
+        res199 = new ArrayList<>();
+        dfsRightSide(root, 1);
+        return res199;
     }
 
-    void dfsOfRightSide(TreeNode x, int level, Set<Integer> set, List<Integer> res) {
-        if (x == null) {
+    private void dfsRightSide(TreeNode node, int level) {
+        if (node == null) {
             return;
         }
-
-        if (!set.contains(level)) {
-            set.add(level);
-            res.add(x.val);
+        if (level > res199.size()) {
+            res199.add(node.val);
         }
-
-        dfsOfRightSide(x.right, level + 1, set, res);
-        dfsOfRightSide(x.left, level + 1, set, res);
+        dfsRightSide(node.right, level + 1);
+        dfsRightSide(node.left, level + 1);
     }
 
     /*
@@ -1246,7 +1454,7 @@ class BSTIterator {
      * @return the next smallest number
      */
     public int next() {
-        // Node at the top of the stack is the next smallest element
+        // Tile at the top of the stack is the next smallest element
         TreeNode topmostNode = this.stack.pop();
 
         // Need to maintain the invariant. If the node has a right child, call the
