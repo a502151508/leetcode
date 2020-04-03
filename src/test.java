@@ -52,7 +52,7 @@ public class test {
 
 
     public static void main(String[] args) {
-        System.out.print(Double.valueOf("959440.94f"));
+        double a = 1 + 0.5;
     }
 
     public static boolean arraySumInAnotherArray(int[] a, int[] b) {

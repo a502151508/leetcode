@@ -601,6 +601,29 @@ public class Trees {
     }
 
     /*
+        979. Distribute Coins in Binary Tree
+        time N
+        space H
+     */
+    int steps;
+
+    public int distributeCoins(TreeNode root) {
+        steps = 0;
+        dfsdistributeCoins(root);
+        return steps;
+    }
+
+    public int dfsdistributeCoins(TreeNode node) {
+        if (node == null) {
+            return 0;
+        }
+        int L = dfs(node.left);
+        int R = dfs(node.right);
+        steps += Math.abs(L) + Math.abs(R);
+        return node.val + L + R - 1;
+    }
+
+    /*
         105. Construct Binary Tree from Preorder and Inorder Traversal
         Time N
         Space N

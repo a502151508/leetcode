@@ -7,10 +7,272 @@ import java.util.*;
 public class Main {
 
     public static void main(String[] args) {
+        System.out.print(sqrt1(2, 0.0000001));
+    }
 
-        System.out.print(arraySumInAnotherArray(new int[]{1, 2, 3, 4, 5, 6, 7}, new int[]{14}));
+    /*
+        84. Largest Rectangle in Histogram
+        Time N
+        Space N
+     */
+    public int largestRectangleArea(int[] heights) {
+        Stack<Integer> s = new Stack<>();
+        int res = 0;
+        for (int i = 0; i < heights.length; i++) {
+            while (!s.isEmpty() && heights[s.peek()] > heights[i]) {
+                int index = s.pop();
+                if (!s.isEmpty()) {
+                    res = Math.max(res, heights[index] * (i - s.peek() - 1));//
+                } else {
+                    res = Math.max(res, heights[index] * i);
+                }
+            }
+            s.push(i);
+        }
+        while (!s.isEmpty()) {
+            if (s.size() > 1) {
+                int index = s.pop();
+                res = Math.max(res, heights[index] * (heights.length - s.peek() - 1));
+            } else {
+                res = Math.max(res, heights[s.pop()] * heights.length);
+            }
+        }
+        return res;
+    }
+
+    //遍历所有区间 找到区间里的最小值乘以区间长度
+    //Time N^2
+    public int largestRectangleAreaBF(int[] heights) {
+        int maxarea = 0;
+        for (int i = 0; i < heights.length; i++) {
+            int minheight = Integer.MAX_VALUE;
+            for (int j = i; j < heights.length; j++) {
+                minheight = Math.min(minheight, heights[j]);
+                maxarea = Math.max(maxarea, minheight * (j - i + 1));
+            }
+        }
+        return maxarea;
+    }
+
+    /*
+        136
+        Single Number
+        time N
+        space 1
+     */
+    public int singleNumber(int[] nums) {
+        int a = 0;
+        for (int num : nums) {
+            a ^= num;
+        }
+        return a;
+    }
+
+    /*
+        148. Sort List
+        Time NlogN
+        space logn
+     */
+    public ListNode sortList(ListNode head) {
+        if (head == null) {
+            return null;
+        }
+        if (head.next != null) {
+            ListNode mid = findMiddle(head);
+            ListNode secHead = mid.next;
+            mid.next = null;
+            ListNode p1 = sortList(head);
+            ListNode p2 = sortList(secHead);
+            return mergeList(p1, p2);
+        } else {
+            return head;
+        }
 
     }
+
+    private ListNode mergeList(ListNode p1, ListNode p2) {
+        ListNode dummy = new ListNode(0);
+        ListNode cur = dummy;
+        while (p1 != null && p2 != null) {
+            if (p1.val < p2.val) {
+                cur.next = p1;
+                p1 = p1.next;
+            } else {
+                cur.next = p2;
+                p2 = p2.next;
+            }
+            cur = cur.next;
+        }
+        if (p1 != null) {
+            cur.next = p1;
+        }
+        if (p2 != null) {
+            cur.next = p2;
+        }
+        return dummy.next;
+
+    }
+
+    private ListNode findMiddle(ListNode head) {
+        ListNode slow = head;
+        ListNode fast = head;
+        while (fast.next != null && fast.next.next != null) {
+            fast = fast.next.next;
+            slow = slow.next;
+        }
+        return slow;
+    }
+
+    public static void merge(int[] a, int low, int mid, int high) {
+        int[] temp = new int[high - low + 1];
+        int i = low;// 左指针
+        int j = mid + 1;// 右指针
+        int k = 0;
+        // 把较小的数先移到新数组中
+        while (i <= mid && j <= high) {
+            if (a[i] < a[j]) {
+                temp[k++] = a[i++];
+            } else {
+                temp[k++] = a[j++];
+            }
+        }
+        // 把左边剩余的数移入数组
+        while (i <= mid) {
+            temp[k++] = a[i++];
+        }
+        // 把右边边剩余的数移入数组
+        while (j <= high) {
+            temp[k++] = a[j++];
+        }
+        // 把新数组中的数覆盖nums数组
+        for (int k2 = 0; k2 < temp.length; k2++) {
+            a[k2 + low] = temp[k2];
+        }
+    }
+
+    public static void mergeSort(int[] a, int low, int high) {
+        int mid = (low + high) / 2;
+        if (low < high) {
+            // 左边
+            mergeSort(a, low, mid);
+            // 右边
+            mergeSort(a, mid + 1, high);
+            // 左右归并
+            merge(a, low, mid, high);
+            System.out.println(Arrays.toString(a));
+        }
+
+    }
+
+//    public ListNode sortList(ListNode head) {
+//
+//    }
+
+    /*
+        542. 01 Matrix
+        Time N
+        Space N
+     */
+    public int[][] updateMatrix(int[][] matrix) {
+        if (matrix == null || matrix.length == 0 || matrix[0].length == 0) {
+            return matrix == null ? null : matrix;
+        }
+        int row = matrix.length;
+        int col = matrix[0].length;
+        boolean[][] visited = new boolean[row][col];
+        Queue<int[]> bfsHelper = new LinkedList<>();
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+                if (matrix[i][j] == 0) {
+                    bfsHelper.offer(new int[]{i, j});
+                }
+            }
+        }
+        int dis = 1;
+        int[][] dirs = new int[][]{{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+        while (!bfsHelper.isEmpty()) {
+            int size = bfsHelper.size();
+            for (int k = 0; k < size; k++) {
+                int[] cur = bfsHelper.poll();
+                for (int i = 0; i < 4; i++) {
+                    int newRow = cur[0] + dirs[i][0];
+                    int newCol = cur[1] + dirs[i][1];
+                    if (inMatrix(newRow, newCol, row, col) &&
+                        matrix[newRow][newCol] != 0 && !visited[newRow][newCol]) {
+                        visited[newRow][newCol] = true;
+                        matrix[newRow][newCol] = dis;
+                        bfsHelper.offer(new int[]{newRow, newCol});
+                    }
+                }
+            }
+            dis++;
+        }
+        return matrix;
+    }
+
+    private boolean inMatrix(int r, int c, int row, int col) {
+        return r >= 0 && r < row && c >= 0 && c < col;
+    }
+
+    /*
+        1277. Count Square Submatrices with All Ones
+        Time M*N
+        Space 1
+     */
+    public int countSquares(int[][] A) {
+        int res = 0;
+        for (int i = 0; i < A.length; ++i) {
+            for (int j = 0; j < A[0].length; ++j) {
+                if (A[i][j] > 0 && i > 0 && j > 0) {
+                    A[i][j] = Math.min(A[i - 1][j - 1], Math.min(A[i - 1][j], A[i][j - 1])) + 1;
+                }
+                res += A[i][j];
+            }
+        }
+        return res;
+    }
+
+    /*
+        1262. Greatest Sum Divisible by Three
+        Time N
+        Space 1
+     */
+    public int maxSumDivThree(int[] nums) {
+        int[] remain = new int[]{0, Integer.MIN_VALUE, Integer.MIN_VALUE};
+        for (int n : nums) {
+            int[] newRemain = new int[3];
+            for (int i = 0; i < 3; i++) {
+                newRemain[(n + i) % 3] = Math
+                    .max(remain[(n + i) % 3], n + remain[i]);
+            }
+            remain = newRemain;
+
+        }
+        return remain[0];
+    }
+
+
+    /*
+        1268. Search Suggestions System
+     */
+    public List<List<String>> suggestedProducts(String[] products, String searchWord) {
+        Arrays.sort(products);
+        List<List<String>> res = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        for (char c : searchWord.toCharArray()) {
+            sb.append(c);
+            int k = Arrays.binarySearch(products, sb.toString());
+            List<String> subRes = new ArrayList<>();
+            for (int i = k; i < products.length && i < k + 3; i++) {
+                if (products[i].indexOf(sb.toString()) != -1) {
+                    subRes.add(products[i]);
+                }
+            }
+            res.add(subRes);
+        }
+        return res;
+    }
+
 
     /*
         1292. Maximum Side Length of a Square with Sum Less than or Equal to Threshold
@@ -759,6 +1021,7 @@ public class Main {
          Space 1
      */
     public ListNode reverseListIterative(ListNode head) {
+
         if (head == null) {
             return null;
         }
@@ -770,7 +1033,24 @@ public class Main {
             prev = cur;
             cur = tempNext;
         }
+
         return prev;
+    }
+
+    /*
+        206. Reverse Linked List
+         Time N
+         Space N
+     */
+
+    public ListNode reverseList(ListNode head) {
+        if (head == null || head.next == null) {
+            return head;
+        }
+        ListNode n = reverseList(head.next);
+        head.next.next = head;
+        head.next = null;
+        return n;
     }
 
     /*
@@ -1766,6 +2046,46 @@ public class Main {
         return ans;
     }
 
+    static double sqrt1(double n, double PRECISION) {
+        double min, max; //min代表下边界，max代表上边界，mid为中间值也作为近似值
+        min = 0;
+        max = n;
+        while (min + PRECISION < max) {
+            double mid = (max + min) / 2;
+            if (mid * mid < n + PRECISION) {
+                min = mid; //值偏小，升高下边界
+            }
+
+            if (mid * mid > n - PRECISION) {
+                max = mid;//值偏大，降低上边界
+            }
+        }
+        return max;
+    }
+
+    public static int sqrt(int num) {
+        if (num <= 0) {
+            return 0;
+        }
+        int low = 0;
+        int high = num / 2;
+        while (low + 1 < high) {
+            int mid = low + (high - low) / 2;
+            int temp = num / mid;
+            if (temp > mid) {
+                low = mid;
+            } else if (temp < mid) {
+                high = mid;
+            } else {
+                return mid;
+            }
+        }
+        if (high * high <= num) {
+            return high;
+        }
+        return low;
+    }
+
     /*
         97. Interleaving String
         time O(s1.length*s2.length)
@@ -1975,6 +2295,7 @@ public class Main {
     }
 
     /*
+        翻转 k组链表
         lc 25. Reverse Nodes in k-Group
         time O(N) length of the list
         space O(1)
@@ -2570,6 +2891,7 @@ class Tile {
     interface HtmlParser {
 
         List<String> getUrls(String url);
+
     }
 
     //lc1236 web crawler
@@ -3643,25 +3965,48 @@ class Tile {
     }
 
 
-    public boolean isHappy(int n) {
-        Set<Integer> set = new HashSet<>();
-        int m = 0;
-        while (true) {
-            while (n != 0) {
-                m += Math.pow(n % 10, 2);
-                n /= 10;
-            }
-            if (m == 1) {
-                return true;
-            }
-            if (set.contains(m)) {
-                return false;
-            } else {
-                set.add(m);
-                n = m;
-                m = 0;
-            }
+    /*
+        202. Happy Number
+     */
+    public int getNext(int n) {
+        int totalSum = 0;
+        while (n > 0) {
+            int d = n % 10;
+            n = n / 10;
+            totalSum += d * d;
         }
+        return totalSum;
+    }
+
+    public boolean isHappy(int n) {
+        int slowRunner = n;
+        int fastRunner = getNext(n);
+        while (fastRunner != 1 && slowRunner != fastRunner) {
+            slowRunner = getNext(slowRunner);
+            fastRunner = getNext(getNext(fastRunner));
+        }
+        return fastRunner == 1;
+    }
+
+    Set<Integer> seen = new HashSet<>();
+
+    public boolean isHappyRecursion(int n) {
+        seen.add(n);
+        int nextNum = 0;
+        while (n != 0) {
+            int currentDigit = n % 10;
+            nextNum += currentDigit * currentDigit;
+            n = n / 10;
+        }
+        if (nextNum == 1) {
+            return true;
+        }
+        if (seen.contains(nextNum)) {
+            return false;
+        } else {
+            return isHappyRecursion(nextNum);
+        }
+
     }
 
     //Using stack
@@ -4026,40 +4371,60 @@ class Tile {
         return next;
     }
 
+
     /*
-    Initialize left pointer to 0 and right pointer to size-1
-    While left<right, do:
-        If height[left] is smaller than height[right]
-            If height[left]≥left_max, update left_max
-        Else add left_max−height[left] to ans
-        Add 1 to left.
-    Else
-        If height[right]≥right_max, update right_max
-        Else add right_max−height[right] to ans
-        Subtract 1 from right.
+        42. Trapping Rain Water
+        Time N
+        Space N
+        单调递减栈
      */
-    public int trapWater(int[] height) {
-        int left = 0, right = height.length - 1;
-        int ans = 0;
-        int left_max = 0, right_max = 0;
+    public int trapWaterDecreaseStack(int[] height) {
+        Stack<Integer> s = new Stack<>();
+        int res = 0;//1
+        for (int i = 0; i < height.length; i++) {
+            while (s.size() > 1 && height[s.peek()] < height[i]) {
+
+                int baseIndex = s.pop();
+                res += (Math.min(height[s.peek()], height[i]) - height[baseIndex])
+                    * (i - 1 - s.peek());
+            }
+            if (!s.isEmpty() && height[s.peek()] <= height[i]) {
+                s.pop();
+            }
+            s.push(i);
+        }
+        return res;
+    }
+
+    /*
+        two pointer
+
+        Time N
+        Space 1
+        双指针一个最左一个最右边
+        我们知道盛水是看左右最小的那个开始
+        每次比较左右pointer 较小的那个
+        维护一个从左边的目前最高 和从右边的目前最高
+        该点能存的水就是 目前最高减去目前的高度
+        每次从左右较矮的地方开始装水，确保该点一定是能装满水的
+     */
+    public int trapWaterTwoPointer(int[] height) {
+        int left = 0;
+        int right = height.length - 1;
+        int leftMax = 0, rightMax = 0;
+        int res = 0;
         while (left < right) {
             if (height[left] < height[right]) {
-                if (height[left] >= left_max) {
-                    left_max = height[left];
-                } else {
-                    ans += (left_max - height[left]);
-                }
-                ++left;
+                leftMax = Math.max(leftMax, height[left]);
+                res += leftMax - height[left];
+                left++;
             } else {
-                if (height[right] >= right_max) {
-                    right_max = height[right];
-                } else {
-                    ans += (right_max - height[right]);
-                }
-                --right;
+                rightMax = Math.max(rightMax, height[right]);
+                res += rightMax - height[right];
+                right--;
             }
         }
-        return ans;
+        return res;
     }
 
     public static int waterPlants(int[] plants, int cap1, int cap2) {
@@ -4278,6 +4643,10 @@ class Tile {
         return t[0] * t[0] + t[1] * t[1];
     }
 
+    /*
+        除法
+        29. Divide Two Integers
+     */
     public static int divide(int dividend, int divisor) {
         boolean sign = (dividend > 0) ^ (divisor > 0);
         int result = 0;
@@ -4568,6 +4937,7 @@ class Tile {
     503. Next Greater Element II
     Time O(N)
     Space O(N)
+    单调栈
      */
     public static int[] nextGreaterElements2(int[] nums) {
         //store index in stack
@@ -5096,6 +5466,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         return steps;
     }
 
+
     public static int[] searchRange(int[] nums, int target) {
         int[] res = {-1, -1};
         if (nums.length == 0) {
@@ -5116,6 +5487,29 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
             res[1] = j;
         }
         return res;
+    }
+
+    //二分搜索
+    public static int findFirstBSearch(int[] nums, int target) {
+        if (nums == null || nums.length == 0) {
+            return -1;
+        }
+        int start = 0;
+        int end = nums.length - 1;
+        while (start + 1 < end) {//0 1
+            int mid = start + (end - start) / 2;// mid = 1
+            if (nums[mid] >= target) {
+                end = mid;
+            } else {
+                start = mid;
+            }
+        }
+        if (nums[start] == target) {
+            return start;
+        } else if (nums[end] == target) {
+            return end;
+        }
+        return -1;
     }
 
     public static int bSearch(int low, int high, int target, int[] nums) {
@@ -5708,14 +6102,20 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
     }
 
     /*
-    1283. Find the Smallest Divisor Given a Threshold
+        1283. Find the Smallest Divisor Given a Threshold
+        Time N+logK*N
+        space 1
      */
     public int smallestDivisor(int[] A, int threshold) {
-        int left = 1, right = (int) 1e6;
+        int left = 1, right = (int) 1e5;
+        for (int num : A) {
+            left = Math.min(num, left);
+            right = Math.max(num, right);
+        }
         while (left < right) {
             int m = (left + right) / 2, sum = 0;
             for (int i : A) {
-                sum += (i - 1) / m + 1;
+                sum += (i + m - 1) / m;
             }
             if (sum > threshold) {
                 left = m + 1;
@@ -6111,36 +6511,37 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
     }
 
     //sell stock 3， only allow do K transaction
-    public int maxProfit3(int K, int[] prices) {
-        if (prices.length == 0) {
+    public int maxProfit3(int k, int[] nums) {
+
+        //initial state dim1 - day; dim2 - transacation number
+        if (nums == null || nums.length == 0) {
             return 0;
         }
-        if (K >= prices.length / 2) {
-            return maxProfit2(prices);
+        if (k > nums.length) {
+            return maxProfit2(nums);
         }
-        int[][] dp = new int[prices.length][K + 1];
-        for (int k = 1; k <= K; k++) {
-            int min = prices[0];
-            for (int i = 1; i < prices.length; i++) {
-                //找出第 1 天到第 i 天 prices[buy] - dp[buy][k - 1] 的最小值
-                //dp[i][k]应为求 price[i]-price[j]+dp[j][k-1]的最大值即为最后一次买入
-                //在j天，并与不买入的数值比较，也就是dp[i-1][k].
-                //转化为求price[j]-dp[j][k-1]的最小值
-                //price[j]-dp[j][k-1] 其中j的取值为0~i，所以可用一个min储存起来，以i遍历累积过去。
-                min = Math.min(prices[i] - dp[i][k - 1], min);
-                //比较不操作和选择一天买入的哪个值更大
-                dp[i][k] = Math.max(dp[i - 1][k], prices[i] - min);
+        int[][] dp = new int[nums.length][k + 1];
+        // dp[i][0] = 0
+        for (int time = 1; time <= k; time++) {
+            int max = Integer.MIN_VALUE;
+            for (int day = 1; day < nums.length; day++) {
+
+                max = Math.max(dp[day - 1][time - 1] - nums[day - 1], max);
+                dp[day][time] = Math.max(dp[day - 1][time], max + nums[day]);
             }
         }
-        return dp[prices.length - 1][K];
+        return dp[nums.length - 1][k];
     }
 
     //sell stock 1， only allow do one transaction
-    public static int maxProfit1(int[] prices) {
+    public static int maxProfit1(int[] nums) {
+        if (nums == null || nums.length == 0) {
+            return 0;
+        }
         int buyIn = Integer.MAX_VALUE;
         int sellOut = Integer.MIN_VALUE;
         int maxPro = Integer.MIN_VALUE;
-        for (int i : prices) {
+        for (int i : nums) {
             if (i < buyIn) {
                 buyIn = i;
                 sellOut = Integer.MIN_VALUE;
@@ -6666,24 +7067,25 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         time(logn)
         space 1
      */
+    private double fastPow(double x, long n) {
+        if (n == 0) {
+            return 1.0;
+        }
+        double half = fastPow(x, n / 2);
+        if (n % 2 == 0) {
+            return half * half;
+        } else {
+            return half * half * x;
+        }
+    }
     public double myPow(double x, int n) {
-
-        double sum = 1;
-        double tmp = x;
         long N = n;
         if (N < 0) {
-            tmp = 1 / tmp;
+            x = 1 / x;
             N = -N;
         }
 
-        while (N != 0) {
-            if ((N & 1) == 1) {
-                sum *= tmp;
-            }
-            tmp *= tmp;
-            N = N >> 1;
-        }
-        return sum;
+        return fastPow(x, N);
     }
 
     //atoi string 转 int
