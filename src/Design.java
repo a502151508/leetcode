@@ -27,6 +27,41 @@ public class Design {
 
 }
 
+/*
+        Q10 Find non repeating character in a stream, f.read(char), f.findFirstNonRepeatChar()
+*/
+class CharacterStream {
+
+    private LinkedHashSet<Character> nonRepeatedCharSet = new LinkedHashSet<>();
+    private HashSet<Character> repeatedCharSet = new HashSet<>();
+
+    public void read(char c) {
+        if (!repeatedCharSet.contains(c)) {
+            if (!nonRepeatedCharSet.contains(c)) {
+                nonRepeatedCharSet.add(c);
+            } else {
+                nonRepeatedCharSet.remove(c);
+                repeatedCharSet.add(c);
+            }
+        }
+    }
+
+    public char findFirstNonRepeatChar() {
+        Iterator<Character> it = nonRepeatedCharSet.iterator();
+        if (it.hasNext()) {
+            return nonRepeatedCharSet.iterator().next();
+        } else {
+            if (repeatedCharSet.isEmpty()) {
+                throw new RuntimeException("no char read");
+            } else {
+                throw new RuntimeException("There is no non-repeated char");
+            }
+
+        }
+
+    }
+}
+
 
 class AutocompleteSystem {
 

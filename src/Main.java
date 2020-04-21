@@ -7,8 +7,192 @@ import java.util.*;
 public class Main {
 
     public static void main(String[] args) {
-        System.out.print(sqrt1(2, 0.0000001));
+        System.out.println(staNum(new int[]{1, 2, 3, 4, 5}, new int[]{3, 4, 5, 1, 2}));
     }
+
+
+    /*
+        82. Remove Duplicates from Sorted List II
+        Time N
+        Space 1
+     */
+    public ListNode deleteDuplicates(ListNode head) {
+        if (head == null) {
+            return null;
+        }
+        ListNode dummyHead = new ListNode(0);
+        ListNode prev = dummyHead;
+        ListNode cur = head;
+        boolean flag = false;
+        while (cur.next != null) {
+            //当前位置已经重复
+            if (flag) {
+                if (cur.val != cur.next.val) {
+                    flag = false;
+                }
+            }//当前位置没有重复
+            else {
+                if (cur.val == cur.next.val) {
+                    flag = true;
+                } else {
+                    prev.next = cur;
+                    prev = cur;
+                }
+            }
+            cur = cur.next;
+        }
+        if (flag) {
+            prev.next = null;
+        } else {
+            prev.next = cur;
+        }
+        return dummyHead.next;
+    }
+
+    /*
+        byte dance
+     */
+    static int staNum(int[] gas, int[] cost) {
+        int len = gas.length;
+        int nowLeft = 0;
+        int preCost = 0, flag = 0;//flag标记起点下标
+        for (int i = 0; i < len; ++i) {
+            nowLeft += gas[i] - cost[i];
+            if (nowLeft < 0) {//此时油量为负数
+                preCost += nowLeft;//累计负的油量
+                nowLeft = 0;//清零重新开始
+                flag = i + 1;//表示将下一个工区作为起点
+            }
+        }
+        if (nowLeft + preCost < 0) {//总剩余油量为负数返回-1
+            return -1;
+        }
+        return flag + 1;
+    }
+
+    /*
+        525. Contiguous Array
+        Time N
+        Space N
+     */
+    public int findMaxLength(int[] nums) {
+        Map<Integer, Integer> map = new HashMap<>();
+        map.put(0, -1);
+        int maxlen = 0, count = 0;
+        for (int i = 0; i < nums.length; i++) {
+            count = count + (nums[i] == 1 ? 1 : -1);
+            if (map.containsKey(count)) {
+                maxlen = Math.max(maxlen, i - map.get(count));
+            } else {
+                map.put(count, i);
+            }
+        }
+        return maxlen;
+    }
+
+    /*
+        174. Dungeon Game
+        Time m*n
+        space m*n
+     */
+    public int calculateMinimumHP(int[][] dungeon) {
+        int m = dungeon.length;
+        if (m == 0) {
+            return 0;
+        }
+        int n = dungeon[0].length;
+        int[][] health = new int[m][n];
+        int[][] dirs = new int[][]{{-1, 0}, {0, -1}};
+        health[m - 1][n - 1] = 1 - dungeon[m - 1][n - 1] <= 0 ? 1 : 1 - dungeon[m - 1][n - 1];
+        for (int i = m - 1; i >= 0; i--) {
+            for (int j = n - 1; j >= 0; j--) {
+                for (int[] dir : dirs) {
+                    int newR = i + dir[0];
+                    int newC = j + dir[1];
+                    if (newR >= 0 && newC >= 0) {
+                        int newHealth = health[i][j] - dungeon[newR][newC];
+                        if (newHealth <= 0) {
+                            newHealth = 1;
+                        }
+                        if (health[newR][newC] == 0) {
+                            health[newR][newC] = newHealth;
+                        } else {
+                            health[newR][newC] = Math.min(newHealth, health[newR][newC]);
+                        }
+                    }
+                }
+            }
+        }
+        return health[0][0];
+    }
+
+    public int calculateMinimumHP1(int[][] dungeon) {
+        int m = dungeon.length;
+        if (m == 0) {
+            return 0;
+        }
+        int n = dungeon[0].length;
+        int[][] health = new int[m][n];
+        Queue<int[]> bfs = new LinkedList<>();
+        bfs.offer(new int[]{m - 1, n - 1});
+        int[][] dirs = new int[][]{{-1, 0}, {0, -1}};
+        health[m - 1][n - 1] = 1 - dungeon[m - 1][n - 1] <= 0 ? 1 : 1 - dungeon[m - 1][n - 1];
+        Set<String> isVisited = new HashSet<>();
+        while (!bfs.isEmpty()) {
+            int[] cur = bfs.poll();
+            StringBuilder sb = new StringBuilder();
+            sb.append(cur[0]);
+            sb.append("|");
+            sb.append(cur[1]);
+            isVisited.add(sb.toString());
+            for (int[] dir : dirs) {
+                int newR = cur[0] + dir[0];
+                int newC = cur[1] + dir[1];
+                if (newR >= 0 && newC >= 0) {
+                    int newHealth = health[cur[0]][cur[1]] - dungeon[newR][newC];
+                    if (newHealth <= 0) {
+                        newHealth = 1;
+                    }
+                    if (health[newR][newC] == 0) {
+                        health[newR][newC] = newHealth;
+                    } else {
+                        health[newR][newC] = Math.min(newHealth, health[newR][newC]);
+                    }
+                    StringBuilder sb1 = new StringBuilder();
+                    sb1.append(newR);
+                    sb1.append("|");
+                    sb1.append(newC);
+                    if (!isVisited.contains(sb1.toString())) {
+                        bfs.offer(new int[]{newR, newC});
+                    }
+                }
+            }
+        }
+        return health[0][0];
+    }
+
+
+    /*
+        844. Backspace String Compare
+        Time S + T
+        Space S + T
+     */
+    public boolean backspaceCompare(String S, String T) {
+        return build(S).equals(build(T));
+    }
+
+    public String build(String S) {
+        Stack<Character> ans = new Stack();
+        for (char c : S.toCharArray()) {
+            if (c != '#') {
+                ans.push(c);
+            } else if (!ans.empty()) {
+                ans.pop();
+            }
+        }
+        return String.valueOf(ans);
+    }
+
 
     /*
         84. Largest Rectangle in Histogram
@@ -163,10 +347,6 @@ public class Main {
         }
 
     }
-
-//    public ListNode sortList(ListNode head) {
-//
-//    }
 
     /*
         542. 01 Matrix
@@ -5182,30 +5362,23 @@ class Tile {
         return ans.equals("") ? word.toString() : ans;
     }
 
-    public static void moveZeroes(int[] nums) {
-        int i = 0;
-        int j = nums.length - 1;
-        if (j < 0) {
-            return;
-        }
-        while (i < j) {
-            while (j > 0 && nums[j] == 0) {
-                j--;
-            }
+    /*
+        283. Move Zeroes
+        Time N
+        Space 1
+     */
+    public void moveZeroes(int[] nums) {
+        int cur = 0;
+        for (int i = 0; i < nums.length; i++) {
             if (nums[i] != 0) {
-                i++;
-                continue;
+                nums[cur] = nums[i];
+                cur++;
             }
-            swapIJ(nums, i, j);
-            j--;
         }
-    }
-
-    static void swapIJ(int[] nums, int i, int j) {
-        for (int t = i; t < j; t++) {
-            nums[t] = nums[t + 1];
+        while (cur < nums.length) {
+            nums[cur] = 0;
+            cur++;
         }
-        nums[j] = 0;
     }
 
 
@@ -6371,80 +6544,53 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         return false;
     }
 
-    //Accepted
-    public static List<List<String>> groupAnagrams3(String[] strs) {
-
-        HashMap<String, ArrayList<String>> map = new HashMap();
-        for (int i = 0; i < strs.length; i++) {
-            String valKey = createAngVal(strs[i]);
-            ArrayList<String> list = map.get(valKey);
-            if (list == null) {
-                list = new ArrayList<String>();
-            }
-            list.add(strs[i]);
-            map.put(valKey, list);
+    /*
+        49. Group Anagrams
+        Time N * klogk  k = avg length of strs
+        Space n
+     */
+    public List<List<String>> groupAnagrams(String[] strs) {
+        Map<String, List<String>> map = new HashMap<>();
+        for (String s : strs) {
+            char[] sArr = s.toCharArray();
+            Arrays.sort(sArr);
+            String key = new String(sArr);
+            List<String> list = map.getOrDefault(key, new ArrayList<>());
+            list.add(s);
+            map.put(key, list);
         }
-        return new ArrayList(map.values());
+        List<List<String>> res = new ArrayList<>();
+        res.addAll(map.values());
+        return res;
     }
 
-    public static String createAngVal(String str) {
-        char arr[] = new char[26];
-        for (int i = 0; i < str.length(); i++) {
-            ++arr[str.charAt(i) - 'a'];
-        }
-        return new String(arr);
-    }
-
-    //time exceeded
-    public static List<List<String>> groupAnagrams(String[] strs) {
-        List<List<String>> result = new LinkedList<>();
+    //Time NK
+    public List<List<String>> groupAnagramsByCharCount(String[] strs) {
         if (strs.length == 0) {
-            return new LinkedList<>();
+            return new ArrayList();
         }
-        Map<Integer, List<String>> countGroup = new HashMap();
-        for (String str : strs) {
-            if (countGroup.containsKey(str.length())) {
-                countGroup.get(str.length()).add(str);
-            } else {
-                LinkedList<String> l = new LinkedList<>();
-                l.add(str);
-                countGroup.put(str.length(), l);
+        Map<String, List> ans = new HashMap<String, List>();
+        int[] count = new int[26];
+        for (String s : strs) {
+            Arrays.fill(count, 0);
+            for (char c : s.toCharArray()) {
+                count[c - 'a']++;
             }
+
+            StringBuilder sb = new StringBuilder("");
+            for (int i = 0; i < 26; i++) {
+                sb.append('#');
+                sb.append(count[i]);
+            }
+            String key = sb.toString();
+            if (!ans.containsKey(key)) {
+                ans.put(key, new ArrayList());
+            }
+            ans.get(key).add(s);
         }
-        for (Map.Entry<Integer, List<String>> e : countGroup.entrySet()) {
-            List<String> cur = e.getValue();
-            while (cur.size() != 0) {
-                List<String> singleResult = new LinkedList();
-                String s = cur.get(0);
-                String copyS = s;
-                singleResult.add(s);
-                cur.remove(0);
-                outer:
-                for (int i = 0; i < cur.size(); i++) {
-                    for (int j = 0; j < cur.get(i).length(); j++) {
-                        if (!copyS.contains(String.valueOf(cur.get(i).charAt(j)))) {
-                            copyS = s;
-                            continue outer;
-                        } else {
-                            int index = copyS.indexOf(cur.get(i).charAt(j));
-                            copyS = copyS.substring(0, index) + copyS.substring(index + 1);
-                        }
-                    }
-                    singleResult.add(cur.get(i));
-                    cur.remove(i);
-                    i--;
-                    copyS = s;
-                }
-                result.add(singleResult);
-            }
-            if (cur.size() != 0) {
-                List<String> singleResult = new LinkedList();
-                singleResult.add(cur.get(0));
-                result.add(singleResult);
-            }
-        }
-        return result;
+        return new ArrayList(ans.values());
     }
+
 
     //旋转数组中搜索
     public static int searchInRotatedArray(int[] nums, int target) {
@@ -7078,6 +7224,7 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
             return half * half * x;
         }
     }
+
     public double myPow(double x, int n) {
         long N = n;
         if (N < 0) {

@@ -1,9 +1,6 @@
 import java.util.*;
 import javafx.util.Pair;
 
-interface a {
-
-}
 
 class Solution {
 
@@ -52,7 +49,19 @@ public class test {
 
 
     public static void main(String[] args) {
-        double a = 1 + 0.5;
+        TreeNode r = new TreeNode(10);
+        r.left = new TreeNode(5);
+        r.right = new TreeNode(15);
+        r.left.left = new TreeNode(1);
+        r.left.right = new TreeNode(7);
+        r.right.right = new TreeNode(18);
+        r.right.left = new TreeNode(11);
+        Trees t = new Trees();
+        TreeNode newRoot = t.pruningTree(r, 11, 15);
+        BSTIterator it = new BSTIterator(newRoot);
+        while (it.hasNext()) {
+            System.out.println(it.next());
+        }
     }
 
     public static boolean arraySumInAnotherArray(int[] a, int[] b) {

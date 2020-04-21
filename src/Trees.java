@@ -1,3 +1,4 @@
+import apple.laf.JRSUIUtils.Tree;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -142,10 +143,147 @@ public class Trees {
 
 
     /*
+        BST 剪枝到范围之内
+     */
+
+    public TreeNode pruningTree(TreeNode root, int min, int max) {
+        if (min > max) {
+            return null;
+        }
+        TreeNode newRoot = findRoot(root, min, max);
+        pruningLeft(newRoot, min);
+        pruningRight(newRoot, max);
+        return newRoot;
+    }
+
+    //找到剪枝后的新树根
+    private TreeNode findRoot(TreeNode root, int min, int max) {
+        //新root需要满足min 和max 落在root的两边
+        if (root == null || (min <= root.val && max >= root.val)) {
+            return root;
+        } else if (min < root.val && max < root.val) {
+            return findRoot(root.left, min, max);
+        } else if (min > root.val && max > root.val) {
+            return findRoot(root.right, min, max);
+        }
+        return null;
+    }
+
+    //对最小值做剪枝
+    private void pruningLeft(TreeNode root, int min) {
+        if (root != null && root.left != null) {
+            //如果左孩子不满足要求 需要找到新的左节点
+            if (root.left.val < min) {
+                TreeNode left = root.left;
+                //从当前左孩子的一系列右孩子里，找到第一个大于min的节点作为新的左孩子
+                //否则则将左孩子设为null
+                while (left != null && left.val < min) {
+                    left = left.right;
+                }
+                root.left = left;
+            }
+            //对新找到的左孩子递归进行剪枝判断
+            pruningLeft(root.left, min);
+        }
+    }
+
+    //对最大值做剪枝
+    private void pruningRight(TreeNode root, int max) {
+        //同上逻辑
+        if (root != null && root.right != null) {
+            if (root.right.val > max) {
+                TreeNode right = root.right;
+                while (right != null && right.val > max) {
+                    right = right.left;
+                }
+                root.right = right;
+            }
+            pruningRight(root.right, max);
+        }
+    }
+
+
+    /*
+        450 BST delete node
+        Time H
+        Space H
+     */
+    public int successor(TreeNode root) {
+        root = root.right;
+        while (root.left != null) {
+            root = root.left;
+        }
+        return root.val;
+    }
+
+    /*
+    One step left and then always right
+    */
+    public int predecessor(TreeNode root) {
+        root = root.left;
+        while (root.right != null) {
+            root = root.right;
+        }
+        return root.val;
+    }
+
+    public TreeNode deleteNode(TreeNode root, int key) {
+        if (root == null) {
+            return null;
+        }
+
+        // delete from the right subtree
+        if (key > root.val) {
+            root.right = deleteNode(root.right, key);
+        }
+        // delete from the left subtree
+        else if (key < root.val) {
+            root.left = deleteNode(root.left, key);
+        }
+        // delete the current node
+        else {
+            // the node is a leaf
+            if (root.left == null && root.right == null) {
+                root = null;
+            }
+            // the node is not a leaf and has a right child
+            else if (root.right != null) {
+                root.val = successor(root);
+                root.right = deleteNode(root.right, root.val);
+            }
+            // the node is not a leaf, has no right child, and has a left child
+            else {
+                root.val = predecessor(root);
+                root.left = deleteNode(root.left, root.val);
+            }
+        }
+        return root;
+    }
+
+    private TreeNode[] findNodeAndItsParent(TreeNode parent, TreeNode cur, int key) {
+        if (cur.val == key) {
+            return new TreeNode[]{parent, cur};
+        } else if (cur.val < key) {
+            return findNodeAndItsParent(cur, cur.right, key);
+        } else {
+            return findNodeAndItsParent(cur, cur.left, key);
+        }
+    }
+
+
+    /*
     lc 236. Lowest Common Ancestor of a Binary Tree
     time O(N)
     space O(H)
      */
+
+
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        // Traverse the tree
+        this.recurseTree(root, p, q);
+        return ans;
+    }
+
     private TreeNode ans;
 
     private boolean recurseTree(TreeNode currentNode, TreeNode p, TreeNode q) {
@@ -176,48 +314,6 @@ public class Trees {
         // Return true if any one of the three bool values is True.
         return mid || left || right;
     }
-
-    /*
-        366. Find Leaves of Binary Tree
-        Time N
-        Space N
-     */
-    List<List<Integer>> leavesRes = new ArrayList<>();
-
-    public List<List<Integer>> findLeaves(TreeNode root) {
-        leavesRes = new ArrayList<>();
-        if (root != null) {
-            dfs(root);
-        }
-        return leavesRes;
-    }
-
-    private int dfs(TreeNode node) {
-        int level = 0;
-        if (node.left != null) {
-            level = Math.max(dfs(node.left) + 1, level);
-        }
-        if (node.right != null) {
-            level = Math.max(dfs(node.right) + 1, level);
-        }
-        addToRes(node.val, level);
-        return level;
-    }
-
-    private void addToRes(int val, int level) {
-        if (level >= leavesRes.size()) {
-            leavesRes.add(new ArrayList<>());
-        }
-        leavesRes.get(level).add(val);
-    }
-
-
-    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
-        // Traverse the tree
-        this.recurseTree(root, p, q);
-        return ans;
-    }
-
 
     public TreeNode lowestCommonAncestorIterative(TreeNode root, TreeNode p, TreeNode q) {
 
@@ -262,6 +358,162 @@ public class Trees {
         }
         return q;
     }
+
+    /*
+        270. Closest Binary Search Tree Value
+        Time O(H)
+        Space O(H)
+     */
+    private Integer closestRes = null;
+
+    public int closestValue(TreeNode root, double target) {
+        findCloestValue(root, target);
+        return closestRes;
+    }
+
+    private void findCloestValue(TreeNode root, double target) {
+        if (root != null) {
+            if (closestRes == null || Math.abs(root.val - target) < Math.abs(closestRes - target)) {
+                closestRes = root.val;
+            }
+            if (root.val > target) {
+                findCloestValue(root.left, target);
+            } else if (root.val < target) {
+                findCloestValue(root.right, target);
+            }
+        }
+    }
+
+    /*
+        222. Count Complete Tree Nodes
+        Time d^2 logn*logn  (d 树的深度)
+        Space 1
+        1.先计算出树的深度
+        除了叶子层以外的节点为2^(d-1)个
+        最后一层可能有2^d个节点，用二分搜索来找到到底最后一个存在的节点的序号
+        1.查找树的深度需要O(d)
+        2.查找叶子节点个数总共需要O(log(2^d)*d) = O(d^2);
+        总复杂度为d^2 = (logN)^2
+
+     */
+    // Return tree depth in O(d) time.
+    public int computeDepth(TreeNode node) {
+        int d = 0;
+        while (node.left != null) {
+            node = node.left;
+            ++d;
+        }
+        return d;
+    }
+
+    // Last level nodes are enumerated from 0 to 2**d - 1 (left -> right).
+    // Return True if last level node idx exists.
+    // Binary search with O(d) complexity.
+    public boolean exists(int idx, int d, TreeNode node) {
+        int left = 0, right = (int) Math.pow(2, d) - 1;
+        int pivot;
+        for (int i = 0; i < d; ++i) {
+            pivot = left + (right - left) / 2;
+            if (idx <= pivot) {
+                node = node.left;
+                right = pivot;
+            } else {
+                node = node.right;
+                left = pivot + 1;
+            }
+        }
+        return node != null;
+    }
+
+    public int countNodes(TreeNode root) {
+        // if the tree is empty
+        if (root == null) {
+            return 0;
+        }
+
+        int d = computeDepth(root);
+        // if the tree contains 1 node
+        if (d == 0) {
+            return 1;
+        }
+
+        // Last level nodes are enumerated from 0 to 2**d - 1 (left -> right).
+        // Perform binary search to check how many nodes exist.
+        int left = 1, right = (int) Math.pow(2, d) - 1;
+        int pivot;
+        while (left <= right) {
+            pivot = left + (right - left) / 2;
+            if (exists(pivot, d, root)) {
+                left = pivot + 1;
+            } else {
+                right = pivot - 1;
+            }
+        }
+
+        // The tree contains 2**d - 1 nodes on the first (d - 1) levels
+        // and left nodes on the last level.
+        return (int) Math.pow(2, d) - 1 + left;
+    }
+
+    /*
+        958. Check Completeness of a Binary Tree
+        Time N
+        Space N
+     */
+
+    public boolean isCompleteTree(TreeNode root) {
+        boolean end = false;
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.add(root);
+        while (!queue.isEmpty()) {
+            TreeNode cur = queue.poll();
+            if (cur == null) {
+                end = true;
+            } else {
+                if (end) {
+                    return false;
+                }
+                queue.add(cur.left);
+                queue.add(cur.right);
+            }
+        }
+        return true;
+    }
+
+    /*
+        366. Find Leaves of Binary Tree
+        Time N
+        Space N
+     */
+    List<List<Integer>> leavesRes = new ArrayList<>();
+
+    public List<List<Integer>> findLeaves(TreeNode root) {
+        leavesRes = new ArrayList<>();
+        if (root != null) {
+            dfs(root);
+        }
+        return leavesRes;
+    }
+
+    private int dfs(TreeNode node) {
+        int level = 0;
+        if (node.left != null) {
+            level = Math.max(dfs(node.left) + 1, level);
+        }
+        if (node.right != null) {
+            level = Math.max(dfs(node.right) + 1, level);
+        }
+        addToRes(node.val, level);
+        return level;
+    }
+
+    private void addToRes(int val, int level) {
+        if (level >= leavesRes.size()) {
+            leavesRes.add(new ArrayList<>());
+        }
+        leavesRes.get(level).add(val);
+    }
+
 
     //lc 684
     //time inverse Ackermann function nearly to O(N)
@@ -1188,6 +1440,7 @@ public class Trees {
     space O(H) best case H = logN worst H = N
      */
     List<Integer> res199;
+
     public List<Integer> rightSideView(TreeNode root) {
         res199 = new ArrayList<>();
         dfsRightSide(root, 1);
