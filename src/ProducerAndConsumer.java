@@ -1,5 +1,7 @@
 import java.util.LinkedList;
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * Created by Sichi Zhang on 2020/4/21.
@@ -8,11 +10,11 @@ public class ProducerAndConsumer {
 
 
     public static void main(String[] args) {
-        ProductWareHouse p = new ProductWareHouse(10);
-        Producer producer = new Producer(p);
-        Customer c1 = new Customer("c1", p);
-        Customer c2 = new Customer("c2", p);
-        Customer c3 = new Customer("c3", p);
+        BlockingQueue<Integer> q = new ArrayBlockingQueue<>(2);
+        Producer producer = new Producer(q);
+        Customer c1 = new Customer("c1", q);
+        Customer c2 = new Customer("c2", q);
+        Customer c3 = new Customer("c3", q);
         producer.start();
         c1.start();
         c2.start();
@@ -33,9 +35,10 @@ class ProductWareHouse {
     }
 
     public synchronized void produce() {
-        if (products.size() == size) {
+        while (products.size() == size) {
             try {
                 this.wait();
+                System.out.println("生产者被唤醒");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -52,6 +55,7 @@ class ProductWareHouse {
         while (products.isEmpty()) {
             try {
                 this.wait();
+                System.out.println(c.name + "被唤醒");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -64,21 +68,24 @@ class ProductWareHouse {
 
 class Producer extends Thread {
 
-    ProductWareHouse p;
+    BlockingQueue<Integer> q;
+    private double pro;
 
-    public Producer(ProductWareHouse p) {
-        this.p = p;
+    public Producer(BlockingQueue<Integer> q) {
+        this.q = q;
     }
 
     @Override
     public void run() {
-        for (int i = 0; i < 100; i++) {
-            p.produce();
+        for (int i = 0; i < 10; i++) {
             try {
-                Thread.sleep(1000);
-            } catch (Exception e) {
+                q.put(i);
+                System.out.println("生产者生产了" + i);
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+
         }
     }
 }
@@ -87,20 +94,20 @@ class Producer extends Thread {
 class Customer extends Thread {
 
     String name;
-    ProductWareHouse p;
+    BlockingQueue<Integer> q;
 
-    public Customer(String name, ProductWareHouse p) {
+    public Customer(String name, BlockingQueue<Integer> q) {
         this.name = name;
-        this.p = p;
+        this.q = q;
     }
 
     @Override
     public void run() {
         while (true) {
-            p.customer(this);
             try {
-                Thread.sleep(1000);
-            } catch (Exception e) {
+                System.out.println(this.name + "消费了" + q.take());
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
