@@ -1,4 +1,3 @@
-import apple.laf.JRSUIUtils.Tree;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,6 +66,50 @@ public class Trees {
             System.out.println(p.val);
             p = p.right;
         }
+    }
+
+    /**
+     * 非递归先序遍历二叉树
+     * */
+    public List<Integer> preorderTraversal(TreeNode root) {
+        List<Integer> resultList=new ArrayList<>();
+        Stack<TreeNode> treeStack=new Stack<>();
+        if(root==null) //如果为空树则返回
+            return resultList;
+        treeStack.push(root);
+        while(!treeStack.isEmpty()){
+            TreeNode tempNode=treeStack.pop();
+            if(tempNode!=null){
+                resultList.add(tempNode.val);//访问根节点
+                treeStack.push(tempNode.right); //入栈右孩子
+                treeStack.push(tempNode.left);//入栈左孩子
+            }
+        }
+        return resultList;
+    }
+    /**
+     * 非递归后序遍历二叉树
+     * */
+    public List<Integer> postorderTraversal(TreeNode root) {
+        LinkedList<TreeNode> stack = new LinkedList<>();
+        LinkedList<Integer> output = new LinkedList<>();
+        if (root == null) {
+            return output;
+        }
+
+        stack.add(root);
+        //使用根右左的顺序遍历，然后倒过来就可以得到后序遍历需要的左右根
+        while (!stack.isEmpty()) {
+            TreeNode node = stack.pollLast();
+            output.addFirst(node.val);
+            if (node.left != null) {
+                stack.add(node.left);
+            }
+            if (node.right != null) {
+                stack.add(node.right);
+            }
+        }
+        return output;
     }
 
     /**

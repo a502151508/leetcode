@@ -49,18 +49,43 @@ public class test {
 
 
     public static void main(String[] args) {
-        TreeNode r = new TreeNode(10);
-        r.left = new TreeNode(5);
-        r.right = new TreeNode(15);
-        r.left.left = new TreeNode(1);
-        r.left.right = new TreeNode(7);
-        r.right.right = new TreeNode(18);
-        r.right.left = new TreeNode(11);
-        Trees t = new Trees();
-        TreeNode newRoot = t.pruningTree(r, 11, 15);
-        BSTIterator it = new BSTIterator(newRoot);
-        while (it.hasNext()) {
-            System.out.println(it.next());
+        test t = new test();
+        try {
+            t.turning();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private int count = 0;
+    private final Object lock = new Object();
+    public void turning() throws InterruptedException {
+        new Thread(new TurningRunner(), "偶数").start();
+        // 确保偶数线程线先获取到锁
+        Thread.sleep(1);
+        new Thread(new TurningRunner(), "奇数").start();
+    }
+
+    class TurningRunner implements Runnable {
+        @Override
+        public void run() {
+            while (count <= 100) {
+                // 获取锁
+                synchronized (lock) {
+                    // 拿到锁就打印
+                    System.out.println(Thread.currentThread().getName() + ": " + count++);
+                    // 唤醒其他线程
+                    lock.notify();
+                    try {
+                        if (count <= 100) {
+                            // 如果任务还没有结束，则让出当前的锁并休眠
+                            lock.wait();
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
     }
 
