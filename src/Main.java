@@ -9,6 +9,23 @@ public class Main {
     public static void main(String[] args) {
         System.out.println(staNum(new int[]{1, 2, 3, 4, 5}, new int[]{3, 4, 5, 1, 2}));
     }
+    /*
+        找零钱
+        Space N
+        Time N
+     */
+    public int waysToChange(int n) {
+        int[] coins = new int[]{1,5,10,25};
+        int[] dp = new int[n + 1];
+        dp[0] = 1;
+        for (int c = 0; c < 4; ++c) {
+            int coin = coins[c];
+            for (int i = coin; i <= n; ++i) {
+                dp[i] = (dp[i] + dp[i - coin]) % 1000000007;
+            }
+        }
+        return dp[n];
+    }
 
 
     /*
@@ -1299,6 +1316,61 @@ public class Main {
         }
     }
 
+    /*
+        翻转 k组链表
+        lc 25. Reverse Nodes in k-Group
+        time O(N) length of the list
+        space O(1)
+     */
+
+    public ListNode reverseKGroup(ListNode head, int k) {
+        if (k <= 1) {
+            return head;
+        }
+        int length = getLengthOfALinkedList(head);
+        if (length == 1 || k > length) {
+            return head;
+        }
+        ListNode prev = null, cur = head, next = null;
+        int groups = length / k;
+        //mark the result's head.
+        ListNode resHead = null;
+        //mark each groups end, to link each group after reverse.
+        ListNode prevGroupEnd = null, curGroupEnd = null;
+        for (int t = 0; t < groups; t++) {
+            //moving groups
+            prevGroupEnd = curGroupEnd;
+            curGroupEnd = cur;
+            //reverse k times
+            for (int i = 0; i < k; i++) {
+                next = cur.next;
+                cur.next = prev;
+                prev = cur;
+                cur = next;
+            }
+            if (resHead == null) {
+                resHead = prev;
+            }
+            //link prevGroupEnding element to this group's first one.
+            if (prevGroupEnd != null) {
+                prevGroupEnd.next = prev;
+            }
+        }
+        //link the last group to the remains next elements. if there is no more, link it to null.
+        curGroupEnd.next = cur;
+        return resHead;
+    }
+
+    private int getLengthOfALinkedList(ListNode head) {
+        int count = 0;
+        while (head != null) {
+            count++;
+            head = head.next;
+        }
+        return count;
+    }
+
+
 
     /*
         1296. Divide Array in Sets of K Consecutive Numbers
@@ -2474,59 +2546,6 @@ public class Main {
         return res;
     }
 
-    /*
-        翻转 k组链表
-        lc 25. Reverse Nodes in k-Group
-        time O(N) length of the list
-        space O(1)
-     */
-
-    public ListNode reverseKGroup(ListNode head, int k) {
-        if (k <= 1) {
-            return head;
-        }
-        int length = getLengthOfALinkedList(head);
-        if (length == 1 || k > length) {
-            return head;
-        }
-        ListNode prev = null, cur = head, next = null;
-        int groups = length / k;
-        //mark the result's head.
-        ListNode resHead = null;
-        //mark each groups end, to link each group after reverse.
-        ListNode prevGroupEnd = null, curGroupEnd = null;
-        for (int t = 0; t < groups; t++) {
-            //moving groups
-            prevGroupEnd = curGroupEnd;
-            curGroupEnd = cur;
-            //reverse k times
-            for (int i = 0; i < k; i++) {
-                next = cur.next;
-                cur.next = prev;
-                prev = cur;
-                cur = next;
-            }
-            if (resHead == null) {
-                resHead = prev;
-            }
-            //link prevGroupEnding element to this group's first one.
-            if (prevGroupEnd != null) {
-                prevGroupEnd.next = prev;
-            }
-        }
-        //link the last group to the remains next elements. if there is no more, link it to null.
-        curGroupEnd.next = cur;
-        return resHead;
-    }
-
-    private int getLengthOfALinkedList(ListNode head) {
-        int count = 0;
-        while (head != null) {
-            count++;
-            head = head.next;
-        }
-        return count;
-    }
 
     /*
         239. Sliding Window Maximum
@@ -6224,12 +6243,12 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         int i = nums.length - 1;
         while (nums[i] <= nums[i - 1]) {
             if (i == 1) {
-                Arrays.sort(nums);
+                reverse(nums, 0);
                 return;
             }
             i--;
         }
-        int j = i + 1;
+        int j = i;
         while (j < nums.length && nums[i - 1] < nums[j]) {
             j++;
         }
@@ -6641,44 +6660,6 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         }
     }
 
-    public int maxProfitWithCD(int[] prices) {
-
-        int n = prices.length;
-        int dp_i_0 = 0, dp_i_1 = Integer.MIN_VALUE;
-        int dp_pre_0 = 0; // 代表 dp[i-2][0]
-        for (int i = 0; i < n; i++) {
-            int temp = dp_i_0;
-            dp_i_0 = Math.max(dp_i_0, dp_i_1 + prices[i]);
-            dp_i_1 = Math.max(dp_i_1, dp_pre_0 - prices[i]);
-            dp_pre_0 = temp;
-        }
-        return dp_i_0;
-
-
-    }
-
-    //sell stock 3， only allow do K transaction
-    public int maxProfit3(int k, int[] nums) {
-
-        //initial state dim1 - day; dim2 - transacation number
-        if (nums == null || nums.length == 0) {
-            return 0;
-        }
-        if (k > nums.length) {
-            return maxProfit2(nums);
-        }
-        int[][] dp = new int[nums.length][k + 1];
-        // dp[i][0] = 0
-        for (int time = 1; time <= k; time++) {
-            int max = Integer.MIN_VALUE;
-            for (int day = 1; day < nums.length; day++) {
-
-                max = Math.max(dp[day - 1][time - 1] - nums[day - 1], max);
-                dp[day][time] = Math.max(dp[day - 1][time], max + nums[day]);
-            }
-        }
-        return dp[nums.length - 1][k];
-    }
 
     //sell stock 1， only allow do one transaction
     public static int maxProfit1(int[] nums) {
@@ -6724,6 +6705,29 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         return dp_i_0;
     }
 
+    //sell stock 3， only allow do K transaction
+    public int maxProfit3(int k, int[] nums) {
+
+        //initial state dim1 - day; dim2 - transacation number
+        if (nums == null || nums.length == 0) {
+            return 0;
+        }
+        if (k > nums.length) {
+            return maxProfit2(nums);
+        }
+        int[][] dp = new int[nums.length][k + 1];
+        // dp[i][0] = 0
+        for (int time = 1; time <= k; time++) {
+            int max = Integer.MIN_VALUE;
+            for (int day = 1; day < nums.length; day++) {
+
+                max = Math.max(dp[day - 1][time - 1] - nums[day - 1], max);
+                dp[day][time] = Math.max(dp[day - 1][time], max + nums[day]);
+            }
+        }
+        return dp[nums.length - 1][k];
+    }
+
     public int maxProfitWithFee(int[] prices, int fee) {
 
         int n = prices.length;
@@ -6736,6 +6740,21 @@ dp[i] = sum{dp[i - num] for num in nums and if i >= num}
         return dp_i_0;
     }
 
+    public int maxProfitWithCD(int[] prices) {
+
+        int n = prices.length;
+        int dp_i_0 = 0, dp_i_1 = Integer.MIN_VALUE;
+        int dp_pre_0 = 0; // 代表 dp[i-2][0]
+        for (int i = 0; i < n; i++) {
+            int temp = dp_i_0;
+            dp_i_0 = Math.max(dp_i_0, dp_i_1 + prices[i]);
+            dp_i_1 = Math.max(dp_i_1, dp_pre_0 - prices[i]);
+            dp_pre_0 = temp;
+        }
+        return dp_i_0;
+
+
+    }
 
     /*
     lc 56. Merge Intervals
